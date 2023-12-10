@@ -9,8 +9,10 @@ import io.flutter.plugin.common.MethodChannel
 class WebitelPortalPlugin: FlutterPlugin, ActivityAware {
     private val PORTAL_CHANNEL = "webitel.com/portal"
     private val CALL_EVENT_CHANNEL = "webitel.com/calls"
+    private val CHAT_EVENT_CHANNEL = "webitel.com/chat"
 
     private lateinit var eventChannel: EventChannel
+    private lateinit var chatEventChannel: EventChannel
     private lateinit var channel: MethodChannel
     private lateinit var portal: WebitelPortal
 
@@ -19,7 +21,9 @@ class WebitelPortalPlugin: FlutterPlugin, ActivityAware {
         portal = WebitelPortal(binding.applicationContext)
         channel = MethodChannel(binding.binaryMessenger, PORTAL_CHANNEL)
         eventChannel = EventChannel(binding.binaryMessenger, CALL_EVENT_CHANNEL)
+        chatEventChannel = EventChannel(binding.binaryMessenger, CHAT_EVENT_CHANNEL)
         eventChannel.setStreamHandler(portal.callListener)
+        chatEventChannel.setStreamHandler(portal.chatListener)
 
         channel.setMethodCallHandler { call, result ->
             portal.methodCallHandler(call.method, call.arguments, result)

@@ -5,9 +5,15 @@ import android.util.Log
 import com.webitel.mobile_sdk.domain.Call
 import com.webitel.mobile_sdk.domain.CallStateListener
 import com.webitel.mobile_sdk.domain.CallbackListener
+import com.webitel.mobile_sdk.domain.ChatClient
 import com.webitel.mobile_sdk.domain.Code
+import com.webitel.mobile_sdk.domain.Dialog
+import com.webitel.mobile_sdk.domain.DialogListener
 import com.webitel.mobile_sdk.domain.Error
+import com.webitel.mobile_sdk.domain.HistoryRequest
 import com.webitel.mobile_sdk.domain.LoginListener
+import com.webitel.mobile_sdk.domain.Message
+import com.webitel.mobile_sdk.domain.MessageCallbackListener
 import com.webitel.mobile_sdk.domain.PortalClient
 import com.webitel.mobile_sdk.domain.Session
 import com.webitel.mobile_sdk.domain.User
@@ -19,7 +25,8 @@ internal class PortalCustomerService(private val application: Application) {
     private var ADDRESS = ""
 
     private var _portalClient: PortalClient? = null
-
+    private var _chatClient: ChatClient? = null
+    private var _serviceDialog: Dialog? = null
 
     @Synchronized
     fun init(token: String, address: String) {
@@ -41,6 +48,85 @@ internal class PortalCustomerService(private val application: Application) {
 
     fun isInitialized(): Boolean {
         return _portalClient != null
+    }
+
+
+    fun getUpdates(params: Params, listener: DialogListener,
+                   callback: (Error?, List<Message>?) -> Unit) {
+        if (user == null) {
+            callback(
+                Error(
+                    "you need to call setUser first",
+                    Code.NOT_FOUND
+                ), null
+            )
+            return
+        }
+
+        if (_chatClient == null || _serviceDialog == null) {
+            initChatControllerAndLogin(listener) {
+                if (it != null) {
+                    callback(it, null)
+                } else {
+                    getUpdatesAndLogin(params, listener, callback)
+                }
+            }
+        } else {
+            getUpdatesAndLogin(params, listener, callback)
+        }
+    }
+
+
+    fun getHistory(params: Params, listener: DialogListener,
+                   callback: (Error?, List<Message>?) -> Unit) {
+        if (user == null) {
+            callback(
+                Error(
+                    "you need to call setUser first",
+                    Code.NOT_FOUND
+                ), null
+            )
+            return
+        }
+
+        if (_chatClient == null || _serviceDialog == null) {
+            initChatControllerAndLogin(listener) {
+                if (it != null) {
+                    callback(it, null)
+                } else {
+                    getHistoryAndLogin(params, listener, callback)
+                }
+            }
+        } else {
+            getHistoryAndLogin(params, listener, callback)
+        }
+    }
+
+
+    fun sendMessage(listener: DialogListener,
+                    message: Message.options,
+                    callback: (Error?, Message?) -> Unit) {
+        if (user == null) {
+            callback(
+                Error(
+                    "you need to call setUser first",
+                    Code.NOT_FOUND
+                ), null
+            )
+            return
+        }
+
+        if (_chatClient == null || _serviceDialog == null) {
+            initChatControllerAndLogin(listener) {
+                if (it != null) {
+                    callback(it, null)
+                } else {
+                    sendAndLogin(listener, message, callback)
+                }
+            }
+        } else {
+            sendAndLogin(listener, message, callback)
+        }
     }
 
 
@@ -178,6 +264,205 @@ internal class PortalCustomerService(private val application: Application) {
     }
 
 
+    private fun getUpdatesAndLogin(params: Params,
+                                   listener: DialogListener,
+                                   callback: (Error?, List<Message>?) -> Unit) {
+        val s = object: CallbackListener<List<Message>> {
+            override fun onError(e: Error) {
+                if (e.code == Code.UNAUTHENTICATED) {
+                    initChatControllerAndLogin(listener) { err ->
+                        if (err != null) {
+                            callback(err, null)
+                        } else
+                            getUpdates(callback)
+                    }
+                } else {
+                    callback(e, null)
+                }
+            }
+            override fun onSuccess(t: List<Message>) {
+                callback(null, t)
+            }
+        }
+
+        if (params.offset > 0 || params.limit > 0) {
+            _serviceDialog?.getUpdates(
+                createHistoryRequest(params), s)
+
+        } else {
+            _serviceDialog?.getUpdates(s)
+        }
+    }
+
+
+    private fun getUpdates(callback: (Error?, List<Message>?) -> Unit) {
+        _serviceDialog?.getUpdates(object: CallbackListener<List<Message>> {
+            override fun onError(e: Error) {
+                callback(e, null)
+            }
+
+            override fun onSuccess(t: List<Message>) {
+                callback(null, t)
+            }
+        })
+    }
+
+
+    private fun getHistoryAndLogin(params: Params,
+                                   listener: DialogListener,
+                                   callback: (Error?, List<Message>?) -> Unit) {
+        val s = object: CallbackListener<List<Message>> {
+            override fun onError(e: Error) {
+                if (e.code == Code.UNAUTHENTICATED) {
+                    initChatControllerAndLogin(listener) { err ->
+                        if (err != null) {
+                            callback(err, null)
+                        } else
+                            getHistory(callback)
+                    }
+                } else {
+                    callback(e, null)
+                }
+            }
+            override fun onSuccess(t: List<Message>) {
+                callback(null, t)
+            }
+        }
+
+        if (params.offset > 0 || params.limit > 0) {
+            _serviceDialog?.getHistory(
+                createHistoryRequest(params), s)
+
+        } else {
+            _serviceDialog?.getHistory(s)
+        }
+    }
+
+
+    private fun createHistoryRequest(params: Params): HistoryRequest {
+        val builder = HistoryRequest.Builder()
+
+        if(params.offset > 0) builder.offset(params.offset)
+        if(params.limit > 0) builder.limit(params.limit)
+
+        return builder.build()
+    }
+
+
+    private fun getHistory(callback: (Error?, List<Message>?) -> Unit) {
+        _serviceDialog?.getHistory(object: CallbackListener<List<Message>> {
+            override fun onError(e: Error) {
+                callback(e, null)
+            }
+
+            override fun onSuccess(t: List<Message>) {
+                callback(null, t)
+            }
+        })
+    }
+
+
+    private fun sendAndLogin(listener: DialogListener,
+                             message: Message.options,
+                             callback: (Error?, Message?) -> Unit) {
+        _serviceDialog?.sendMessage(message = message, object : MessageCallbackListener {
+            override fun onError(e: Error) {
+                if (e.code == Code.UNAUTHENTICATED) {
+                    initChatControllerAndLogin(listener) { err ->
+                        if (err != null) {
+                            callback(err, null)
+                        } else {
+                            send(message, callback)
+                        }
+                    }
+                } else {
+                    callback(e, null)
+                }
+            }
+
+            override fun onSend(m: Message) {}
+
+            override fun onSent(m: Message) {
+                callback(null, m)
+            }
+        })
+    }
+
+
+    private fun send(message: Message.options,
+                     callback: (Error?, Message?) -> Unit){
+        _serviceDialog?.sendMessage(message = message, object: MessageCallbackListener {
+            override fun onError(e: Error) {
+                callback(e, null)
+            }
+
+            override fun onSend(m: Message) {}
+
+            override fun onSent(m: Message) {
+                callback(null, m)
+            }
+        })
+    }
+
+
+    private fun initChatControllerAndLogin(listener: DialogListener,
+                                           callback: (Error?) -> Unit) {
+        _portalClient?.getChatClient(object: CallbackListener<ChatClient> {
+            override fun onError(e: Error) {
+                if (e.code == Code.UNAUTHENTICATED) {
+                    login { err ->
+                        if (err != null) {
+                            callback(err)
+                            return@login
+                        }
+
+                        initChatController(listener, callback)
+                    }
+                } else {
+                    callback(e)
+                }
+            }
+
+            override fun onSuccess(t: ChatClient) {
+                _chatClient = t
+                findServiceDialog(listener, t, callback)
+            }
+        })
+    }
+
+
+    private fun initChatController(listener: DialogListener,
+                                   callback: (Error?) -> Unit) {
+        _portalClient?.getChatClient(object: CallbackListener<ChatClient> {
+            override fun onError(e: Error) {
+                callback(e)
+            }
+
+            override fun onSuccess(t: ChatClient) {
+                _chatClient = t
+                findServiceDialog(listener, t, callback)
+            }
+        })
+    }
+
+
+    private fun findServiceDialog(listener: DialogListener,
+                                  t: ChatClient,
+                                  callback: (Error?) -> Unit) {
+        t.getServiceDialog(object : CallbackListener<Dialog> {
+            override fun onError(e: Error) {
+                callback(e)
+            }
+
+            override fun onSuccess(t: Dialog) {
+                t.addListener(listener)
+                _serviceDialog = t
+                callback(null)
+            }
+        })
+    }
+
+
     private fun createClient(token: String, address: String) {
         _portalClient = PortalClient.Builder(
             application = application,
@@ -217,5 +502,8 @@ internal class PortalCustomerService(private val application: Application) {
             })
         }
     }
+
+
+    data class Params(val limit: Int, val offset: Long)
 }
 

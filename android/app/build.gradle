@@ -64,5 +64,5 @@ flutter {
 }
 
 dependencies {
-    implementation("com.github.webitel:mobile-sdk:0.3.3")
+    implementation("com.github.webitel:mobile-sdk:0.3.4")
 }

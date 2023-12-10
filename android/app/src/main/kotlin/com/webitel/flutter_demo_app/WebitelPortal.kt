@@ -6,12 +6,14 @@ import android.content.Context
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.webitel.mobile_sdk.domain.Message
 import com.webitel.mobile_sdk.domain.User
 import io.flutter.plugin.common.MethodChannel
 
 
 class WebitelPortal(private val context: Context) {
     val callListener = CallsStreamHandler(context)
+    val chatListener = ChatStreamHandler(context)
 
     private var activity: Activity? = null
     private var _portal: PortalCustomerService? = null
@@ -48,6 +50,18 @@ class WebitelPortal(private val context: Context) {
             "sendDtmf" -> {
                 val arg = data as Map<String,String>
                 sendDtmf(arg, result)
+            }
+            "sendText" -> {
+                val arg = data as Map<String,String>
+                sendTextMessage(arg, result)
+            }
+            "getHistory" -> {
+                val arg = data as Map<String,String>
+                getHistory(arg, result)
+            }
+            "getUpdates" -> {
+                val arg = data as Map<String,String>
+                getUpdates(arg, result)
             }
         }
     }
@@ -103,6 +117,93 @@ class WebitelPortal(private val context: Context) {
 
         portalService()?.setUser(user)
         result.success(true)
+    }
+
+
+    private fun getUpdates(arg: Map<String, String>, result: MethodChannel.Result) {
+        if (portalService()?.isInitialized() != true)
+            return result.error(
+                "NOT_INITIALIZED",
+                "you need to call \"init\" first",
+                null
+            )
+
+        val limit = arg["limit"]?.toIntOrNull() ?: 0
+        val offset = arg["offset"]?.toLongOrNull() ?: 0
+
+        portalService()?.getUpdates(
+            PortalCustomerService.Params(limit, offset),
+            chatListener
+        ) { err, messages ->
+            if (err != null) {
+                result.error(
+                    err.code.name,
+                    err.message,
+                    null
+                )
+            } else {
+                chatListener.onMessages("getUpdates", messages?.reversed())
+                result.success(messages?.size)
+            }
+        }
+    }
+
+
+    private fun getHistory(arg: Map<String, String>, result: MethodChannel.Result) {
+        if (portalService()?.isInitialized() != true)
+            return result.error(
+                "NOT_INITIALIZED",
+                "you need to call \"init\" first",
+                null
+            )
+
+        val limit = arg["limit"]?.toIntOrNull() ?: 0
+        val offset = arg["offset"]?.toLongOrNull() ?: 0
+
+        portalService()?.getHistory(
+            PortalCustomerService.Params(limit, offset),
+            chatListener
+        ) { err, messages ->
+            if (err != null) {
+                result.error(
+                    err.code.name,
+                    err.message,
+                    null
+                )
+            } else {
+                chatListener.onMessages("getHistory", messages)
+                result.success(messages?.size)
+            }
+        }
+    }
+
+
+    private fun sendTextMessage(arg: Map<String, String>, result: MethodChannel.Result) {
+        if (portalService()?.isInitialized() != true)
+            return result.error(
+                "NOT_INITIALIZED",
+                "you need to call \"init\" first",
+                null
+            )
+
+        val text = arg["text"]
+            ?: return result.error("NOT_FOUND", "text - is required", null)
+
+        portalService()?.sendMessage(
+            chatListener,
+            Message.options().withText(text)) {err, message ->
+            if (err != null) {
+                result.error(
+                    err.code.name,
+                    err.message,
+                    null
+                )
+            } else {
+                if (message != null)
+                    chatListener.onMessages("onSent", listOf(message))
+                result.success(null)
+            }
+        }
     }
 
 
