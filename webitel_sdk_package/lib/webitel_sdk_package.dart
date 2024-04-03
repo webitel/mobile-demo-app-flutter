@@ -1,21 +1,26 @@
 library webitel_sdk_package;
 
 import 'package:webitel_sdk_package/src/backbone/dependency_injection.dart';
-import 'package:webitel_sdk_package/src/domain/services/auth_service.dart';
+import 'package:webitel_sdk_package/src/domain/usecase/auth/init_grpc_usecase.dart';
+import 'package:webitel_sdk_package/src/domain/usecase/auth/ping_usecase.dart';
 
 class WebitelSdkPackage {
-  late AuthService _authService;
+  late InitUseCase _initUseCase;
+  late PingUseCase _pingUseCase;
 
-  WebitelSdkPackage() {
-    registerServices();
-    _authService = locator.get<AuthService>(instanceName: "AuthServiceImpl");
-  }
+  WebitelSdkPackage();
 
   Future<void> initGrpc() async {
-    return await _authService.initGrpc();
+    _initUseCase = locator.get<InitUseCase>(instanceName: "InitUseCase");
+    return await _initUseCase();
   }
 
   Future<String> ping() async {
-    return await _authService.ping();
+    _pingUseCase = locator.get<PingUseCase>(instanceName: "PingUseCase");
+    return await _pingUseCase();
+  }
+
+  Future<void> registerDependencies() async {
+    await registerServices();
   }
 }

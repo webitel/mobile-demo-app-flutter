@@ -5,7 +5,8 @@ import 'chat_page.dart';
 
 void main() async {
   runApp(const MyApp());
-  WebitelSdkPackage().initGrpc();
+  await WebitelSdkPackage().registerDependencies();
+  await WebitelSdkPackage().initGrpc();
 }
 
 class MyApp extends StatelessWidget {
