@@ -15,7 +15,7 @@ class WebitelSdkPackage {
     return await _authService.initGrpc();
   }
 
-  Future<void> ping() async {
+  Future<String> ping() async {
     return await _authService.ping();
   }
 }
