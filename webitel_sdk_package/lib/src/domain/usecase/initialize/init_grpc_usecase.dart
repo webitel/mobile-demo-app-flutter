@@ -1,4 +1,3 @@
-import 'package:webitel_sdk_package/src/domain/services/authorization/auth_service.dart';
 import 'package:webitel_sdk_package/src/domain/services/initialize/initialize_service.dart';
 
 abstract class InitGrpcUseCase {
