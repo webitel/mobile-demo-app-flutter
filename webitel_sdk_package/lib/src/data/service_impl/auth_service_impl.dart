@@ -1,6 +1,6 @@
 import 'package:grpc/grpc.dart';
 import 'package:webitel_sdk_package/src/data/gateway/grpc_gateway.dart';
-import 'package:webitel_sdk_package/src/domain/services/auth_service.dart';
+import 'package:webitel_sdk_package/src/domain/services/authorization/auth_service.dart';
 import 'package:webitel_sdk_package/src/exceptions/auth_exception.dart';
 import 'package:webitel_sdk_package/src/generated/portal/connect.pb.dart';
 
@@ -9,10 +9,6 @@ class AuthServiceImpl implements AuthService {
 
   AuthServiceImpl(this._grpcGateway);
 
-  @override
-  Future<void> initGrpc() async {
-    _grpcGateway.init();
-  }
 
   @override
   Future<String> ping() async {

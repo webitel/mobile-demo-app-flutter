@@ -1,4 +1,4 @@
-import 'package:webitel_sdk_package/src/domain/services/auth_service.dart';
+import 'package:webitel_sdk_package/src/domain/services/authorization/auth_service.dart';
 
 abstract class PingUseCase {
   Future<String> call();

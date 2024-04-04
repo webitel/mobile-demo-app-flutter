@@ -5,7 +5,7 @@ import 'chat_page.dart';
 
 void main() async {
   runApp(const MyApp());
-  await WebitelSdkPackage().registerDependencies();
+ await WebitelSdkPackage().registerDependencies();
   await WebitelSdkPackage().initGrpc();
 }
 
