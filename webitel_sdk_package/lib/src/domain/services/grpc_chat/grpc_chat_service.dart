@@ -1,3 +1,5 @@
+import 'package:webitel_sdk_package/src/domain/entities/message.dart';
+
 abstract interface class GrpcChatService {
   Future<String> ping({required List<int> echo});
 
@@ -11,5 +13,5 @@ abstract interface class GrpcChatService {
 
   Future<void> fetchUpdates();
 
-  Future<void> sendMessage();
+  Future<MessageEntity> sendMessage({required MessageEntity message});
 }

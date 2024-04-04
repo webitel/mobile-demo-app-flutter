@@ -1,7 +1,8 @@
+import 'package:webitel_sdk_package/src/domain/entities/message.dart';
 import 'package:webitel_sdk_package/src/domain/services/grpc_chat/grpc_chat_service.dart';
 
 abstract interface class SendMessageUseCase {
-  Future<void> call();
+  Future<MessageEntity> call({required MessageEntity message});
 }
 
 class SendMessageUseCaseImplUseCase implements SendMessageUseCase {
@@ -10,5 +11,6 @@ class SendMessageUseCaseImplUseCase implements SendMessageUseCase {
   SendMessageUseCaseImplUseCase(this._grpcChatService);
 
   @override
-  Future<void> call() => _grpcChatService.sendMessage();
+  Future<MessageEntity> call({required MessageEntity message}) =>
+      _grpcChatService.sendMessage(message: message);
 }

@@ -1,9 +1,13 @@
 import 'dart:async';
 
+import 'package:fixnum/fixnum.dart';
 import 'package:grpc/grpc.dart';
+import 'package:uuid/uuid.dart';
 import 'package:webitel_sdk_package/src/data/gateway/grpc_gateway.dart';
+import 'package:webitel_sdk_package/src/domain/entities/message.dart';
 import 'package:webitel_sdk_package/src/domain/services/grpc_chat/grpc_chat_service.dart';
 import 'package:webitel_sdk_package/src/exceptions/auth_exception.dart';
+import 'package:webitel_sdk_package/src/generated/chat/messages/message.pb.dart';
 import 'package:webitel_sdk_package/src/generated/portal/connect.pb.dart';
 
 import '../../generated/google/protobuf/any.pb.dart';
@@ -14,6 +18,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
   GrpcChatServiceImpl(this._grpcGateway);
 
   final requestStreamController = StreamController<Request>();
+  var uuid = Uuid();
 
   @override
   Future<String> connectToGrpcChannel({
@@ -79,8 +84,60 @@ class GrpcChatServiceImpl implements GrpcChatService {
   }
 
   @override
-  Future<void> sendMessage() {
-    // TODO: implement sendMessage
-    throw UnimplementedError();
+  Future<MessageEntity> sendMessage({required MessageEntity message}) async {
+    try {
+      final messageData = Message(
+        id: Int64.tryParseInt(message.id),
+      );
+
+      final request = Request(
+        path: '/webitel.portal.Customer/SendMessage',
+        data: Any.pack(messageData),
+      );
+
+      final completer = Completer<MessageEntity>();
+      final options = CallOptions(timeout: Duration(seconds: 60));
+
+      final responseStream = _grpcGateway.customerClient.connect(
+        Stream<Request>.fromIterable([request]),
+        options: options,
+      );
+
+      responseStream.firstWhere((response) {
+        try {
+          final canUnpack = response.data.canUnpackInto(Message.getDefault());
+          return canUnpack &&
+              response.data.unpackInto(Message.getDefault()).id.toString() ==
+                  message.id;
+        } catch (_) {
+          return false;
+        }
+      }).then((response) {
+        try {
+          final responseData = response.data.unpackInto(Message.getDefault());
+          final responseId = responseData.id.toInt();
+
+          final responseMessage = MessageEntity(
+            id: responseId.toString(),
+            timestamp: 1,
+          );
+
+          completer.complete(responseMessage);
+        } catch (error) {
+          completer.completeError('Error unpacking response: $error');
+        }
+      }).catchError((error) {
+        print('Error sending message: $error');
+        completer.completeError('Error sending message: $error');
+      });
+
+      requestStreamController.add(request);
+
+      final response = await completer.future;
+      return response;
+    } catch (error) {
+      print('Error occurred: $error');
+      return Future.error(AuthException(message: error.toString()).message);
+    }
   }
 }
