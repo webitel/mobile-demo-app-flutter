@@ -12,34 +12,19 @@ final GetIt locator = GetIt.instance;
 
 Future<void> registerDi() async {
   //Gateway
-  if (!locator.isRegistered<GrpcGateway>(instanceName: "GrpcGateway")) {
-    locator.registerLazySingleton<GrpcGateway>(() => GrpcGateway());
-  }
+  locator.registerLazySingleton<GrpcGateway>(() => GrpcGateway());
 
   //Service
-
-  if (!locator.isRegistered<InitializeService>(
-      instanceName: "InitializeServiceImpl")) {
-    locator.registerLazySingleton<InitializeService>(
-        () => InitializeServiceImpl(locator.get()));
-  }
-
-  if (!locator.isRegistered<AuthService>(instanceName: "AuthServiceImpl")) {
-    locator.registerLazySingleton<AuthService>(
-        () => AuthServiceImpl(locator.get()));
-  }
+  locator.registerLazySingleton<InitializeService>(
+      () => InitializeServiceImpl(locator.get()));
+  locator
+      .registerLazySingleton<AuthService>(() => AuthServiceImpl(locator.get()));
 
   //Use case
-
-  if (!locator.isRegistered<InitGrpcUseCase>(instanceName: "InitGrpcUseCase")) {
-    locator.registerLazySingleton<InitGrpcUseCase>(
-        () => GrpcInitImplUseCase(locator.get()),
-        instanceName: "GrpcInitImplUseCase");
-  }
-
-  if (!locator.isRegistered<PingUseCase>(instanceName: "PingUseCase")) {
-    locator.registerLazySingleton<PingUseCase>(
-        () => GrpcPingUseCase(locator.get()),
-        instanceName: "GrpcPingUseCase");
-  }
+  locator.registerLazySingleton<InitGrpcUseCase>(
+      () => GrpcInitImplUseCase(locator.get()),
+      instanceName: "InitGrpcUseCase");
+  locator.registerLazySingleton<PingUseCase>(
+      () => GrpcPingUseCase(locator.get()),
+      instanceName: "PingUseCase");
 }
