@@ -13,6 +13,8 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.6
+  flutter_bloc: ^8.1.5
+  uuid: ^4.3.3
   webitel_sdk_package:
     path: webitel_sdk_package/
 

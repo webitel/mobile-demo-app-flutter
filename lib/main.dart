@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:webitel_sdk_package/webitel_sdk_package.dart';
 
-import 'chat_page.dart';
+import 'presentation/page/chat.dart';
 
 void main() async {
   runApp(const MyApp());
