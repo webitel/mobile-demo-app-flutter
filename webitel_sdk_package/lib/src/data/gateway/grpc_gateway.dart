@@ -16,11 +16,9 @@ class GrpcGateway {
   Future<void> init() async {
     _createChannel();
   }
-
   CustomerClient get customerClient {
     return _customerClient;
   }
-
   _createChannel() {
     final channel = ClientChannel(
       baseUrl,
