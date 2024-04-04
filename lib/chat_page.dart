@@ -10,18 +10,21 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   String initialMessage = 'Test';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: ElevatedButton(
-          onPressed: () async {
-            final test = await WebitelSdkPackage().ping();
-            setState(() {
-              initialMessage = test;
-            });
-          },
-          child: Text(initialMessage),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () async {
+                WebitelSdkPackage().pingServer(echo: [1, 2, 3, 4]);
+              },
+              child: const Text('Ping'),
+            ),
+          ],
         ),
       ),
     );

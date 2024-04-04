@@ -1,3 +1,3 @@
-abstract class InitializeService {
+abstract interface class InitializeService {
   Future<void> initGrpcClient();
 }
