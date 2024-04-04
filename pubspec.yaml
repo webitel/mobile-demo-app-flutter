@@ -15,17 +15,24 @@ dependencies:
   cupertino_icons: ^1.0.6
   flutter_bloc: ^8.1.5
   uuid: ^4.3.3
+  flutter_svg: ^2.0.10+1
+  build_runner: ^2.4.9
   webitel_sdk_package:
     path: webitel_sdk_package/
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-  flutter_lints: ^3.0.0
+  flutter_gen_runner: ^5.4.0
+  flutter_lints: ^3.0.2
 
 
 flutter:
   uses-material-design: true
+  generate: true
+
+  assets:
+    - assets/icons/send_message.svg
+
 
 
