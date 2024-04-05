@@ -1,8 +1,8 @@
-class AuthException implements Exception {
+class GrpcException implements Exception {
   final String message;
   final Exception? thrownException;
 
-  AuthException({required this.message, this.thrownException});
+  GrpcException({required this.message, this.thrownException});
 
   @override
   String toString() {

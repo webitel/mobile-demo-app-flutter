@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:webitel_sdk/presentation/widget/message_item.dart';
+import 'package:webitel_sdk_package/webitel_sdk_package.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({
@@ -24,6 +25,7 @@ class _ChatPageState extends State<ChatPage> {
           Expanded(
             flex: 9,
             child: ListView(
+              controller: _scrollController,
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               children: [
                 SizedBox(
@@ -70,7 +72,10 @@ class _ChatPageState extends State<ChatPage> {
                           ),
                           const SizedBox(width: 16),
                           GestureDetector(
-                            onTap: () {},
+                            onTap: () {
+                              WebitelSdkPackage()
+                                  .pingServer(echo: [1, 2, 3, 4]);
+                            },
                             child: SizedBox(
                               height: 40,
                               width: 40,

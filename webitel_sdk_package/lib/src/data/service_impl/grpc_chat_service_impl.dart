@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:fixnum/fixnum.dart';
 import 'package:grpc/grpc.dart';
+import 'package:grpc/grpc_or_grpcweb.dart';
 import 'package:webitel_sdk_package/src/data/gateway/grpc_gateway.dart';
 import 'package:webitel_sdk_package/src/domain/entities/message.dart';
 import 'package:webitel_sdk_package/src/domain/services/grpc_chat/grpc_chat_service.dart';
-import 'package:webitel_sdk_package/src/exceptions/auth_exception.dart';
+import 'package:webitel_sdk_package/src/exceptions/grpc_exception.dart';
 import 'package:webitel_sdk_package/src/generated/chat/messages/message.pb.dart';
-import 'package:webitel_sdk_package/src/generated/portal/connect.pb.dart';
+import 'package:webitel_sdk_package/src/generated/portal/connect.pb.dart'
+    as portal;
 
 import '../../generated/google/protobuf/any.pb.dart';
 
@@ -16,8 +18,8 @@ class GrpcChatServiceImpl implements GrpcChatService {
 
   GrpcChatServiceImpl(this._grpcGateway);
 
-  final requestStreamController = StreamController<Request>();
-  ResponseStream<Update>? responseStream;
+  final requestStreamController = StreamController<portal.Request>();
+  ResponseStream<portal.Update>? responseStream;
 
   @override
   Future<String> connectToGrpcChannel({
@@ -39,7 +41,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
 
       try {
         responseStream = _grpcGateway.customerClient.connect(
-          Stream<Request>.fromIterable([request]),
+          Stream<portal.Request>.fromIterable([request]),
           options: options,
         );
       } catch (error) {
@@ -51,19 +53,75 @@ class GrpcChatServiceImpl implements GrpcChatService {
   }
 
   @override
-  Future<String> ping({required List<int> echo}) async {
+  Future<List<int>> ping({required List<int> echo}) async {
     try {
       final echoData = echo;
-      final pingEcho = Echo(data: echoData);
-      final request = Request(
+      final pingEcho = portal.Echo(data: echoData);
+      final request = portal.Request(
         path: '/webitel.portal.Customer/Ping',
         data: Any.pack(pingEcho),
       );
       requestStreamController.add(request);
-      return 'Ping sent successfully';
+      portal.Response? messageResponse;
+      bool? canUnpackIntoResponse;
+
+      if (responseStream != null) {
+        responseStream?.forEach((res) {
+          canUnpackIntoResponse = res.data.canUnpackInto(portal.Response());
+          if (canUnpackIntoResponse == true) {
+            messageResponse = res.data.unpackInto(portal.Response());
+            messageResponse?.data.unpackInto(portal.Echo());
+          } else {
+            throw GrpcException(message: 'Can not unpack into response');
+          }
+        });
+        return messageResponse!.data.value;
+      }
+      return [];
     } catch (error, _) {
-      print('Error occurred: $error');
-      return AuthException(message: error.toString()).message;
+      return [];
+    }
+  }
+
+  @override
+  Future<MessageEntity> sendMessage({required MessageEntity message}) async {
+    try {
+      final messageData = Message(
+        id: Int64.tryParseInt(message.id),
+      );
+
+      final request = portal.Request(
+        path: '/webitel.portal.Customer/SendMessage',
+        data: Any.pack(messageData),
+      );
+
+      final completer = Completer<MessageEntity>();
+      if (responseStream != null) {
+        responseStream?.forEach((response) {
+          final canUnpack = response.data.canUnpackInto(portal.Response());
+          if (canUnpack == true) {
+            final decodedResponse = response.data.unpackInto(portal.Response());
+            if (decodedResponse.id == message.id) {
+              final responseMessage = MessageEntity(
+                id: decodedResponse.id,
+                timestamp: decodedResponse.data.value.first,
+              );
+              completer.complete(responseMessage);
+            } else {
+              throw GrpcException(message: 'Ids are not equal');
+            }
+          } else {
+            throw GrpcException(message: 'Can not unpack into response');
+          }
+        });
+      }
+
+      requestStreamController.add(request);
+
+      final response = await completer.future;
+      return response;
+    } catch (error) {
+      return Future.error(GrpcException(message: error.toString()).message);
     }
   }
 
@@ -77,56 +135,5 @@ class GrpcChatServiceImpl implements GrpcChatService {
   Future<void> fetchUpdates() {
     // TODO: implement fetchUpdates
     throw UnimplementedError();
-  }
-
-  @override
-  Future<MessageEntity> sendMessage({required MessageEntity message}) async {
-    try {
-      final messageData = Message(
-        id: Int64.tryParseInt(message.id),
-      );
-
-      final request = Request(
-        path: '/webitel.portal.Customer/SendMessage',
-        data: Any.pack(messageData),
-      );
-
-      final completer = Completer<MessageEntity>();
-      if (responseStream != null) {
-        responseStream?.firstWhere((response) {
-          try {
-            final canUnpack = response.data.canUnpackInto(Message.getDefault());
-            return canUnpack &&
-                response.data.unpackInto(Message.getDefault()).id.toString() ==
-                    message.id;
-          } catch (_) {
-            return false;
-          }
-        }).then((response) {
-          try {
-            final responseData = response.data.unpackInto(Message.getDefault());
-            final responseId = responseData.id;
-
-            final responseMessage = MessageEntity(
-              id: responseId.toString(),
-              timestamp: 1,
-            );
-
-            completer.complete(responseMessage);
-          } catch (error) {
-            completer.completeError('Error sending message: $error');
-          }
-        }).catchError((error) {
-          completer.completeError('Error sending message: $error');
-        });
-      }
-
-      requestStreamController.add(request);
-
-      final response = await completer.future;
-      return response;
-    } catch (error) {
-      return Future.error(AuthException(message: error.toString()).message);
-    }
   }
 }

@@ -39,7 +39,7 @@ final class WebitelSdkPackage {
     );
   }
 
-  Future<String> pingServer({required List<int> echo}) async {
+  Future<List<int>> pingServer({required List<int> echo}) async {
     _pingUseCase = locator.get<PingUseCase>(instanceName: "PingUseCase");
     return await _pingUseCase(echo: echo);
   }
