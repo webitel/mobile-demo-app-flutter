@@ -1,17 +1,16 @@
 import 'dart:async';
 
-import 'package:fixnum/fixnum.dart';
 import 'package:grpc/grpc.dart';
 import 'package:grpc/grpc_or_grpcweb.dart';
+import 'package:uuid/uuid.dart';
 import 'package:webitel_sdk_package/src/data/gateway/grpc_gateway.dart';
 import 'package:webitel_sdk_package/src/domain/entities/message.dart';
 import 'package:webitel_sdk_package/src/domain/services/grpc_chat/grpc_chat_service.dart';
 import 'package:webitel_sdk_package/src/exceptions/grpc_exception.dart';
-import 'package:webitel_sdk_package/src/generated/chat/messages/message.pb.dart';
+import 'package:webitel_sdk_package/src/generated/google/protobuf/any.pb.dart';
 import 'package:webitel_sdk_package/src/generated/portal/connect.pb.dart'
     as portal;
-
-import '../../generated/google/protobuf/any.pb.dart';
+import 'package:webitel_sdk_package/src/generated/portal/messages.pb.dart';
 
 class GrpcChatServiceImpl implements GrpcChatService {
   final GrpcGateway _grpcGateway;
@@ -20,6 +19,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
 
   final requestStreamController = StreamController<portal.Request>();
   ResponseStream<portal.Update>? responseStream;
+  final uuid = Uuid();
 
   @override
   Future<String> connectToGrpcChannel({
@@ -28,6 +28,12 @@ class GrpcChatServiceImpl implements GrpcChatService {
     required String accessToken,
   }) async {
     await _grpcGateway.init();
+    final pingEcho = portal.Echo(data: [1, 2, 3, 4]);
+    final pingRequest = portal.Request(
+      path: '/webitel.portal.Customer/Ping',
+      data: Any.pack(pingEcho),
+    );
+    requestStreamController.add(pingRequest);
 
     requestStreamController.stream.listen((request) {
       CallOptions options = CallOptions(
@@ -57,11 +63,12 @@ class GrpcChatServiceImpl implements GrpcChatService {
     try {
       final echoData = echo;
       final pingEcho = portal.Echo(data: echoData);
-      final request = portal.Request(
+
+      final pingRequest = portal.Request(
         path: '/webitel.portal.Customer/Ping',
         data: Any.pack(pingEcho),
       );
-      requestStreamController.add(request);
+      requestStreamController.add(pingRequest);
       portal.Echo? echoResponse;
 
       if (responseStream != null) {
@@ -98,29 +105,39 @@ class GrpcChatServiceImpl implements GrpcChatService {
   @override
   Future<MessageEntity> sendMessage({required MessageEntity message}) async {
     try {
-      final messageData = Message(
-        id: Int64.tryParseInt(message.id),
-      );
-
+      final newMessageRequest = SendMessageRequest(text: 'Test message');
+      final id = uuid.v4();
       final request = portal.Request(
         path: '/webitel.portal.Customer/SendMessage',
-        data: Any.pack(messageData),
+        data: Any.pack(newMessageRequest),
+        id: id,
       );
 
       final completer = Completer<MessageEntity>();
       if (responseStream != null) {
         responseStream?.forEach((response) {
-          final canUnpack = response.data.canUnpackInto(portal.Response());
-          if (canUnpack == true) {
+          final canUnpackIntoResponse =
+              response.data.canUnpackInto(portal.Response());
+          if (canUnpackIntoResponse == true) {
             final decodedResponse = response.data.unpackInto(portal.Response());
-            if (decodedResponse.id == message.id) {
-              final responseMessage = MessageEntity(
-                id: decodedResponse.id,
-                timestamp: decodedResponse.data.value.first,
-              );
-              completer.complete(responseMessage);
+            final canUnpackIntoUpdateNewMessage =
+                decodedResponse.data.canUnpackInto(UpdateNewMessage());
+            if (canUnpackIntoUpdateNewMessage == true) {
+              final decodedUpdateNewMessage =
+                  decodedResponse.data.unpackInto(UpdateNewMessage());
+              if (decodedUpdateNewMessage.message.id.toString() == id) {
+                completer.complete(
+                  MessageEntity(
+                    id: decodedUpdateNewMessage.message.id.toString(),
+                    timestamp: decodedUpdateNewMessage.message.date.toInt(),
+                  ),
+                );
+              } else {
+                throw GrpcException(message: 'Ids are not equal');
+              }
             } else {
-              throw GrpcException(message: 'Ids are not equal');
+              throw GrpcException(
+                  message: 'Can not unpack into New Message Update');
             }
           } else {
             throw GrpcException(message: 'Can not unpack into response');
