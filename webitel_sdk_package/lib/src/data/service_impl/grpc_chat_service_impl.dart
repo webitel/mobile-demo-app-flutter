@@ -62,22 +62,34 @@ class GrpcChatServiceImpl implements GrpcChatService {
         data: Any.pack(pingEcho),
       );
       requestStreamController.add(request);
-      portal.Response? messageResponse;
-      bool? canUnpackIntoResponse;
+      portal.Echo? echoResponse;
 
       if (responseStream != null) {
         responseStream?.forEach((res) {
-          canUnpackIntoResponse = res.data.canUnpackInto(portal.Response());
+          final canUnpackIntoResponse =
+              res.data.canUnpackInto(portal.Response());
           if (canUnpackIntoResponse == true) {
-            messageResponse = res.data.unpackInto(portal.Response());
-            messageResponse?.data.unpackInto(portal.Echo());
+            final response = res.data.unpackInto(portal.Response());
+            final canUnpackIntoEcho =
+                response.data.canUnpackInto(portal.Echo());
+            if (canUnpackIntoEcho == true) {
+              echoResponse = response.data.unpackInto(portal.Echo());
+              print('Echo response: ${echoResponse!.data}');
+            } else {
+              throw GrpcException(message: 'Can not unpack into Echo');
+            }
           } else {
             throw GrpcException(message: 'Can not unpack into response');
           }
         });
-        return messageResponse!.data.value;
+        if (echoResponse != null) {
+          return echoResponse!.data;
+        } else {
+          return [];
+        }
+      } else {
+        throw GrpcException(message: 'Grpc stream is null');
       }
-      return [];
     } catch (error, _) {
       return [];
     }
