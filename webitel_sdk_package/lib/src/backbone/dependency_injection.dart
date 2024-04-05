@@ -1,14 +1,19 @@
 import 'package:get_it/get_it.dart';
 import 'package:webitel_sdk_package/src/data/gateway/grpc_gateway.dart';
+import 'package:webitel_sdk_package/src/data/service_impl/grpc_call_service_impl.dart';
 import 'package:webitel_sdk_package/src/data/service_impl/grpc_chat_service_impl.dart';
 import 'package:webitel_sdk_package/src/data/service_impl/initialize_service_impl.dart';
+import 'package:webitel_sdk_package/src/domain/services/grpc_call/grpc_call_service.dart';
 import 'package:webitel_sdk_package/src/domain/services/grpc_chat/grpc_chat_service.dart';
 import 'package:webitel_sdk_package/src/domain/services/initialize/initialize_service.dart';
-import 'package:webitel_sdk_package/src/domain/usecase/auth/connect_to_grpc_channel_usecase.dart';
-import 'package:webitel_sdk_package/src/domain/usecase/auth/fetch_dialogs_usecase.dart';
-import 'package:webitel_sdk_package/src/domain/usecase/auth/fetch_updates_usecase.dart';
-import 'package:webitel_sdk_package/src/domain/usecase/auth/ping_usecase.dart';
-import 'package:webitel_sdk_package/src/domain/usecase/auth/send_message_usecase.dart';
+import 'package:webitel_sdk_package/src/domain/usecase/grpc_call/end_call_usecase.dart';
+import 'package:webitel_sdk_package/src/domain/usecase/grpc_call/hold_call_usecase.dart';
+import 'package:webitel_sdk_package/src/domain/usecase/grpc_call/make_call_usecase.dart';
+import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/connect_to_grpc_channel_usecase.dart';
+import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/fetch_dialogs_usecase.dart';
+import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/fetch_updates_usecase.dart';
+import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/ping_usecase.dart';
+import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/send_message_usecase.dart';
 
 import '../domain/usecase/initialize/init_grpc_usecase.dart';
 
@@ -23,6 +28,7 @@ Future<void> registerDi() async {
       () => InitializeServiceImpl(locator.get()));
   locator.registerLazySingleton<GrpcChatService>(
       () => GrpcChatServiceImpl(locator.get()));
+  locator.registerLazySingleton<GrpcCallService>(() => GrpcCallServiceImpl());
 
   //Use case
   locator.registerLazySingleton<InitGrpcUseCase>(
@@ -35,7 +41,7 @@ Future<void> registerDi() async {
       () => ConnectToGrpcChannelImplUseCase(locator.get()),
       instanceName: "ConnectToGrpcChannelUseCase");
   locator.registerLazySingleton<FetchDialogsUseCase>(
-      () => FetchDialogsUseCaseImplUseCase(locator.get()),
+      () => FetchDialogsImplUseCase(locator.get()),
       instanceName: "FetchDialogsUseCase");
   locator.registerLazySingleton<FetchUpdatesUseCase>(
       () => FetchUpdatesUseCaseImplUseCase(locator.get()),
@@ -43,4 +49,13 @@ Future<void> registerDi() async {
   locator.registerLazySingleton<SendMessageUseCase>(
       () => SendMessageUseCaseImplUseCase(locator.get()),
       instanceName: "SendMessageUseCase");
+  locator.registerLazySingleton<MakeCallUseCase>(
+      () => MakeCallImplUseCase(locator.get()),
+      instanceName: "MakeCallUseCase");
+  locator.registerLazySingleton<HoldCallUseCase>(
+      () => HoldCallImplUseCase(locator.get()),
+      instanceName: "HoldCallUseCase");
+  locator.registerLazySingleton<EndCallUseCase>(
+      () => EndCallImplUseCase(locator.get()),
+      instanceName: "EndCallUseCase");
 }

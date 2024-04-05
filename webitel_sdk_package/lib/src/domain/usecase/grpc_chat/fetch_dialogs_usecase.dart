@@ -4,10 +4,10 @@ abstract interface class FetchDialogsUseCase {
   Future<void> call();
 }
 
-class FetchDialogsUseCaseImplUseCase implements FetchDialogsUseCase {
+class FetchDialogsImplUseCase implements FetchDialogsUseCase {
   final GrpcChatService _grpcChatService;
 
-  FetchDialogsUseCaseImplUseCase(this._grpcChatService);
+  FetchDialogsImplUseCase(this._grpcChatService);
 
   @override
   Future<void> call() => _grpcChatService.fetchDialogs();

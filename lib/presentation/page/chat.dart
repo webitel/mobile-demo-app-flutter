@@ -73,7 +73,7 @@ class _ChatPageState extends State<ChatPage> {
                           const SizedBox(width: 16),
                           GestureDetector(
                             onTap: () {
-                              WebitelSdkPackage()
+                              WebitelSdkPackage.instance.messageHandler
                                   .pingServer(echo: [1, 2, 3, 4]);
                             },
                             child: SizedBox(
