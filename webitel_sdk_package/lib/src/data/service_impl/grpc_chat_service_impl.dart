@@ -144,14 +144,14 @@ class GrpcChatServiceImpl implements GrpcChatService {
               );
               print('completed');
             } else {
-              throw GrpcException(
-                  message: 'Can not unpack into Update New Message ');
+              // throw GrpcException(
+              //     message: 'Can not unpack into Update New Message ');
             }
           } else {
-            throw GrpcException(message: 'Ids are not equal');
+            // throw GrpcException(message: 'Ids are not equal');
           }
         } else {
-          throw GrpcException(message: 'Can not unpack into response');
+          // throw GrpcException(message: 'Can not unpack into response');
         }
       });
 

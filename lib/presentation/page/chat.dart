@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:webitel_sdk/backbone/dependency_injection.dart' as di;
 import 'package:webitel_sdk/domain/entity/dialog_message.dart';
@@ -44,10 +45,18 @@ class _ChatPageState extends State<ChatPage> {
                     trackVisibility: true,
                     thickness: 2,
                     thumbVisibility: true,
-                    child: ListView.builder(
-                      itemCount: 20,
-                      itemBuilder: (BuildContext context, message) {
-                        return const MessageItem();
+                    child: BlocBuilder<ChatBloc, ChatState>(
+                      bloc: chatBloc,
+                      builder: (context, state) {
+                        return ListView.builder(
+                          itemCount: state.dialogMessages.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return MessageItem(
+                              content: state
+                                  .dialogMessages[index].dialogMessageContent,
+                            );
+                          },
+                        );
                       },
                     ),
                   ),

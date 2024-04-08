@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 class MessageItem extends StatelessWidget {
+  final String content;
+
   const MessageItem({
+    required this.content,
     super.key,
   });
 
@@ -14,10 +17,10 @@ class MessageItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         color: Colors.yellow.withOpacity(0.2),
       ),
-      child: const Center(
+      child: Center(
           child: Text(
-        'Test message',
-        style: TextStyle(
+        content,
+        style: const TextStyle(
           fontSize: 16,
           color: Colors.black,
           fontWeight: FontWeight.w600,
