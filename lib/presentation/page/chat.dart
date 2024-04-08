@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:webitel_sdk/backbone/dependency_injection.dart' as di;
+import 'package:webitel_sdk/domain/entity/dialog_message.dart';
+import 'package:webitel_sdk/presentation/bloc/chat_bloc.dart';
 import 'package:webitel_sdk/presentation/widget/message_item.dart';
-import 'package:webitel_sdk_package/webitel_sdk_package.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({
@@ -13,9 +15,16 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
+  late ChatBloc chatBloc;
   final TextEditingController _textEditingController = TextEditingController();
-
   final ScrollController _scrollController = ScrollController();
+  String messageContent = '';
+
+  @override
+  void initState() {
+    chatBloc = di.locator.get<ChatBloc>();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +70,9 @@ class _ChatPageState extends State<ChatPage> {
                                 maxLines: null,
                                 keyboardType: TextInputType.multiline,
                                 controller: _textEditingController,
-                                onChanged: (value) {},
+                                onChanged: (value) {
+                                  messageContent = value;
+                                },
                                 decoration: const InputDecoration(
                                   hintText: 'Type here',
                                   border: InputBorder.none,
@@ -73,8 +84,18 @@ class _ChatPageState extends State<ChatPage> {
                           const SizedBox(width: 16),
                           GestureDetector(
                             onTap: () {
-                              WebitelSdkPackage.instance.messageHandler
-                                  .pingServer(echo: [1, 2, 3, 4]);
+                              chatBloc.add(
+                                SendDialogMessageEvent(
+                                  dialogMessageEntity: DialogMessageEntity(
+                                    dialogMessageContent: messageContent,
+                                    peer: Peer(
+                                      id: '',
+                                      type: 'chat',
+                                      name: '',
+                                    ),
+                                  ),
+                                ),
+                              );
                             },
                             child: SizedBox(
                               height: 40,

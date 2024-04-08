@@ -1,11 +1,19 @@
 import 'package:bloc/bloc.dart';
-import 'package:meta/meta.dart';
+import 'package:equatable/equatable.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:webitel_sdk/domain/entity/dialog_message.dart';
+import 'package:webitel_sdk/domain/usecase/send_dialog_message_usecase.dart';
 
 part 'chat_event.dart';
 part 'chat_state.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
-  ChatBloc() : super(ChatState()) {
-    on<SendDialogMessageEvent>((event, emit) {});
+  final SendDialogMessageUseCase _sendDialogMessageUseCase;
+
+  ChatBloc(this._sendDialogMessageUseCase) : super(ChatState.initial()) {
+    on<SendDialogMessageEvent>((event, emit) async {
+      await _sendDialogMessageUseCase(
+          dialogMessageEntity: event.dialogMessageEntity);
+    });
   }
 }

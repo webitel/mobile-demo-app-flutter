@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:webitel_sdk/data/service_impl/chat_service_impl.dart';
 import 'package:webitel_sdk/domain/service/chat_service.dart';
 import 'package:webitel_sdk/domain/usecase/send_dialog_message_usecase.dart';
+import 'package:webitel_sdk/presentation/bloc/chat_bloc.dart';
 
 final GetIt locator = GetIt.instance;
 
@@ -13,4 +14,7 @@ Future<void> registerDi() async {
   locator.registerLazySingleton<SendDialogMessageUseCase>(
       () => SendDialogMessageImplUseCase(locator.get()),
       instanceName: "SendDialogMessageUseCase");
+
+  //BloC
+  locator.registerLazySingleton<ChatBloc>(() => ChatBloc(locator.get()));
 }
