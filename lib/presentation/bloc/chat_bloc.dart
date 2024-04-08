@@ -12,7 +12,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   ChatBloc(this._sendDialogMessageUseCase) : super(ChatState.initial()) {
     on<SendDialogMessageEvent>((event, emit) async {
-      await _sendDialogMessageUseCase(
+      final message = await _sendDialogMessageUseCase(
           dialogMessageEntity: event.dialogMessageEntity);
     });
   }

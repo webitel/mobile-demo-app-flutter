@@ -1,9 +1,21 @@
 class DialogMessageEntity {
-  final String id;
-  final int timestamp;
+  final String dialogMessageContent;
+  final PeerInfo peer;
 
   DialogMessageEntity({
+    required this.dialogMessageContent,
+    required this.peer,
+  });
+}
+
+class PeerInfo {
+  final String id;
+  final String type;
+  final String name;
+
+  PeerInfo({
     required this.id,
-    required this.timestamp,
+    required this.type,
+    required this.name,
   });
 }

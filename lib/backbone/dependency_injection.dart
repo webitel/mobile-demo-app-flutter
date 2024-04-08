@@ -16,5 +16,7 @@ Future<void> registerDi() async {
       instanceName: "SendDialogMessageUseCase");
 
   //BloC
-  locator.registerLazySingleton<ChatBloc>(() => ChatBloc(locator.get()));
+  locator.registerLazySingleton<ChatBloc>(() => ChatBloc(
+      locator<SendDialogMessageUseCase>(
+          instanceName: "SendDialogMessageUseCase")));
 }

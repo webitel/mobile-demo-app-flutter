@@ -16,11 +16,13 @@ import 'package:webitel_sdk_package/src/generated/portal/messages.pb.dart';
 class GrpcChatServiceImpl implements GrpcChatService {
   final GrpcGateway _grpcGateway;
 
-  GrpcChatServiceImpl(this._grpcGateway);
-
   final requestStreamController = StreamController<portal.Request>();
-  ResponseStream<portal.Update>? responseStream;
+  late final StreamController<portal.Update> _responseStreamController;
   final uuid = Uuid();
+
+  GrpcChatServiceImpl(this._grpcGateway) {
+    _responseStreamController = StreamController<portal.Update>.broadcast();
+  }
 
   @override
   Future<String> connectToGrpcChannel({
@@ -29,12 +31,6 @@ class GrpcChatServiceImpl implements GrpcChatService {
     required String accessToken,
   }) async {
     await _grpcGateway.init();
-    final pingEcho = portal.Echo(data: [1, 2, 3, 4]);
-    final pingRequest = portal.Request(
-      path: '/webitel.portal.Customer/Ping',
-      data: Any.pack(pingEcho),
-    );
-    requestStreamController.add(pingRequest);
 
     requestStreamController.stream.listen((request) {
       CallOptions options = CallOptions(
@@ -46,14 +42,14 @@ class GrpcChatServiceImpl implements GrpcChatService {
         timeout: Duration(seconds: 60),
       );
 
-      try {
-        responseStream = _grpcGateway.customerClient.connect(
-          Stream<portal.Request>.fromIterable([request]),
-          options: options,
-        );
-      } catch (error) {
-        print('Error connecting to gRPC channel: $error');
-      }
+      _grpcGateway.customerClient
+          .connect(
+        Stream<portal.Request>.fromIterable([request]),
+        options: options,
+      )
+          .listen((response) {
+        _responseStreamController.add(response);
+      });
     });
 
     return 'Connected successfully';
@@ -62,41 +58,37 @@ class GrpcChatServiceImpl implements GrpcChatService {
   @override
   Future<List<int>> ping({required List<int> echo}) async {
     try {
+      final id = uuid.v4();
       final echoData = echo;
       final pingEcho = portal.Echo(data: echoData);
 
       final pingRequest = portal.Request(
         path: '/webitel.portal.Customer/Ping',
         data: Any.pack(pingEcho),
+        id: id,
       );
       requestStreamController.add(pingRequest);
       portal.Echo? echoResponse;
 
-      if (responseStream != null) {
-        responseStream?.forEach((res) {
-          final canUnpackIntoResponse =
-              res.data.canUnpackInto(portal.Response());
-          if (canUnpackIntoResponse == true) {
-            final response = res.data.unpackInto(portal.Response());
-            final canUnpackIntoEcho =
-                response.data.canUnpackInto(portal.Echo());
-            if (canUnpackIntoEcho == true) {
-              echoResponse = response.data.unpackInto(portal.Echo());
-              print('Echo response: ${echoResponse!.data}');
-            } else {
-              throw GrpcException(message: 'Can not unpack into Echo');
-            }
+      _responseStreamController.stream.listen((res) {
+        final canUnpackIntoResponse = res.data.canUnpackInto(portal.Response());
+        if (canUnpackIntoResponse == true) {
+          final response = res.data.unpackInto(portal.Response());
+          final canUnpackIntoEcho = response.data.canUnpackInto(portal.Echo());
+          if (canUnpackIntoEcho == true) {
+            echoResponse = response.data.unpackInto(portal.Echo());
+            print('Echo response: ${echoResponse!.data}');
           } else {
-            throw GrpcException(message: 'Can not unpack into response');
+            throw GrpcException(message: 'Can not unpack into Echo');
           }
-        });
-        if (echoResponse != null) {
-          return echoResponse!.data;
         } else {
-          return [];
+          throw GrpcException(message: 'Can not unpack into response');
         }
+      });
+      if (echoResponse != null) {
+        return echoResponse!.data;
       } else {
-        throw GrpcException(message: 'Grpc stream is null');
+        return [];
       }
     } catch (error, _) {
       return [];
@@ -107,50 +99,61 @@ class GrpcChatServiceImpl implements GrpcChatService {
   Future<DialogMessageEntity> sendDialogMessage(
       {required DialogMessageEntity message}) async {
     try {
-      final newMessageRequest = SendMessageRequest(
-        text: 'Test message',
-        peer: Peer(id: '', type: '', name: ''),
-      );
       final id = uuid.v4();
+
+      final newMessageRequest = SendMessageRequest(
+        text: message.dialogMessageContent,
+        peer: Peer(
+          id: message.peer.id,
+          type: message.peer.type,
+          name: message.peer.name,
+        ),
+      );
+
       final request = portal.Request(
-        path: '/webitel.portal.Customer/SendMessage',
+        path: '/webitel.portal.ChatMessages/SendMessage',
         data: Any.pack(newMessageRequest),
         id: id,
       );
 
+      requestStreamController.add(request);
+
       final completer = Completer<DialogMessageEntity>();
-      if (responseStream != null) {
-        responseStream?.forEach((response) {
-          final canUnpackIntoResponse =
-              response.data.canUnpackInto(portal.Response());
-          if (canUnpackIntoResponse == true) {
-            final decodedResponse = response.data.unpackInto(portal.Response());
+
+      _responseStreamController.stream.listen((response) {
+        final canUnpackIntoResponse =
+            response.data.canUnpackInto(portal.Response());
+        if (canUnpackIntoResponse == true) {
+          final decodedResponse = response.data.unpackInto(portal.Response());
+          if (decodedResponse.id == id) {
             final canUnpackIntoUpdateNewMessage =
                 decodedResponse.data.canUnpackInto(UpdateNewMessage());
             if (canUnpackIntoUpdateNewMessage == true) {
-              final decodedUpdateNewMessage =
+              final unpackedMessage =
                   decodedResponse.data.unpackInto(UpdateNewMessage());
-              if (decodedUpdateNewMessage.message.id.toString() == id) {
-                completer.complete(
-                  DialogMessageEntity(
-                    id: decodedUpdateNewMessage.message.id.toString(),
-                    timestamp: decodedUpdateNewMessage.message.date.toInt(),
+
+              completer.complete(
+                DialogMessageEntity(
+                  dialogMessageContent: unpackedMessage.message.text,
+                  peer: PeerInfo(
+                    name: unpackedMessage.message.chat.peer.name,
+                    type: unpackedMessage.message.chat.peer.type,
+                    id: unpackedMessage.message.chat.peer.id,
                   ),
-                );
-              } else {
-                throw GrpcException(message: 'Ids are not equal');
-              }
+                ),
+              );
+              print('completed');
             } else {
               throw GrpcException(
-                  message: 'Can not unpack into New Message Update');
+                  message: 'Can not unpack into Update New Message ');
             }
           } else {
-            throw GrpcException(message: 'Can not unpack into response');
+            throw GrpcException(message: 'Ids are not equal');
           }
-        });
-      }
-
-      requestStreamController.add(request);
+        } else {
+          throw GrpcException(message: 'Can not unpack into response');
+        }
+      });
 
       final response = await completer.future;
       return response;
