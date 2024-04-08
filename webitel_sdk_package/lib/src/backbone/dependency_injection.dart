@@ -46,8 +46,8 @@ Future<void> registerDi() async {
   locator.registerLazySingleton<FetchUpdatesUseCase>(
       () => FetchUpdatesUseCaseImplUseCase(locator.get()),
       instanceName: "FetchUpdatesUseCase");
-  locator.registerLazySingleton<SendMessageUseCase>(
-      () => SendMessageUseCaseImplUseCase(locator.get()),
+  locator.registerLazySingleton<SendDialogMessageUseCase>(
+      () => SendDialogMessageImplUseCase(locator.get()),
       instanceName: "SendMessageUseCase");
   locator.registerLazySingleton<MakeCallUseCase>(
       () => MakeCallImplUseCase(locator.get()),

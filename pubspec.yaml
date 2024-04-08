@@ -17,6 +17,7 @@ dependencies:
   uuid: ^4.3.3
   flutter_svg: ^2.0.10+1
   build_runner: ^2.4.9
+  get_it: ^7.6.8
   webitel_sdk_package:
     path: webitel_sdk_package/
 

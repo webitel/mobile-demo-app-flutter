@@ -1,4 +1,4 @@
-import 'package:webitel_sdk_package/src/domain/entities/message.dart';
+import 'package:webitel_sdk_package/src/domain/entities/dialog_message.dart';
 
 abstract interface class GrpcChatService {
   Future<List<int>> ping({required List<int> echo});
@@ -13,5 +13,6 @@ abstract interface class GrpcChatService {
 
   Future<void> fetchUpdates();
 
-  Future<MessageEntity> sendMessage({required MessageEntity message});
+  Future<DialogMessageEntity> sendDialogMessage(
+      {required DialogMessageEntity message});
 }

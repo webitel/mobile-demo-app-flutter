@@ -1,17 +1,17 @@
 import 'package:webitel_sdk_package/src/backbone/dependency_injection.dart';
-import 'package:webitel_sdk_package/src/domain/entities/message.dart';
+import 'package:webitel_sdk_package/src/domain/entities/dialog_message.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/connect_to_grpc_channel_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/ping_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/send_message_usecase.dart';
 
 class MessageHandler {
-  late SendMessageUseCase _sendMessageUseCase;
+  late SendDialogMessageUseCase _sendMessageUseCase;
   late ConnectToGrpcChannelUseCase _connectToGrpcChannelUseCase;
   late PingUseCase _pingUseCase;
 
   MessageHandler() {
-    _sendMessageUseCase =
-        locator.get<SendMessageUseCase>(instanceName: "SendMessageUseCase");
+    _sendMessageUseCase = locator.get<SendDialogMessageUseCase>(
+        instanceName: "SendMessageUseCase");
     _connectToGrpcChannelUseCase = locator.get<ConnectToGrpcChannelUseCase>(
         instanceName: "ConnectToGrpcChannelUseCase");
     _pingUseCase = locator.get<PingUseCase>(instanceName: "PingUseCase");
@@ -33,9 +33,9 @@ class MessageHandler {
     return await _pingUseCase(echo: echo);
   }
 
-  Future<MessageEntity> sendMessage(
+  Future<DialogMessageEntity> sendDialogMessage(
       {required String id, required int timestamp}) async {
     return await _sendMessageUseCase(
-        message: MessageEntity(id: id, timestamp: timestamp));
+        message: DialogMessageEntity(id: id, timestamp: timestamp));
   }
 }

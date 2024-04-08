@@ -4,9 +4,10 @@ import 'package:grpc/grpc.dart';
 import 'package:grpc/grpc_or_grpcweb.dart';
 import 'package:uuid/uuid.dart';
 import 'package:webitel_sdk_package/src/data/gateway/grpc_gateway.dart';
-import 'package:webitel_sdk_package/src/domain/entities/message.dart';
+import 'package:webitel_sdk_package/src/domain/entities/dialog_message.dart';
 import 'package:webitel_sdk_package/src/domain/services/grpc_chat/grpc_chat_service.dart';
 import 'package:webitel_sdk_package/src/exceptions/grpc_exception.dart';
+import 'package:webitel_sdk_package/src/generated/chat/messages/peer.pb.dart';
 import 'package:webitel_sdk_package/src/generated/google/protobuf/any.pb.dart';
 import 'package:webitel_sdk_package/src/generated/portal/connect.pb.dart'
     as portal;
@@ -103,9 +104,13 @@ class GrpcChatServiceImpl implements GrpcChatService {
   }
 
   @override
-  Future<MessageEntity> sendMessage({required MessageEntity message}) async {
+  Future<DialogMessageEntity> sendDialogMessage(
+      {required DialogMessageEntity message}) async {
     try {
-      final newMessageRequest = SendMessageRequest(text: 'Test message');
+      final newMessageRequest = SendMessageRequest(
+        text: 'Test message',
+        peer: Peer(id: '', type: '', name: ''),
+      );
       final id = uuid.v4();
       final request = portal.Request(
         path: '/webitel.portal.Customer/SendMessage',
@@ -113,7 +118,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
         id: id,
       );
 
-      final completer = Completer<MessageEntity>();
+      final completer = Completer<DialogMessageEntity>();
       if (responseStream != null) {
         responseStream?.forEach((response) {
           final canUnpackIntoResponse =
@@ -127,7 +132,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
                   decodedResponse.data.unpackInto(UpdateNewMessage());
               if (decodedUpdateNewMessage.message.id.toString() == id) {
                 completer.complete(
-                  MessageEntity(
+                  DialogMessageEntity(
                     id: decodedUpdateNewMessage.message.id.toString(),
                     timestamp: decodedUpdateNewMessage.message.date.toInt(),
                   ),

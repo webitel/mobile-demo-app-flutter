@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:webitel_sdk/backbone/dependency_injection.dart';
 import 'package:webitel_sdk_package/webitel_sdk_package.dart';
 
 import 'presentation/page/chat.dart';
 
 void main() async {
   runApp(const MyApp());
-
+  await registerDi();
   await WebitelSdkPackage.instance.initializer.initGrpc();
   await WebitelSdkPackage.instance.messageHandler.connectToGrpcChannel(
     deviceId: 'some id',

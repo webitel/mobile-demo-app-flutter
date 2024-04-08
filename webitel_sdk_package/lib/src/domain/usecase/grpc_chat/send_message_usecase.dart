@@ -1,16 +1,16 @@
-import 'package:webitel_sdk_package/src/domain/entities/message.dart';
+import 'package:webitel_sdk_package/src/domain/entities/dialog_message.dart';
 import 'package:webitel_sdk_package/src/domain/services/grpc_chat/grpc_chat_service.dart';
 
-abstract interface class SendMessageUseCase {
-  Future<MessageEntity> call({required MessageEntity message});
+abstract interface class SendDialogMessageUseCase {
+  Future<DialogMessageEntity> call({required DialogMessageEntity message});
 }
 
-class SendMessageUseCaseImplUseCase implements SendMessageUseCase {
+class SendDialogMessageImplUseCase implements SendDialogMessageUseCase {
   final GrpcChatService _grpcChatService;
 
-  SendMessageUseCaseImplUseCase(this._grpcChatService);
+  SendDialogMessageImplUseCase(this._grpcChatService);
 
   @override
-  Future<MessageEntity> call({required MessageEntity message}) =>
-      _grpcChatService.sendMessage(message: message);
+  Future<DialogMessageEntity> call({required DialogMessageEntity message}) =>
+      _grpcChatService.sendDialogMessage(message: message);
 }

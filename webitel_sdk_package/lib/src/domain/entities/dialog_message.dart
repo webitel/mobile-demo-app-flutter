@@ -1,8 +1,8 @@
-class MessageEntity {
+class DialogMessageEntity {
   final String id;
   final int timestamp;
 
-  MessageEntity({
+  DialogMessageEntity({
     required this.id,
     required this.timestamp,
   });
