@@ -30,29 +30,34 @@ class GrpcChatServiceImpl implements GrpcChatService {
     required String clientToken,
     required String accessToken,
   }) async {
-    await _grpcGateway.init();
+    try {
+      await _grpcGateway.init();
 
-    requestStreamController.stream.listen((request) {
-      CallOptions options = CallOptions(
-        metadata: {
-          'x-portal-device': deviceId,
-          'x-portal-client': clientToken,
-          'x-portal-access': accessToken,
-        },
-        timeout: Duration(seconds: 60),
-      );
+      requestStreamController.stream.listen((request) {
+        CallOptions options = CallOptions(
+          metadata: {
+            'x-portal-device': deviceId,
+            'x-portal-client': clientToken,
+            'x-portal-access': accessToken,
+          },
+          timeout: Duration(seconds: 60),
+        );
 
-      _grpcGateway.customerClient
-          .connect(
-        Stream<portal.Request>.fromIterable([request]),
-        options: options,
-      )
-          .listen((response) {
-        _responseStreamController.add(response);
+        _grpcGateway.customerClient
+            .connect(
+          Stream<portal.Request>.fromIterable([request]),
+          options: options,
+        )
+            .listen((response) {
+          _responseStreamController.add(response);
+        }, onError: (error) {
+          _responseStreamController.addError(error);
+        });
       });
-    });
-
-    return 'Connected successfully';
+    } catch (error) {
+      print('SocketException occurred: $error');
+    }
+    return '';
   }
 
   @override
@@ -98,68 +103,100 @@ class GrpcChatServiceImpl implements GrpcChatService {
   @override
   Future<DialogMessageEntity> sendDialogMessage(
       {required DialogMessageEntity message}) async {
-    try {
-      final id = uuid.v4();
+    final maxRetries = 5;
+    final completer = Completer<DialogMessageEntity>();
+    var attempt = 0;
+    var consecutiveErrors = 0;
 
-      final newMessageRequest = SendMessageRequest(
-        text: message.dialogMessageContent,
-        peer: Peer(
-          id: message.peer.id,
-          type: message.peer.type,
-          name: message.peer.name,
-        ),
-      );
+    while (!completer.isCompleted && attempt < maxRetries) {
+      try {
+        final id = uuid.v4();
 
-      final request = portal.Request(
-        path: '/webitel.portal.ChatMessages/SendMessage',
-        data: Any.pack(newMessageRequest),
-        id: id,
-      );
+        final newMessageRequest = SendMessageRequest(
+          text: message.dialogMessageContent,
+          peer: Peer(
+            id: message.peer.id,
+            type: message.peer.type,
+            name: message.peer.name,
+          ),
+        );
 
-      requestStreamController.add(request);
+        final request = portal.Request(
+          path: '/webitel.portal.ChatMessages/SendMessage',
+          data: Any.pack(newMessageRequest),
+          id: id,
+        );
 
-      final completer = Completer<DialogMessageEntity>();
+        requestStreamController.add(request);
 
-      _responseStreamController.stream.listen((response) {
-        final canUnpackIntoResponse =
-            response.data.canUnpackInto(portal.Response());
-        if (canUnpackIntoResponse == true) {
-          final decodedResponse = response.data.unpackInto(portal.Response());
-          if (decodedResponse.id == id) {
-            final canUnpackIntoUpdateNewMessage =
-                decodedResponse.data.canUnpackInto(UpdateNewMessage());
-            if (canUnpackIntoUpdateNewMessage == true) {
-              final unpackedMessage =
-                  decodedResponse.data.unpackInto(UpdateNewMessage());
+        StreamSubscription<portal.Update>? subscription;
+        subscription = _responseStreamController.stream.listen((response) {
+          final canUnpackIntoResponse =
+              response.data.canUnpackInto(portal.Response());
+          if (canUnpackIntoResponse == true) {
+            final decodedResponse = response.data.unpackInto(portal.Response());
+            if (decodedResponse.id == id) {
+              final canUnpackIntoUpdateNewMessage =
+                  decodedResponse.data.canUnpackInto(UpdateNewMessage());
+              if (canUnpackIntoUpdateNewMessage == true) {
+                final unpackedMessage =
+                    decodedResponse.data.unpackInto(UpdateNewMessage());
 
-              completer.complete(
-                DialogMessageEntity(
-                  dialogMessageContent: unpackedMessage.message.text,
-                  peer: PeerInfo(
-                    name: unpackedMessage.message.chat.peer.name,
-                    type: unpackedMessage.message.chat.peer.type,
-                    id: unpackedMessage.message.chat.peer.id,
+                completer.complete(
+                  DialogMessageEntity(
+                    dialogMessageContent: unpackedMessage.message.text,
+                    peer: PeerInfo(
+                      name: unpackedMessage.message.chat.peer.name,
+                      type: unpackedMessage.message.chat.peer.type,
+                      id: unpackedMessage.message.chat.peer.id,
+                    ),
                   ),
-                ),
-              );
-              print('completed');
-            } else {
-              // throw GrpcException(
-              //     message: 'Can not unpack into Update New Message ');
+                );
+                print('completed');
+                subscription?.cancel();
+              }
             }
-          } else {
-            // throw GrpcException(message: 'Ids are not equal');
           }
-        } else {
-          // throw GrpcException(message: 'Can not unpack into response');
-        }
-      });
+        }, onError: (error) {
+          print(error);
+          subscription?.cancel();
+          consecutiveErrors++;
+          if (consecutiveErrors == maxRetries) {
+            completer.complete(
+              DialogMessageEntity(
+                dialogMessageContent: error.toString(),
+                peer: PeerInfo(
+                  name: 'ERROR',
+                  type: 'Unknown',
+                  id: '',
+                ),
+              ),
+            );
+          }
+        }, onDone: () {});
 
-      final response = await completer.future;
-      return response;
-    } catch (error) {
-      return Future.error(GrpcException(message: error.toString()).message);
+        await completer.future.timeout(Duration(seconds: 1));
+
+        if (completer.isCompleted) {
+          consecutiveErrors = 0;
+          attempt = 0;
+          return completer.future;
+        }
+      } catch (error) {
+        print(error);
+      }
+
+      attempt++;
     }
+
+    return DialogMessageEntity(
+      dialogMessageContent: 'Unknown Error',
+      peer: PeerInfo(
+        name: 'ERROR',
+        type: 'Unknown',
+        id: '',
+      ),
+    );
   }
 
   @override

@@ -49,6 +49,7 @@ class _ChatPageState extends State<ChatPage> {
                       bloc: chatBloc,
                       builder: (context, state) {
                         return ListView.builder(
+                          reverse: true,
                           itemCount: state.dialogMessages.length,
                           itemBuilder: (BuildContext context, int index) {
                             return MessageItem(

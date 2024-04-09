@@ -1,5 +1,4 @@
 import 'package:bloc/bloc.dart';
-import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:webitel_sdk/domain/entity/dialog_message.dart';
@@ -24,7 +23,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
         emit(state.copyWith(dialogMessages: updatedMessages));
       },
-      transformer: sequential(),
+      // transformer: sequential(),
     );
   }
 }
