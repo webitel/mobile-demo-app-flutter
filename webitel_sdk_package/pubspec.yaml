@@ -10,6 +10,7 @@ dependencies:
   build_runner: ^2.4.9
   fixnum: ^1.1.0
   get_it: ^7.6.8
+  shared_preferences: ^2.2.2
   grpc: ^3.2.4
   protobuf: ^3.1.0
   uuid: ^4.3.3
