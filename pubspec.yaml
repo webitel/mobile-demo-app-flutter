@@ -17,7 +17,7 @@ dependencies:
   bloc: ^8.1.4
   bloc_concurrency: ^0.2.5
   equatable: ^2.0.5
-  uuid: ^4.3.3
+  uuid: ^4.4.0
   flutter_svg: ^2.0.10+1
   build_runner: ^2.4.9
   get_it: ^7.6.8

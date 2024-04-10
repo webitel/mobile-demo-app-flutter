@@ -22,4 +22,11 @@ class ChatServiceImpl implements ChatService {
       ),
     );
   }
+
+  @override
+  Future<Stream<dynamic>> listenIncomingOperatorMessages() async {
+    final stream = await WebitelSdkPackage.instance.messageHandler
+        .listenToOperatorMessages();
+    return stream;
+  }
 }

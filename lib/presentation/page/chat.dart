@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
@@ -5,7 +7,6 @@ import 'package:webitel_sdk/backbone/dependency_injection.dart' as di;
 import 'package:webitel_sdk/domain/entity/dialog_message.dart';
 import 'package:webitel_sdk/presentation/bloc/chat_bloc.dart';
 import 'package:webitel_sdk/presentation/widget/message_item.dart';
-import 'package:webitel_sdk_package/webitel_sdk_package.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({
@@ -20,12 +21,13 @@ class _ChatPageState extends State<ChatPage> {
   late ChatBloc chatBloc;
   final TextEditingController _textEditingController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  late final StreamController<DialogMessageEntity> streamController;
   String messageContent = '';
 
   @override
   void initState() {
     chatBloc = di.locator.get<ChatBloc>();
-    WebitelSdkPackage.instance.messageHandler.listenToOperatorMessages();
+    chatBloc.add(ListenIncomingOperatorMessages());
     super.initState();
   }
 

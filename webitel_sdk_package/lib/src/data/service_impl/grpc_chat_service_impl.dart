@@ -24,7 +24,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
   GrpcChatServiceImpl(this._grpcGateway) {
     _responseStreamController = StreamController<portal.Response>.broadcast();
     _updateStreamController = StreamController<UpdateNewMessage>.broadcast();
-    startPingTimer(Duration(seconds: 15));
+    startPingTimer(Duration(seconds: 10));
   }
 
   void startPingTimer(Duration period) {
@@ -62,7 +62,6 @@ class GrpcChatServiceImpl implements GrpcChatService {
           'x-portal-client': clientToken,
           'x-portal-access': accessToken,
         },
-        timeout: Duration(seconds: 60),
       );
 
       _grpcGateway.customerClient
