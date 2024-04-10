@@ -6,7 +6,6 @@ import 'package:uuid/uuid.dart';
 import 'package:webitel_sdk_package/src/data/gateway/grpc_gateway.dart';
 import 'package:webitel_sdk_package/src/domain/entities/dialog_message.dart';
 import 'package:webitel_sdk_package/src/domain/services/grpc_chat/grpc_chat_service.dart';
-import 'package:webitel_sdk_package/src/exceptions/grpc_exception.dart';
 import 'package:webitel_sdk_package/src/generated/chat/messages/peer.pb.dart';
 import 'package:webitel_sdk_package/src/generated/google/protobuf/any.pb.dart';
 import 'package:webitel_sdk_package/src/generated/portal/connect.pb.dart'
@@ -126,20 +125,22 @@ class GrpcChatServiceImpl implements GrpcChatService {
             }
           }
         }, onError: (error) {
-          print(error);
-          subscription?.cancel();
-          consecutiveErrors++;
-          if (consecutiveErrors == maxRetries) {
-            completer.complete(
-              DialogMessageEntity(
-                dialogMessageContent: error.toString(),
-                peer: PeerInfo(
-                  name: 'ERROR',
-                  type: 'Unknown',
-                  id: '',
+          if (error is GrpcError) {
+            print(error);
+            subscription?.cancel();
+            consecutiveErrors++;
+            if (consecutiveErrors == maxRetries) {
+              completer.complete(
+                DialogMessageEntity(
+                  dialogMessageContent: error.toString(),
+                  peer: PeerInfo(
+                    name: 'ERROR',
+                    type: 'Unknown',
+                    id: '',
+                  ),
                 ),
-              ),
-            );
+              );
+            }
           }
         }, onDone: () {});
         await completer.future.timeout(Duration(seconds: 1));
@@ -161,46 +162,6 @@ class GrpcChatServiceImpl implements GrpcChatService {
         id: '',
       ),
     );
-  }
-
-  @override
-  Future<List<int>> ping({required List<int> echo}) async {
-    try {
-      final id = uuid.v4();
-      final echoData = echo;
-      final pingEcho = portal.Echo(data: echoData);
-
-      final pingRequest = portal.Request(
-        path: '/webitel.portal.Customer/Ping',
-        data: Any.pack(pingEcho),
-        id: id,
-      );
-      requestStreamController.add(pingRequest);
-      portal.Echo? echoResponse;
-
-      _responseStreamController.stream.listen((res) {
-        final canUnpackIntoResponse = res.data.canUnpackInto(portal.Response());
-        if (canUnpackIntoResponse == true) {
-          final response = res.data.unpackInto(portal.Response());
-          final canUnpackIntoEcho = response.data.canUnpackInto(portal.Echo());
-          if (canUnpackIntoEcho == true) {
-            echoResponse = response.data.unpackInto(portal.Echo());
-            print('Echo response: ${echoResponse!.data}');
-          } else {
-            throw GrpcException(message: 'Can not unpack into Echo');
-          }
-        } else {
-          throw GrpcException(message: 'Can not unpack into response');
-        }
-      });
-      if (echoResponse != null) {
-        return echoResponse!.data;
-      } else {
-        return [];
-      }
-    } catch (error, _) {
-      return [];
-    }
   }
 
   @override
