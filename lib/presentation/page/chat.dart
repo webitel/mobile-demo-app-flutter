@@ -5,6 +5,7 @@ import 'package:webitel_sdk/backbone/dependency_injection.dart' as di;
 import 'package:webitel_sdk/domain/entity/dialog_message.dart';
 import 'package:webitel_sdk/presentation/bloc/chat_bloc.dart';
 import 'package:webitel_sdk/presentation/widget/message_item.dart';
+import 'package:webitel_sdk_package/webitel_sdk_package.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({
@@ -24,6 +25,7 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     chatBloc = di.locator.get<ChatBloc>();
+    WebitelSdkPackage.instance.messageHandler.listenToOperatorMessages();
     super.initState();
   }
 

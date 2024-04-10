@@ -13,4 +13,8 @@ abstract interface class GrpcChatService {
 
   Future<DialogMessageEntity> sendDialogMessage(
       {required DialogMessageEntity message});
+
+  Future<Stream<DialogMessageEntity>> listenToOperatorMessages();
+
+  Future<void> pingServer(int periodicityInterval);
 }

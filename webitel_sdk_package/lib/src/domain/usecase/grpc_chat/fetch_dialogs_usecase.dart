@@ -1,7 +1,8 @@
+import 'package:webitel_sdk_package/src/domain/entities/dialog_message.dart';
 import 'package:webitel_sdk_package/src/domain/services/grpc_chat/grpc_chat_service.dart';
 
 abstract interface class FetchDialogsUseCase {
-  Future<void> call();
+  Future<List<DialogMessageEntity>> call();
 }
 
 class FetchDialogsImplUseCase implements FetchDialogsUseCase {
@@ -10,5 +11,5 @@ class FetchDialogsImplUseCase implements FetchDialogsUseCase {
   FetchDialogsImplUseCase(this._grpcChatService);
 
   @override
-  Future<void> call() => _grpcChatService.fetchDialogs();
+  Future<List<DialogMessageEntity>> call() => _grpcChatService.fetchDialogs();
 }

@@ -15,15 +15,15 @@ import 'package:webitel_sdk_package/src/generated/portal/messages.pb.dart';
 
 class GrpcChatServiceImpl implements GrpcChatService {
   final GrpcGateway _grpcGateway;
-
   final requestStreamController = StreamController<portal.Request>();
   late final StreamController<portal.Response> _responseStreamController;
-  late final StreamController<portal.Update> _updateStreamController;
+  late final StreamController<UpdateNewMessage> _updateStreamController;
+
   final uuid = Uuid();
 
   GrpcChatServiceImpl(this._grpcGateway) {
     _responseStreamController = StreamController<portal.Response>.broadcast();
-    _updateStreamController = StreamController<portal.Update>.broadcast();
+    _updateStreamController = StreamController<UpdateNewMessage>.broadcast();
   }
 
   @override
@@ -35,42 +35,63 @@ class GrpcChatServiceImpl implements GrpcChatService {
     try {
       await _grpcGateway.init();
 
-      requestStreamController.stream.listen((request) {
-        CallOptions options = CallOptions(
-          metadata: {
-            'x-portal-device': deviceId,
-            'x-portal-client': clientToken,
-            'x-portal-access': accessToken,
-          },
-          timeout: Duration(seconds: 60),
-        );
+      CallOptions options = CallOptions(
+        metadata: {
+          'x-portal-device': deviceId,
+          'x-portal-client': clientToken,
+          'x-portal-access': accessToken,
+        },
+        timeout: Duration(seconds: 60),
+      );
 
-        _grpcGateway.customerClient
-            .connect(
-          Stream<portal.Request>.fromIterable([request]),
-          options: options,
-        )
-            .listen((response) {
-          final canUnpackIntoResponse =
-              response.data.canUnpackInto(portal.Response());
-          final canUnpackIntoUpdate =
-              response.data.canUnpackInto(portal.Update());
-          if (canUnpackIntoResponse == true) {
-            final decodedResponse = response.data.unpackInto(portal.Response());
-            _responseStreamController.add(decodedResponse);
-          } else if (canUnpackIntoUpdate == true) {
-            final decodedResponse = response.data.unpackInto(portal.Update());
-            _updateStreamController.add(decodedResponse);
-          }
-        }, onError: (error) {
-          _responseStreamController.addError(error);
-          _updateStreamController.addError(error);
-        });
+      _grpcGateway.customerClient
+          .connect(
+        requestStreamController.stream,
+        options: options,
+      )
+          .listen((response) {
+        final canUnpackIntoResponse =
+            response.data.canUnpackInto(portal.Response());
+        final canUnpackIntoUpdateNewMessage =
+            response.data.canUnpackInto(UpdateNewMessage());
+        if (canUnpackIntoResponse == true) {
+          final decodedResponse = response.data.unpackInto(portal.Response());
+          _responseStreamController.add(decodedResponse);
+        } else if (canUnpackIntoUpdateNewMessage == true) {
+          final decodedResponse = response.data.unpackInto(UpdateNewMessage());
+          _updateStreamController.add(decodedResponse);
+        }
+      }, onError: (error) {
+        _responseStreamController.addError(error);
+        _updateStreamController.addError(error);
+      }, onDone: () {
+        print('Stream was closed');
       });
     } catch (error) {
       print('SocketException occurred: $error');
     }
     return '';
+  }
+
+  @override
+  Future<Stream<DialogMessageEntity>> listenToOperatorMessages() async {
+    final operatorMessagesController = StreamController<DialogMessageEntity>();
+    _updateStreamController.stream.listen(
+      (update) {
+        operatorMessagesController.add(
+          DialogMessageEntity(
+            dialogMessageContent: update.message.text,
+            peer: PeerInfo(
+              id: update.message.chat.peer.id,
+              name: update.message.chat.peer.name,
+              type: update.message.chat.peer.type,
+            ),
+          ),
+        );
+      },
+    );
+
+    return operatorMessagesController.stream;
   }
 
   @override
@@ -303,5 +324,11 @@ class GrpcChatServiceImpl implements GrpcChatService {
       attempt++;
     }
     return [];
+  }
+
+  @override
+  Future<void> pingServer(int periodicityInterval) {
+    // TODO: implement pingServer
+    throw UnimplementedError();
   }
 }

@@ -1,17 +1,26 @@
 import 'package:webitel_sdk_package/src/backbone/dependency_injection.dart';
 import 'package:webitel_sdk_package/src/domain/entities/dialog_message.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/connect_to_grpc_channel_usecase.dart';
+import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/listen_to_operator_messages_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/send_message_usecase.dart';
 
 class MessageHandler {
   late SendDialogMessageUseCase _sendDialogMessageUseCase;
   late ConnectToGrpcChannelUseCase _connectToGrpcChannelUseCase;
+  late ListenToOperatorMessagesUsecase _listenToOperatorMessagesUsecase;
 
   MessageHandler() {
     _sendDialogMessageUseCase = locator.get<SendDialogMessageUseCase>(
         instanceName: "SendDialogMessageUseCase");
     _connectToGrpcChannelUseCase = locator.get<ConnectToGrpcChannelUseCase>(
         instanceName: "ConnectToGrpcChannelUseCase");
+    _listenToOperatorMessagesUsecase =
+        locator.get<ListenToOperatorMessagesUsecase>(
+            instanceName: "ListenToOperatorMessagesUsecase");
+  }
+
+  Future<Stream<DialogMessageEntity>> listenToOperatorMessages() async {
+    return await _listenToOperatorMessagesUsecase();
   }
 
   Future<String> connectToGrpcChannel({
