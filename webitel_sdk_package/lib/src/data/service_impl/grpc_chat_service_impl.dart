@@ -17,11 +17,13 @@ class GrpcChatServiceImpl implements GrpcChatService {
   final GrpcGateway _grpcGateway;
 
   final requestStreamController = StreamController<portal.Request>();
-  late final StreamController<portal.Update> _responseStreamController;
+  late final StreamController<portal.Response> _responseStreamController;
+  late final StreamController<portal.Update> _updateStreamController;
   final uuid = Uuid();
 
   GrpcChatServiceImpl(this._grpcGateway) {
-    _responseStreamController = StreamController<portal.Update>.broadcast();
+    _responseStreamController = StreamController<portal.Response>.broadcast();
+    _updateStreamController = StreamController<portal.Update>.broadcast();
   }
 
   @override
@@ -49,15 +51,116 @@ class GrpcChatServiceImpl implements GrpcChatService {
           options: options,
         )
             .listen((response) {
-          _responseStreamController.add(response);
+          final canUnpackIntoResponse =
+              response.data.canUnpackInto(portal.Response());
+          final canUnpackIntoUpdate =
+              response.data.canUnpackInto(portal.Update());
+          if (canUnpackIntoResponse == true) {
+            final decodedResponse = response.data.unpackInto(portal.Response());
+            _responseStreamController.add(decodedResponse);
+          } else if (canUnpackIntoUpdate == true) {
+            final decodedResponse = response.data.unpackInto(portal.Update());
+            _updateStreamController.add(decodedResponse);
+          }
         }, onError: (error) {
           _responseStreamController.addError(error);
+          _updateStreamController.addError(error);
         });
       });
     } catch (error) {
       print('SocketException occurred: $error');
     }
     return '';
+  }
+
+  @override
+  Future<DialogMessageEntity> sendDialogMessage(
+      {required DialogMessageEntity message}) async {
+    final maxRetries = 5;
+    final completer = Completer<DialogMessageEntity>();
+    var attempt = 0;
+    var consecutiveErrors = 0;
+
+    while (!completer.isCompleted && attempt < maxRetries) {
+      try {
+        final id = uuid.v4();
+
+        final newMessageRequest = SendMessageRequest(
+          text: message.dialogMessageContent,
+          peer: Peer(
+            id: message.peer.id,
+            type: message.peer.type,
+            name: message.peer.name,
+          ),
+        );
+
+        final request = portal.Request(
+          path: '/webitel.portal.ChatMessages/SendMessage',
+          data: Any.pack(newMessageRequest),
+          id: id,
+        );
+
+        requestStreamController.add(request);
+
+        StreamSubscription<portal.Response>? subscription;
+        subscription = _responseStreamController.stream.listen((response) {
+          if (response.id == id) {
+            final canUnpackIntoUpdateNewMessage =
+                response.data.canUnpackInto(UpdateNewMessage());
+            if (canUnpackIntoUpdateNewMessage == true) {
+              final unpackedMessage =
+                  response.data.unpackInto(UpdateNewMessage());
+
+              completer.complete(
+                DialogMessageEntity(
+                  dialogMessageContent: unpackedMessage.message.text,
+                  peer: PeerInfo(
+                    name: unpackedMessage.message.chat.peer.name,
+                    type: unpackedMessage.message.chat.peer.type,
+                    id: unpackedMessage.message.chat.peer.id,
+                  ),
+                ),
+              );
+              print('completed');
+              subscription?.cancel();
+            }
+          }
+        }, onError: (error) {
+          print(error);
+          subscription?.cancel();
+          consecutiveErrors++;
+          if (consecutiveErrors == maxRetries) {
+            completer.complete(
+              DialogMessageEntity(
+                dialogMessageContent: error.toString(),
+                peer: PeerInfo(
+                  name: 'ERROR',
+                  type: 'Unknown',
+                  id: '',
+                ),
+              ),
+            );
+          }
+        }, onDone: () {});
+        await completer.future.timeout(Duration(seconds: 1));
+        if (completer.isCompleted) {
+          consecutiveErrors = 0;
+          attempt = 0;
+          return completer.future;
+        }
+      } catch (error) {
+        print(error);
+      }
+      attempt++;
+    }
+    return DialogMessageEntity(
+      dialogMessageContent: 'Unknown Error',
+      peer: PeerInfo(
+        name: 'ERROR',
+        type: 'Unknown',
+        id: '',
+      ),
+    );
   }
 
   @override
@@ -98,105 +201,6 @@ class GrpcChatServiceImpl implements GrpcChatService {
     } catch (error, _) {
       return [];
     }
-  }
-
-  @override
-  Future<DialogMessageEntity> sendDialogMessage(
-      {required DialogMessageEntity message}) async {
-    final maxRetries = 5;
-    final completer = Completer<DialogMessageEntity>();
-    var attempt = 0;
-    var consecutiveErrors = 0;
-
-    while (!completer.isCompleted && attempt < maxRetries) {
-      try {
-        final id = uuid.v4();
-
-        final newMessageRequest = SendMessageRequest(
-          text: message.dialogMessageContent,
-          peer: Peer(
-            id: message.peer.id,
-            type: message.peer.type,
-            name: message.peer.name,
-          ),
-        );
-
-        final request = portal.Request(
-          path: '/webitel.portal.ChatMessages/SendMessage',
-          data: Any.pack(newMessageRequest),
-          id: id,
-        );
-
-        requestStreamController.add(request);
-
-        StreamSubscription<portal.Update>? subscription;
-        subscription = _responseStreamController.stream.listen((response) {
-          final canUnpackIntoResponse =
-              response.data.canUnpackInto(portal.Response());
-          if (canUnpackIntoResponse == true) {
-            final decodedResponse = response.data.unpackInto(portal.Response());
-            if (decodedResponse.id == id) {
-              final canUnpackIntoUpdateNewMessage =
-                  decodedResponse.data.canUnpackInto(UpdateNewMessage());
-              if (canUnpackIntoUpdateNewMessage == true) {
-                final unpackedMessage =
-                    decodedResponse.data.unpackInto(UpdateNewMessage());
-
-                completer.complete(
-                  DialogMessageEntity(
-                    dialogMessageContent: unpackedMessage.message.text,
-                    peer: PeerInfo(
-                      name: unpackedMessage.message.chat.peer.name,
-                      type: unpackedMessage.message.chat.peer.type,
-                      id: unpackedMessage.message.chat.peer.id,
-                    ),
-                  ),
-                );
-                print('completed');
-                subscription?.cancel();
-              }
-            }
-          }
-        }, onError: (error) {
-          print(error);
-          subscription?.cancel();
-          consecutiveErrors++;
-          if (consecutiveErrors == maxRetries) {
-            completer.complete(
-              DialogMessageEntity(
-                dialogMessageContent: error.toString(),
-                peer: PeerInfo(
-                  name: 'ERROR',
-                  type: 'Unknown',
-                  id: '',
-                ),
-              ),
-            );
-          }
-        }, onDone: () {});
-
-        await completer.future.timeout(Duration(seconds: 1));
-
-        if (completer.isCompleted) {
-          consecutiveErrors = 0;
-          attempt = 0;
-          return completer.future;
-        }
-      } catch (error) {
-        print(error);
-      }
-
-      attempt++;
-    }
-
-    return DialogMessageEntity(
-      dialogMessageContent: 'Unknown Error',
-      peer: PeerInfo(
-        name: 'ERROR',
-        type: 'Unknown',
-        id: '',
-      ),
-    );
   }
 
   @override
