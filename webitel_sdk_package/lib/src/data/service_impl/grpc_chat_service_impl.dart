@@ -18,12 +18,35 @@ class GrpcChatServiceImpl implements GrpcChatService {
   final requestStreamController = StreamController<portal.Request>();
   late final StreamController<portal.Response> _responseStreamController;
   late final StreamController<UpdateNewMessage> _updateStreamController;
-
+  Timer? _pingTimer;
   final uuid = Uuid();
 
   GrpcChatServiceImpl(this._grpcGateway) {
     _responseStreamController = StreamController<portal.Response>.broadcast();
     _updateStreamController = StreamController<UpdateNewMessage>.broadcast();
+    startPingTimer(Duration(seconds: 15));
+  }
+
+  void startPingTimer(Duration period) {
+    _pingTimer = Timer.periodic(period, (Timer timer) {
+      pingServer();
+    });
+  }
+
+  void stopPingTimer() {
+    _pingTimer?.cancel();
+  }
+
+  Future<void> pingServer() async {
+    final echoData = [1, 2, 3, 4, 5];
+    final pingEcho = portal.Echo(data: echoData);
+
+    final pingRequest = portal.Request(
+      path: '/webitel.portal.Customer/Ping',
+      data: Any.pack(pingEcho),
+      id: '',
+    );
+    requestStreamController.add(pingRequest);
   }
 
   @override
@@ -33,8 +56,6 @@ class GrpcChatServiceImpl implements GrpcChatService {
     required String accessToken,
   }) async {
     try {
-      await _grpcGateway.init();
-
       CallOptions options = CallOptions(
         metadata: {
           'x-portal-device': deviceId,
@@ -326,9 +347,10 @@ class GrpcChatServiceImpl implements GrpcChatService {
     return [];
   }
 
-  @override
-  Future<void> pingServer(int periodicityInterval) {
-    // TODO: implement pingServer
-    throw UnimplementedError();
+  void dispose() {
+    requestStreamController.close();
+    _responseStreamController.close();
+    _updateStreamController.close();
+    stopPingTimer();
   }
 }
