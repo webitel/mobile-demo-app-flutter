@@ -7,9 +7,9 @@ abstract interface class GrpcChatService {
     required String accessToken,
   });
 
-  Future<void> fetchDialogs();
+  Future<List<DialogMessageEntity>> fetchDialogs();
 
-  Future<void> fetchUpdates();
+  Future<List<DialogMessageEntity>> fetchUpdates();
 
   Future<DialogMessageEntity> sendDialogMessage(
       {required DialogMessageEntity message});
