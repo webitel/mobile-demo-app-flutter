@@ -1,19 +1,23 @@
 import 'package:webitel_sdk_package/src/backbone/dependency_injection.dart';
 import 'package:webitel_sdk_package/src/domain/entities/dialog_message.dart';
-import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/connect_to_grpc_channel_usecase.dart';
+import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/fetch_dialogs_usecase.dart';
+import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/fetch_updates_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/listen_to_operator_messages_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/send_message_usecase.dart';
 
-class MessageHandler {
+class DialogMessageHandler {
   late SendDialogMessageUseCase _sendDialogMessageUseCase;
-  late ConnectToGrpcChannelUseCase _connectToGrpcChannelUseCase;
   late ListenToOperatorMessagesUsecase _listenToOperatorMessagesUsecase;
+  late FetchDialogsUseCase _fetchDialogsUseCase;
+  late FetchUpdatesUseCase _fetchUpdatesUseCase;
 
-  MessageHandler() {
+  DialogMessageHandler() {
+    _fetchDialogsUseCase =
+        locator.get<FetchDialogsUseCase>(instanceName: "FetchDialogsUseCase");
+    _fetchUpdatesUseCase =
+        locator.get<FetchUpdatesUseCase>(instanceName: "FetchUpdatesUseCase");
     _sendDialogMessageUseCase = locator.get<SendDialogMessageUseCase>(
         instanceName: "SendDialogMessageUseCase");
-    _connectToGrpcChannelUseCase = locator.get<ConnectToGrpcChannelUseCase>(
-        instanceName: "ConnectToGrpcChannelUseCase");
     _listenToOperatorMessagesUsecase =
         locator.get<ListenToOperatorMessagesUsecase>(
             instanceName: "ListenToOperatorMessagesUsecase");
@@ -21,18 +25,6 @@ class MessageHandler {
 
   Future<Stream<DialogMessageEntity>> listenToOperatorMessages() async {
     return await _listenToOperatorMessagesUsecase();
-  }
-
-  Future<String> connectToGrpcChannel({
-    required String deviceId,
-    required String clientToken,
-    required String accessToken,
-  }) async {
-    return await _connectToGrpcChannelUseCase(
-      accessToken: accessToken,
-      deviceId: deviceId,
-      clientToken: clientToken,
-    );
   }
 
   Future<DialogMessageEntity> sendDialogMessage({
@@ -51,5 +43,13 @@ class MessageHandler {
         ),
       ),
     );
+  }
+
+  Future<List<DialogMessageEntity>> fetchDialogs() async {
+    return await _fetchDialogsUseCase();
+  }
+
+  Future<List<DialogMessageEntity>> fetchUpdates() async {
+    return await _fetchUpdatesUseCase();
   }
 }

@@ -3,12 +3,12 @@ import 'package:webitel_sdk_package/src/domain/usecase/grpc_call/end_call_usecas
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_call/hold_call_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_call/make_call_usecase.dart';
 
-class CallHandler {
+class DialogCallHandler {
   late MakeCallUseCase _makeCallUseCase;
   late HoldCallUseCase _holdCallUseCase;
   late EndCallUseCase _endCallUseCase;
 
-  CallHandler() {
+  DialogCallHandler() {
     _makeCallUseCase =
         locator.get<MakeCallUseCase>(instanceName: "MakeCallUseCase");
     _holdCallUseCase =

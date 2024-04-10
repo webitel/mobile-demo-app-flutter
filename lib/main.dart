@@ -7,8 +7,7 @@ import 'presentation/page/chat.dart';
 void main() async {
   runApp(const MyApp());
   await registerDi();
-  await WebitelSdkPackage.instance.initializer.initGrpc();
-  await WebitelSdkPackage.instance.messageHandler.connectToGrpcChannel(
+  await WebitelSdkPackage.instance.initializer.connectToGrpcChannel(
     deviceId: 'some id',
     clientToken:
         '49sFBWUGEtlHz7iTWjIXIgRGnZXQ4dQZOy7fdM8AyffZ3oEQzNC5Noa6Aeem6BAw',

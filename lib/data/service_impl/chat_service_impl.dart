@@ -6,8 +6,9 @@ class ChatServiceImpl implements ChatService {
   @override
   Future<DialogMessageEntity> sendDialogMessage(
       {required DialogMessageEntity dialogMessageEntity}) async {
-    final dialogMessageEntityRes =
-        await WebitelSdkPackage.instance.messageHandler.sendDialogMessage(
+    final dialogMessageEntityRes = await WebitelSdkPackage
+        .instance.dialogListHandler.dialogMessageHandler
+        .sendDialogMessage(
       dialogMessageContent: dialogMessageEntity.dialogMessageContent,
       peerType: dialogMessageEntity.peer.type,
       peerName: dialogMessageEntity.peer.name,
@@ -25,7 +26,8 @@ class ChatServiceImpl implements ChatService {
 
   @override
   Future<Stream<dynamic>> listenIncomingOperatorMessages() async {
-    final stream = await WebitelSdkPackage.instance.messageHandler
+    final stream = await WebitelSdkPackage
+        .instance.dialogListHandler.dialogMessageHandler
         .listenToOperatorMessages();
     return stream;
   }

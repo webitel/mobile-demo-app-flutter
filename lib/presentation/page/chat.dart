@@ -27,7 +27,7 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     chatBloc = di.locator.get<ChatBloc>();
-    chatBloc.add(ListenIncomingOperatorMessages());
+    // chatBloc.add(ListenIncomingOperatorMessages());
     super.initState();
   }
 

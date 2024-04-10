@@ -12,6 +12,7 @@ dependencies:
   get_it: ^7.6.8
   shared_preferences: ^2.2.2
   grpc: ^3.2.4
+  flutter_dotenv: ^5.1.0
   protobuf: ^3.1.0
   uuid: ^4.3.3
 

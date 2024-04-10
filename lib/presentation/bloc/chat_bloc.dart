@@ -18,7 +18,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ListenIncomingOperatorMessages>(
       (event, emit) async {
         final stream = await _listenIncomingOperatorUseCase();
-        emit.forEach(stream, onData: (message) {
+        await emit.forEach(stream, onData: (message) {
           return const ChatState(
             sendDialogMessageStatus: SendDialogMessageStatus.sent,
             dialogMessages: [],
