@@ -1,21 +1,21 @@
 name: webitel_sdk_package
-description: A starting point for Dart libraries or applications.
+description: Webitel SDK.
 version: 1.0.0
-# repository: https://github.com/my_org/my_repo
 
 environment:
   sdk: ^3.3.3
 
 dependencies:
   build_runner: ^2.4.9
-  fixnum: ^1.1.0
   get_it: ^7.6.8
   shared_preferences: ^2.2.2
   grpc: ^3.2.4
   flutter_dotenv: ^5.1.0
   protobuf: ^3.1.0
-  uuid: ^4.3.3
+  uuid: ^4.4.0
 
 dev_dependencies:
   lints: ^3.0.0
-  test: ^1.25.2
+
+
+

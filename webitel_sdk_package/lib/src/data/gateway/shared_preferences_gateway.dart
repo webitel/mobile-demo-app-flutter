@@ -1,6 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-class SharedPreferencesServiceGateway {
+class SharedPreferencesGateway {
   late SharedPreferences _preferences;
 
   Future<void> clearPreferences() async {

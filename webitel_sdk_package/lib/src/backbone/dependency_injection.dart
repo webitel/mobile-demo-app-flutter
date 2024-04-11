@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:webitel_sdk_package/src/data/gateway/grpc_gateway.dart';
+import 'package:webitel_sdk_package/src/data/gateway/shared_preferences_gateway.dart';
 import 'package:webitel_sdk_package/src/data/service_impl/grpc_call_service_impl.dart';
 import 'package:webitel_sdk_package/src/data/service_impl/grpc_chat_service_impl.dart';
 import 'package:webitel_sdk_package/src/data/service_impl/initialize_service_impl.dart';
@@ -22,12 +23,14 @@ final GetIt locator = GetIt.instance;
 Future<void> registerDi() async {
   //Gateway
   locator.registerLazySingleton<GrpcGateway>(() => GrpcGateway());
+  locator.registerLazySingleton<SharedPreferencesGateway>(
+      () => SharedPreferencesGateway());
 
   //Service
   locator.registerLazySingleton<InitializeService>(
       () => InitializeServiceImpl(locator.get()));
   locator.registerLazySingleton<GrpcChatService>(
-      () => GrpcChatServiceImpl(locator.get()));
+      () => GrpcChatServiceImpl(locator.get(), locator.get()));
   locator.registerLazySingleton<GrpcCallService>(() => GrpcCallServiceImpl());
 
   //Use case

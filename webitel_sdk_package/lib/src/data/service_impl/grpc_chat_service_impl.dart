@@ -4,6 +4,7 @@ import 'package:grpc/grpc.dart';
 import 'package:grpc/grpc_or_grpcweb.dart';
 import 'package:uuid/uuid.dart';
 import 'package:webitel_sdk_package/src/data/gateway/grpc_gateway.dart';
+import 'package:webitel_sdk_package/src/data/gateway/shared_preferences_gateway.dart';
 import 'package:webitel_sdk_package/src/domain/entities/dialog_message.dart';
 import 'package:webitel_sdk_package/src/domain/services/grpc_chat/grpc_chat_service.dart';
 import 'package:webitel_sdk_package/src/generated/chat/messages/history.pb.dart';
@@ -15,13 +16,17 @@ import 'package:webitel_sdk_package/src/generated/portal/messages.pb.dart';
 
 class GrpcChatServiceImpl implements GrpcChatService {
   final GrpcGateway _grpcGateway;
+  final SharedPreferencesGateway _sharedPreferencesGateway;
   final requestStreamController = StreamController<portal.Request>();
   late final StreamController<portal.Response> _responseStreamController;
   late final StreamController<UpdateNewMessage> _updateStreamController;
   Timer? _pingTimer;
   final uuid = Uuid();
 
-  GrpcChatServiceImpl(this._grpcGateway) {
+  GrpcChatServiceImpl(
+    this._sharedPreferencesGateway,
+    this._grpcGateway,
+  ) {
     _responseStreamController = StreamController<portal.Response>.broadcast();
     _updateStreamController = StreamController<UpdateNewMessage>.broadcast();
     startPingTimer(Duration(seconds: 10));
@@ -98,6 +103,8 @@ class GrpcChatServiceImpl implements GrpcChatService {
     final operatorMessagesController = StreamController<DialogMessageEntity>();
     _updateStreamController.stream.listen(
       (update) {
+        final lastSendMessageId =
+            _sharedPreferencesGateway.getFromDisk('lastSendMessageId');
         operatorMessagesController.add(
           DialogMessageEntity(
             dialogMessageContent: update.message.text,
@@ -125,7 +132,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
     while (!completer.isCompleted && attempt < maxRetries) {
       try {
         final id = uuid.v4();
-
+        _sharedPreferencesGateway.saveToDisk('lastSendMessageId', id);
         final newMessageRequest = SendMessageRequest(
           text: message.dialogMessageContent,
           peer: Peer(
