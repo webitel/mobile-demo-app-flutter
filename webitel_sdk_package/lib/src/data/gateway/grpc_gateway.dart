@@ -32,7 +32,7 @@ class GrpcGateway {
     _clientToken = clientToken;
     _createChannel(
       baseUrl: baseUrl,
-      deviceId: deviceId ?? '', //TODO if empty device id - generate it
+      deviceId: deviceId ?? '', //TODO if empty device id - generate
       clientToken: clientToken,
     );
   }
