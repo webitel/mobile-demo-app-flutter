@@ -61,6 +61,9 @@ class GrpcGateway {
       port: 443,
       options: const ChannelOptions(),
     );
+    // channel.onConnectionStateChanged.listen((event) {
+    //   print(event);
+    // });
     _customerClient = CustomerClient(
       channel,
       options: createCallOptions(

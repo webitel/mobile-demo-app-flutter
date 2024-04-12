@@ -9,7 +9,7 @@ class GrpcStreamInitializer {
         instanceName: "ConnectToGrpcChannelUseCase");
   }
 
-  Future<String> connectToGrpcChannel() async {
+  Future<String> connectToChannel() async {
     return await _connectToGrpcChannelUseCase();
   }
 }

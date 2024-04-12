@@ -17,69 +17,63 @@ import 'package:webitel_sdk_package/src/generated/portal/messages.pb.dart';
 class GrpcChatServiceImpl implements GrpcChatService {
   final GrpcGateway _grpcGateway;
   final SharedPreferencesGateway _sharedPreferencesGateway;
-  final requestStreamController = StreamController<portal.Request>();
+
+  late final StreamController<portal.Request> _requestStreamController;
   late final StreamController<portal.Response> _responseStreamController;
   late final StreamController<UpdateNewMessage> _updateStreamController;
-  final StreamController<DialogMessageEntity> _userMessagesController =
-      StreamController<DialogMessageEntity>.broadcast();
+  late final StreamController<DialogMessageEntity> _userMessagesController;
 
-  Timer? _pingTimer;
   final uuid = Uuid();
+  bool? connectClosed;
 
   GrpcChatServiceImpl(
     this._sharedPreferencesGateway,
     this._grpcGateway,
   ) {
+    _requestStreamController = StreamController<portal.Request>.broadcast();
     _responseStreamController = StreamController<portal.Response>.broadcast();
     _updateStreamController = StreamController<UpdateNewMessage>.broadcast();
-    startPingTimer(Duration(seconds: 10));
+    _userMessagesController = StreamController<DialogMessageEntity>.broadcast();
   }
 
-  void startPingTimer(Duration period) {
-    _pingTimer = Timer.periodic(period, (Timer timer) {
-      pingServer();
-    });
-  }
-
-  void stopPingTimer() {
-    _pingTimer?.cancel();
-  }
-
-  Future<void> pingServer() async {
-    final echoData = [1, 2, 3, 4, 5];
-    final pingEcho = portal.Echo(data: echoData);
-
-    final pingRequest = portal.Request(
-      path: '/webitel.portal.Customer/Ping',
-      data: Any.pack(pingEcho),
-      id: '',
-    );
-    requestStreamController.add(pingRequest);
+  @override
+  Future<Stream<ConnectStatus>> listenConnectStatus() async {
+    return Stream.empty();
   }
 
   @override
   Future<String> connectToGrpcChannel() async {
     try {
       _grpcGateway.customerClient
-          .connect(requestStreamController.stream)
-          .listen((update) {
-        final canUnpackIntoResponse =
-            update.data.canUnpackInto(portal.Response());
-        final canUnpackIntoUpdateNewMessage =
-            update.data.canUnpackInto(UpdateNewMessage());
-        if (canUnpackIntoResponse == true) {
-          final decodedResponse = update.data.unpackInto(portal.Response());
-          _responseStreamController.add(decodedResponse);
-        } else if (canUnpackIntoUpdateNewMessage == true) {
-          final decodedResponse = update.data.unpackInto(UpdateNewMessage());
-          _updateStreamController.add(decodedResponse);
-        }
-      }, onError: (error) {
-        _responseStreamController.addError(error);
-        _updateStreamController.addError(error);
-      }, onDone: () {
-        print('Stream was closed');
-      });
+          .connect(_requestStreamController.stream)
+          .listen(
+            (update) {
+              connectClosed = false;
+              final canUnpackIntoResponse =
+                  update.data.canUnpackInto(portal.Response());
+              final canUnpackIntoUpdateNewMessage =
+                  update.data.canUnpackInto(UpdateNewMessage());
+              if (canUnpackIntoResponse == true) {
+                final decodedResponse =
+                    update.data.unpackInto(portal.Response());
+                _responseStreamController.add(decodedResponse);
+              } else if (canUnpackIntoUpdateNewMessage == true) {
+                final decodedResponse =
+                    update.data.unpackInto(UpdateNewMessage());
+                _updateStreamController.add(decodedResponse);
+              }
+            },
+            cancelOnError: true,
+            onError: (error) {
+              connectClosed = true;
+              _responseStreamController.addError(error);
+              _updateStreamController.addError(error);
+            },
+            onDone: () {
+              connectClosed = true;
+              print('Stream was closed');
+            },
+          );
     } catch (error) {
       print('SocketException occurred: $error');
     }
@@ -112,6 +106,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
     var attempt = 0;
     var consecutiveErrors = 0;
     final id = uuid.v4();
+
     while (!completer.isCompleted && attempt < maxRetries) {
       try {
         final newMessageRequest = SendMessageRequest(
@@ -128,8 +123,10 @@ class GrpcChatServiceImpl implements GrpcChatService {
           data: Any.pack(newMessageRequest),
           id: id,
         );
-
-        requestStreamController.add(request);
+        if (connectClosed == true) {
+          await connectToGrpcChannel();
+        }
+        _requestStreamController.add(request);
 
         StreamSubscription<portal.Response>? subscription;
         subscription = _responseStreamController.stream.listen((response) {
@@ -213,7 +210,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
           id: id,
         );
 
-        requestStreamController.add(request);
+        _requestStreamController.add(request);
 
         StreamSubscription<portal.Response>? subscription;
         subscription = _responseStreamController.stream.listen((response) {
@@ -283,7 +280,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
           id: id,
         );
 
-        requestStreamController.add(request);
+        _requestStreamController.add(request);
 
         StreamSubscription<portal.Response>? subscription;
         subscription = _responseStreamController.stream.listen((response) {
@@ -335,9 +332,8 @@ class GrpcChatServiceImpl implements GrpcChatService {
   }
 
   void dispose() {
-    requestStreamController.close();
+    _requestStreamController.close();
     _responseStreamController.close();
     _updateStreamController.close();
-    stopPingTimer();
   }
 }

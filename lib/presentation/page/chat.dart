@@ -53,8 +53,7 @@ class _ChatPageState extends State<ChatPage> {
       deviceId: deviceId,
     );
     await WebitelSdkPackage.instance.authHandler.login();
-    await WebitelSdkPackage.instance.grpcStreamInitializer
-        .connectToGrpcChannel();
+    await WebitelSdkPackage.instance.grpcStreamInitializer.connectToChannel();
   }
 
   @override
