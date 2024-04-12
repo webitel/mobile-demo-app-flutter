@@ -5,8 +5,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:webitel_sdk/backbone/dependency_injection.dart' as di;
 import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
-import 'package:webitel_sdk/presentation/bloc/chat_bloc.dart';
+import 'package:webitel_sdk/presentation/bloc/chat/chat_bloc.dart';
+import 'package:webitel_sdk/presentation/device_info/device_info_bloc.dart';
 import 'package:webitel_sdk/presentation/widget/message_item.dart';
+import 'package:webitel_sdk_package/webitel_sdk_package.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({
@@ -19,6 +21,7 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   late ChatBloc chatBloc;
+  late DeviceInfoBloc deviceInfoBloc;
   final TextEditingController _textEditingController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   late final StreamController<DialogMessageEntity> streamController;
@@ -27,8 +30,31 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     chatBloc = di.locator.get<ChatBloc>();
+    deviceInfoBloc = di.locator.get<DeviceInfoBloc>();
+    deviceInfoBloc.add(FetchDeviceIdEvent());
+    initClient(
+      deviceId: '8b98475e-21f9-47bf-b10a-125a83731a33',
+      clientToken:
+          '49sFBWUGEtlHz7iTWjIXIgRGnZXQ4dQZOy7fdM8AyffZ3oEQzNC5Noa6Aeem6BAw',
+      baseUrl: 'dev.webitel.com',
+    );
     chatBloc.add(ListenIncomingOperatorMessages());
     super.initState();
+  }
+
+  Future<void> initClient({
+    String? deviceId,
+    required String baseUrl,
+    required String clientToken,
+  }) async {
+    await WebitelSdkPackage.instance.clientInitializer.initializeClient(
+      baseUrl: baseUrl,
+      clientToken: clientToken,
+      deviceId: deviceId,
+    );
+    await WebitelSdkPackage.instance.authHandler.login();
+    await WebitelSdkPackage.instance.grpcStreamInitializer
+        .connectToGrpcChannel();
   }
 
   @override

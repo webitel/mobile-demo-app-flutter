@@ -58,35 +58,20 @@ class GrpcChatServiceImpl implements GrpcChatService {
   }
 
   @override
-  Future<String> connectToGrpcChannel({
-    required String deviceId,
-    required String clientToken,
-    required String accessToken,
-  }) async {
+  Future<String> connectToGrpcChannel() async {
     try {
-      CallOptions options = CallOptions(
-        metadata: {
-          'x-portal-device': 'some id',
-          'x-portal-client': clientToken,
-          'x-portal-access': accessToken,
-        },
-      );
-
       _grpcGateway.customerClient
-          .connect(
-        requestStreamController.stream,
-        options: options,
-      )
-          .listen((response) {
+          .connect(requestStreamController.stream)
+          .listen((update) {
         final canUnpackIntoResponse =
-            response.data.canUnpackInto(portal.Response());
+            update.data.canUnpackInto(portal.Response());
         final canUnpackIntoUpdateNewMessage =
-            response.data.canUnpackInto(UpdateNewMessage());
+            update.data.canUnpackInto(UpdateNewMessage());
         if (canUnpackIntoResponse == true) {
-          final decodedResponse = response.data.unpackInto(portal.Response());
+          final decodedResponse = update.data.unpackInto(portal.Response());
           _responseStreamController.add(decodedResponse);
         } else if (canUnpackIntoUpdateNewMessage == true) {
-          final decodedResponse = response.data.unpackInto(UpdateNewMessage());
+          final decodedResponse = update.data.unpackInto(UpdateNewMessage());
           _updateStreamController.add(decodedResponse);
         }
       }, onError: (error) {
@@ -116,7 +101,6 @@ class GrpcChatServiceImpl implements GrpcChatService {
         ),
       );
     });
-
     return _userMessagesController.stream;
   }
 

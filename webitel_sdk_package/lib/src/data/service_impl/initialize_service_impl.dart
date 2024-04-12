@@ -9,8 +9,13 @@ class InitializeServiceImpl implements InitializeService {
   InitializeServiceImpl(this._grpcGateway, this._sharedPreferencesGateway);
 
   @override
-  Future<void> initGrpcClient() async {
-    _grpcGateway.init();
-    _sharedPreferencesGateway.init();
+  Future<void> initGrpcClient({
+    required String baseUrl,
+    required String clientToken,
+    String? deviceId,
+  }) async {
+    await _grpcGateway.init(
+        baseUrl: baseUrl, clientToken: clientToken, deviceId: deviceId);
+    await _sharedPreferencesGateway.init();
   }
 }

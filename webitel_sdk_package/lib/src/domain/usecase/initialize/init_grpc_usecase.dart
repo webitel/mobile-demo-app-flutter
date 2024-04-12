@@ -1,7 +1,11 @@
 import 'package:webitel_sdk_package/src/domain/services/initialize/initialize_service.dart';
 
 abstract interface class InitGrpcUseCase {
-  Future<void> call();
+  Future<void> call({
+    required String baseUrl,
+    required String clientToken,
+    String? deviceId,
+  });
 }
 
 class GrpcInitImplUseCase implements InitGrpcUseCase {
@@ -10,5 +14,14 @@ class GrpcInitImplUseCase implements InitGrpcUseCase {
   GrpcInitImplUseCase(this._initializeService);
 
   @override
-  Future<void> call() => _initializeService.initGrpcClient();
+  Future<void> call({
+    required String baseUrl,
+    required String clientToken,
+    String? deviceId,
+  }) =>
+      _initializeService.initGrpcClient(
+        baseUrl: baseUrl,
+        clientToken: clientToken,
+        deviceId: deviceId,
+      );
 }
