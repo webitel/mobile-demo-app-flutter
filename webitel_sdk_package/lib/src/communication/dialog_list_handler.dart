@@ -16,7 +16,7 @@ class DialogListHandler {
     dialogMessageHandler = DialogMessageHandler();
   }
 
-  Future<Stream<ConnectStatus>> listenConnectStatus() async {
+  Future<ConnectStatus> listenConnectStatus() async {
     final connectStream = await _listenConnectStatusUseCase();
     return connectStream;
   }

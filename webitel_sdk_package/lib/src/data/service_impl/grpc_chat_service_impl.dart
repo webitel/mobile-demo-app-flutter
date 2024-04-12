@@ -37,8 +37,15 @@ class GrpcChatServiceImpl implements GrpcChatService {
   }
 
   @override
-  Future<Stream<ConnectStatus>> listenConnectStatus() async {
-    return Stream.empty();
+  Future<ConnectStatus> listenConnectStatus() async {
+    if (connectClosed != null) {
+      if (connectClosed == true) {
+        return ConnectStatus.closed;
+      } else if (connectClosed == false) {
+        return ConnectStatus.opened;
+      }
+    }
+    return ConnectStatus.closed;
   }
 
   @override

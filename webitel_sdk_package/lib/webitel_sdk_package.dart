@@ -5,7 +5,7 @@ import 'package:webitel_sdk_package/src/communication/dialog_list_handler.dart';
 import 'src/communication/grpc_stream_initializer.dart';
 
 class WebitelSdkPackage {
-  late GrpcStreamInitializer _grpcStreamInitializer;
+  late GrpcStreamInitializer _streamInitializer;
   late DialogListHandler _dialogListHandler;
   late ClientInitializer _clientInitializer;
 
@@ -15,7 +15,7 @@ class WebitelSdkPackage {
     _initDi();
 
     _dialogListHandler = DialogListHandler();
-    _grpcStreamInitializer = GrpcStreamInitializer();
+    _streamInitializer = GrpcStreamInitializer();
     _clientInitializer = ClientInitializer();
   }
 
@@ -30,7 +30,7 @@ class WebitelSdkPackage {
 
   ClientInitializer get clientInitializer => _clientInitializer;
 
-  GrpcStreamInitializer get grpcStreamInitializer => _grpcStreamInitializer;
+  GrpcStreamInitializer get streamInitializer => _streamInitializer;
 
   DialogListHandler get dialogListHandler => _dialogListHandler;
 }

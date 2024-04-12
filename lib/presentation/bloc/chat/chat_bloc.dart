@@ -20,6 +20,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         final stream = await WebitelSdkPackage
             .instance.dialogListHandler.dialogMessageHandler
             .listenToOperatorMessages(id: uuid.v4());
+        final bool = await WebitelSdkPackage.instance.dialogListHandler
+            .listenConnectStatus();
 
         await emit.forEach(stream, onData: (message) {
           if (kDebugMode) {
