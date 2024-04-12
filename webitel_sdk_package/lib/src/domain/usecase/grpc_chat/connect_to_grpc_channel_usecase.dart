@@ -1,7 +1,7 @@
 import 'package:webitel_sdk_package/src/domain/services/grpc_chat/grpc_chat_service.dart';
 
 abstract interface class ConnectToGrpcChannelUseCase {
-  Future<String> call();
+  Future<void> call();
 }
 
 class ConnectToGrpcChannelImplUseCase implements ConnectToGrpcChannelUseCase {
@@ -10,5 +10,5 @@ class ConnectToGrpcChannelImplUseCase implements ConnectToGrpcChannelUseCase {
   ConnectToGrpcChannelImplUseCase(this._grpcChatService);
 
   @override
-  Future<String> call() => _grpcChatService.connectToGrpcChannel();
+  Future<void> call() => _grpcChatService.connectToGrpcChannel();
 }

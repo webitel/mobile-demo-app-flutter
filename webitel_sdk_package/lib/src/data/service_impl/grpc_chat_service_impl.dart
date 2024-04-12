@@ -42,42 +42,32 @@ class GrpcChatServiceImpl implements GrpcChatService {
   }
 
   @override
-  Future<String> connectToGrpcChannel() async {
-    try {
-      _grpcGateway.customerClient
-          .connect(_requestStreamController.stream)
-          .listen(
-            (update) {
-              connectClosed = false;
-              final canUnpackIntoResponse =
-                  update.data.canUnpackInto(portal.Response());
-              final canUnpackIntoUpdateNewMessage =
-                  update.data.canUnpackInto(UpdateNewMessage());
-              if (canUnpackIntoResponse == true) {
-                final decodedResponse =
-                    update.data.unpackInto(portal.Response());
-                _responseStreamController.add(decodedResponse);
-              } else if (canUnpackIntoUpdateNewMessage == true) {
-                final decodedResponse =
-                    update.data.unpackInto(UpdateNewMessage());
-                _updateStreamController.add(decodedResponse);
-              }
-            },
-            cancelOnError: true,
-            onError: (error) {
-              connectClosed = true;
-              _responseStreamController.addError(error);
-              _updateStreamController.addError(error);
-            },
-            onDone: () {
-              connectClosed = true;
-              print('Stream was closed');
-            },
-          );
-    } catch (error) {
-      print('SocketException occurred: $error');
-    }
-    return '';
+  Future<void> connectToGrpcChannel() async {
+    _grpcGateway.customerClient.connect(_requestStreamController.stream).listen(
+      (update) {
+        connectClosed = false;
+        final canUnpackIntoResponse =
+            update.data.canUnpackInto(portal.Response());
+        final canUnpackIntoUpdateNewMessage =
+            update.data.canUnpackInto(UpdateNewMessage());
+        if (canUnpackIntoResponse == true) {
+          final decodedResponse = update.data.unpackInto(portal.Response());
+          _responseStreamController.add(decodedResponse);
+        } else if (canUnpackIntoUpdateNewMessage == true) {
+          final decodedResponse = update.data.unpackInto(UpdateNewMessage());
+          _updateStreamController.add(decodedResponse);
+        }
+      },
+      onError: (error) {
+        connectClosed = true;
+        _responseStreamController.addError(error);
+        _updateStreamController.addError(error);
+      },
+      onDone: () {
+        connectClosed = true;
+      },
+      cancelOnError: true,
+    );
   }
 
   @override
@@ -137,16 +127,19 @@ class GrpcChatServiceImpl implements GrpcChatService {
               final unpackedMessage =
                   response.data.unpackInto(UpdateNewMessage());
               _sharedPreferencesGateway.clearPreferences();
-              completer.complete(
-                DialogMessageEntity(
-                  dialogMessageContent: unpackedMessage.message.text,
-                  peer: PeerInfo(
-                    name: unpackedMessage.message.chat.peer.name,
-                    type: unpackedMessage.message.chat.peer.type,
-                    id: unpackedMessage.message.chat.peer.id,
+              if (!completer.isCompleted) {
+                completer.complete(
+                  DialogMessageEntity(
+                    dialogMessageContent: unpackedMessage.message.text,
+                    peer: PeerInfo(
+                      name: unpackedMessage.message.chat.peer.name,
+                      type: unpackedMessage.message.chat.peer.type,
+                      id: unpackedMessage.message.chat.peer.id,
+                    ),
                   ),
-                ),
-              );
+                );
+              }
+
               print('completed');
               subscription?.cancel();
             }
@@ -170,7 +163,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
             }
           }
         }, onDone: () {});
-        await completer.future.timeout(Duration(seconds: 1));
+        await completer.future.timeout(Duration(seconds: 2));
         if (completer.isCompleted) {
           consecutiveErrors = 0;
           attempt = 0;
@@ -209,7 +202,9 @@ class GrpcChatServiceImpl implements GrpcChatService {
           data: Any.pack(fetchDialogsRequest),
           id: id,
         );
-
+        if (connectClosed == true) {
+          await connectToGrpcChannel();
+        }
         _requestStreamController.add(request);
 
         StreamSubscription<portal.Response>? subscription;
@@ -279,7 +274,9 @@ class GrpcChatServiceImpl implements GrpcChatService {
           data: Any.pack(fetchUpdatesRequest),
           id: id,
         );
-
+        if (connectClosed == true) {
+          await connectToGrpcChannel();
+        }
         _requestStreamController.add(request);
 
         StreamSubscription<portal.Response>? subscription;
@@ -335,5 +332,6 @@ class GrpcChatServiceImpl implements GrpcChatService {
     _requestStreamController.close();
     _responseStreamController.close();
     _updateStreamController.close();
+    _userMessagesController.close();
   }
 }

@@ -7,7 +7,7 @@ import 'package:webitel_sdk/domain/service/local_storage_service.dart';
 import 'package:webitel_sdk/domain/usecase/fetch_device_id_usecase.dart';
 import 'package:webitel_sdk/domain/usecase/send_dialog_message_usecase.dart';
 import 'package:webitel_sdk/presentation/bloc/chat/chat_bloc.dart';
-import 'package:webitel_sdk/presentation/device_info/device_info_bloc.dart';
+import 'package:webitel_sdk/presentation/bloc/device_info/device_info_bloc.dart';
 
 final GetIt locator = GetIt.instance;
 

@@ -6,7 +6,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:webitel_sdk/backbone/dependency_injection.dart' as di;
 import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 import 'package:webitel_sdk/presentation/bloc/chat/chat_bloc.dart';
-import 'package:webitel_sdk/presentation/device_info/device_info_bloc.dart';
+import 'package:webitel_sdk/presentation/bloc/device_info/device_info_bloc.dart';
 import 'package:webitel_sdk/presentation/widget/message_item.dart';
 import 'package:webitel_sdk_package/webitel_sdk_package.dart';
 
@@ -52,7 +52,6 @@ class _ChatPageState extends State<ChatPage> {
       clientToken: clientToken,
       deviceId: deviceId,
     );
-    await WebitelSdkPackage.instance.authHandler.login();
     await WebitelSdkPackage.instance.grpcStreamInitializer.connectToChannel();
   }
 
