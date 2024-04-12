@@ -1,6 +1,7 @@
-import 'package:webitel_sdk/domain/entity/dialog_message.dart';
 import 'package:webitel_sdk/domain/service/chat_service.dart';
 import 'package:webitel_sdk_package/webitel_sdk_package.dart';
+
+import '../../domain/entity/dialog_message_entity.dart';
 
 class ChatServiceImpl implements ChatService {
   @override
@@ -22,13 +23,5 @@ class ChatServiceImpl implements ChatService {
         name: dialogMessageEntityRes.peer.name,
       ),
     );
-  }
-
-  @override
-  Future<Stream<dynamic>> listenIncomingOperatorMessages() async {
-    final stream = await WebitelSdkPackage
-        .instance.dialogListHandler.dialogMessageHandler
-        .listenToOperatorMessages();
-    return stream;
   }
 }

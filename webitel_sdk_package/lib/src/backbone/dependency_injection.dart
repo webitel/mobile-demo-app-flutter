@@ -27,7 +27,7 @@ Future<void> registerDi() async {
       () => SharedPreferencesGateway());
   //Service
   locator.registerLazySingleton<InitializeService>(
-      () => InitializeServiceImpl(locator.get()));
+      () => InitializeServiceImpl(locator.get(), locator.get()));
   locator.registerLazySingleton<GrpcChatService>(
       () => GrpcChatServiceImpl(locator.get(), locator.get()));
   locator.registerLazySingleton<GrpcCallService>(() => GrpcCallServiceImpl());

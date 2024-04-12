@@ -23,8 +23,9 @@ class DialogMessageHandler {
             instanceName: "ListenToOperatorMessagesUsecase");
   }
 
-  Future<Stream<DialogMessageEntity>> listenToOperatorMessages() async {
-    return await _listenToOperatorMessagesUsecase();
+  Future<Stream<DialogMessageEntity>> listenToOperatorMessages(
+      {required String id}) async {
+    return await _listenToOperatorMessagesUsecase(id: id);
   }
 
   Future<DialogMessageEntity> sendDialogMessage({

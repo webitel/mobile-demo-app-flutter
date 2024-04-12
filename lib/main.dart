@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import 'package:webitel_sdk/backbone/dependency_injection.dart';
 import 'package:webitel_sdk_package/webitel_sdk_package.dart';
 
@@ -7,6 +8,7 @@ import 'presentation/page/chat.dart';
 void main() async {
   runApp(const MyApp());
   await registerDi();
+  const uuid = Uuid();
 
   await WebitelSdkPackage.instance.initializer.connectToGrpcChannel(
     deviceId: 'some id',
@@ -25,7 +27,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       theme: ThemeData(),
       home: const ChatPage(),
-
     );
   }
 }

@@ -20,6 +20,9 @@ class GrpcChatServiceImpl implements GrpcChatService {
   final requestStreamController = StreamController<portal.Request>();
   late final StreamController<portal.Response> _responseStreamController;
   late final StreamController<UpdateNewMessage> _updateStreamController;
+  final StreamController<DialogMessageEntity> _userMessagesController =
+      StreamController<DialogMessageEntity>.broadcast();
+
   Timer? _pingTimer;
   final uuid = Uuid();
 
@@ -63,7 +66,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
     try {
       CallOptions options = CallOptions(
         metadata: {
-          'x-portal-device': deviceId,
+          'x-portal-device': 'some id',
           'x-portal-client': clientToken,
           'x-portal-access': accessToken,
         },
@@ -99,26 +102,22 @@ class GrpcChatServiceImpl implements GrpcChatService {
   }
 
   @override
-  Future<Stream<DialogMessageEntity>> listenToOperatorMessages() async {
-    final operatorMessagesController = StreamController<DialogMessageEntity>();
-    _updateStreamController.stream.listen(
-      (update) {
-        final lastSendMessageId =
-            _sharedPreferencesGateway.getFromDisk('lastSendMessageId');
-        operatorMessagesController.add(
-          DialogMessageEntity(
-            dialogMessageContent: update.message.text,
-            peer: PeerInfo(
-              id: update.message.chat.peer.id,
-              name: update.message.chat.peer.name,
-              type: update.message.chat.peer.type,
-            ),
+  Future<Stream<DialogMessageEntity>> listenToOperatorMessages(
+      {required String id}) async {
+    _updateStreamController.stream.listen((update) {
+      _userMessagesController.add(
+        DialogMessageEntity(
+          dialogMessageContent: update.message.text,
+          peer: PeerInfo(
+            id: update.message.chat.peer.id,
+            name: update.message.chat.peer.name,
+            type: update.message.chat.peer.type,
           ),
-        );
-      },
-    );
+        ),
+      );
+    });
 
-    return operatorMessagesController.stream;
+    return _userMessagesController.stream;
   }
 
   @override
@@ -128,11 +127,9 @@ class GrpcChatServiceImpl implements GrpcChatService {
     final maxRetries = 5;
     var attempt = 0;
     var consecutiveErrors = 0;
-
+    final id = uuid.v4();
     while (!completer.isCompleted && attempt < maxRetries) {
       try {
-        final id = uuid.v4();
-        _sharedPreferencesGateway.saveToDisk('lastSendMessageId', id);
         final newMessageRequest = SendMessageRequest(
           text: message.dialogMessageContent,
           peer: Peer(
@@ -158,7 +155,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
             if (canUnpackIntoUpdateNewMessage == true) {
               final unpackedMessage =
                   response.data.unpackInto(UpdateNewMessage());
-
+              _sharedPreferencesGateway.clearPreferences();
               completer.complete(
                 DialogMessageEntity(
                   dialogMessageContent: unpackedMessage.message.text,

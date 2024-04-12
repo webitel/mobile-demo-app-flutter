@@ -1,27 +1,47 @@
 import 'package:bloc/bloc.dart';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:webitel_sdk/domain/entity/dialog_message.dart';
-import 'package:webitel_sdk/domain/usecase/listen_incoming_operator_messages.dart';
+import 'package:flutter/foundation.dart';
+import 'package:uuid/uuid.dart';
+import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 import 'package:webitel_sdk/domain/usecase/send_dialog_message_usecase.dart';
+import 'package:webitel_sdk_package/webitel_sdk_package.dart';
 
 part 'chat_event.dart';
 part 'chat_state.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
-  final ListenIncomingOperatorUseCase _listenIncomingOperatorUseCase;
   final SendDialogMessageUseCase _sendDialogMessageUseCase;
 
-  ChatBloc(this._sendDialogMessageUseCase, this._listenIncomingOperatorUseCase)
-      : super(ChatState.initial()) {
+  ChatBloc(this._sendDialogMessageUseCase) : super(ChatState.initial()) {
+    const uuid = Uuid();
     on<ListenIncomingOperatorMessages>(
       (event, emit) async {
-        final stream = await _listenIncomingOperatorUseCase();
+        final stream = await WebitelSdkPackage
+            .instance.dialogListHandler.dialogMessageHandler
+            .listenToOperatorMessages(id: uuid.v4());
+
         await emit.forEach(stream, onData: (message) {
-          return const ChatState(
+          if (kDebugMode) {
+            print(message);
+          }
+          final List<DialogMessageEntity> currentMessages =
+              state.dialogMessages;
+          final List<DialogMessageEntity> updatedMessages =
+              List.from(currentMessages)
+                ..add(
+                  DialogMessageEntity(
+                    dialogMessageContent: message.dialogMessageContent,
+                    peer: Peer(
+                      id: message.peer.id,
+                      type: message.peer.type,
+                      name: message.peer.name,
+                    ),
+                  ),
+                );
+          return ChatState(
             sendDialogMessageStatus: SendDialogMessageStatus.sent,
-            dialogMessages: [],
+            dialogMessages: updatedMessages,
           );
         });
       },

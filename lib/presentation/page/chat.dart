@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:webitel_sdk/backbone/dependency_injection.dart' as di;
-import 'package:webitel_sdk/domain/entity/dialog_message.dart';
+import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 import 'package:webitel_sdk/presentation/bloc/chat_bloc.dart';
 import 'package:webitel_sdk/presentation/widget/message_item.dart';
 
@@ -27,7 +27,7 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     chatBloc = di.locator.get<ChatBloc>();
-    // chatBloc.add(ListenIncomingOperatorMessages());
+    chatBloc.add(ListenIncomingOperatorMessages());
     super.initState();
   }
 
@@ -98,6 +98,7 @@ class _ChatPageState extends State<ChatPage> {
                           const SizedBox(width: 16),
                           GestureDetector(
                             onTap: () {
+                              _textEditingController.clear();
                               chatBloc.add(
                                 SendDialogMessageEvent(
                                   dialogMessageEntity: DialogMessageEntity(

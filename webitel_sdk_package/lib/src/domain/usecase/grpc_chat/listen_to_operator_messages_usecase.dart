@@ -2,7 +2,7 @@ import 'package:webitel_sdk_package/src/domain/entities/dialog_message.dart';
 import 'package:webitel_sdk_package/src/domain/services/grpc_chat/grpc_chat_service.dart';
 
 abstract interface class ListenToOperatorMessagesUsecase {
-  Future<Stream<DialogMessageEntity>> call();
+  Future<Stream<DialogMessageEntity>> call({required String id});
 }
 
 class ListenToOperatorMessagesImplUseCase
@@ -12,6 +12,6 @@ class ListenToOperatorMessagesImplUseCase
   ListenToOperatorMessagesImplUseCase(this._grpcChatService);
 
   @override
-  Future<Stream<DialogMessageEntity>> call() =>
-      _grpcChatService.listenToOperatorMessages();
+  Future<Stream<DialogMessageEntity>> call({required String id}) =>
+      _grpcChatService.listenToOperatorMessages(id: id);
 }

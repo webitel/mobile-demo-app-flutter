@@ -1,4 +1,4 @@
-import 'package:webitel_sdk/domain/entity/dialog_message.dart';
+import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 import 'package:webitel_sdk/domain/service/chat_service.dart';
 
 abstract interface class SendDialogMessageUseCase {
