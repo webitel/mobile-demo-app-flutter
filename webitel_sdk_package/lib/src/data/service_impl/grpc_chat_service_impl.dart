@@ -7,6 +7,7 @@ import 'package:webitel_sdk_package/src/data/gateway/grpc_gateway.dart';
 import 'package:webitel_sdk_package/src/data/gateway/shared_preferences_gateway.dart';
 import 'package:webitel_sdk_package/src/domain/entities/dialog_message.dart';
 import 'package:webitel_sdk_package/src/domain/services/grpc_chat/grpc_chat_service.dart';
+import 'package:webitel_sdk_package/src/exceptions/grpc_exception.dart';
 import 'package:webitel_sdk_package/src/generated/chat/messages/history.pb.dart';
 import 'package:webitel_sdk_package/src/generated/chat/messages/peer.pb.dart';
 import 'package:webitel_sdk_package/src/generated/google/protobuf/any.pb.dart';
@@ -67,10 +68,16 @@ class GrpcChatServiceImpl implements GrpcChatService {
       },
       onError: (error) {
         connectClosed = true;
-        _responseStreamController.addError(error);
-        _updateStreamController.addError(error);
+        _responseStreamController.addError(
+            GrpcException(message: error.toString(), thrownException: error));
+        _updateStreamController.addError(
+            GrpcException(message: error.toString(), thrownException: error));
       },
       onDone: () {
+        _responseStreamController
+            .addError(GrpcException(message: 'Connect was closed'));
+        _updateStreamController
+            .addError(GrpcException(message: 'Connect was closed'));
         connectClosed = true;
       },
       cancelOnError: true,
