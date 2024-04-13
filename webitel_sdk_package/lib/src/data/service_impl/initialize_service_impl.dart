@@ -31,7 +31,7 @@ class InitializeServiceImpl implements InitializeService {
       ),
     );
 
-    final response = await _grpcGateway.customerClient.token(request);
+    final response = await _grpcGateway.stub.token(request);
     _grpcGateway.setAccessToken(response.accessToken);
   }
 }

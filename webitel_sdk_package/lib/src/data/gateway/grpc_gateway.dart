@@ -2,7 +2,7 @@ import 'package:grpc/grpc.dart';
 import 'package:webitel_sdk_package/src/generated/portal/customer.pbgrpc.dart';
 
 class GrpcGateway {
-  late CustomerClient _customerClient;
+  late CustomerClient _stub;
   late String _accessToken = '';
   late String _baseUrl;
   late String _deviceId;
@@ -47,8 +47,8 @@ class GrpcGateway {
     );
   }
 
-  CustomerClient get customerClient {
-    return _customerClient;
+  CustomerClient get stub {
+    return _stub;
   }
 
   _createChannel({
@@ -64,7 +64,7 @@ class GrpcGateway {
     // channel.onConnectionStateChanged.listen((event) {
     //   print(event);
     // });
-    _customerClient = CustomerClient(
+    _stub = CustomerClient(
       channel,
       options: createCallOptions(
         deviceId: deviceId,

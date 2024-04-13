@@ -50,7 +50,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
 
   @override
   Future<void> connectToGrpcChannel() async {
-    _grpcGateway.customerClient.connect(_requestStreamController.stream).listen(
+    _grpcGateway.stub.connect(_requestStreamController.stream).listen(
       (update) {
         connectClosed = false;
         final canUnpackIntoResponse =
