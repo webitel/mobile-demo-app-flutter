@@ -1,10 +1,14 @@
+enum MessageType { user, operator, error }
+
 class DialogMessageEntity {
   final String dialogMessageContent;
   final PeerInfo peer;
+  final MessageType? type;
 
   DialogMessageEntity({
     required this.dialogMessageContent,
     required this.peer,
+    this.type,
   });
 }
 

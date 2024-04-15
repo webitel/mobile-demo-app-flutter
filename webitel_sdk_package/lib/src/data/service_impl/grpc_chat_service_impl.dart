@@ -87,10 +87,14 @@ class GrpcChatServiceImpl implements GrpcChatService {
   @override
   Future<Stream<DialogMessageEntity>> listenToOperatorMessages(
       {required String id}) async {
+    final userId = await _sharedPreferencesGateway.getFromDisk('userId');
     _updateStreamController.stream.listen((update) {
       _userMessagesController.add(
         DialogMessageEntity(
           dialogMessageContent: update.message.text,
+          type: update.message.sender.id == userId
+              ? MessageType.user
+              : MessageType.operator,
           peer: PeerInfo(
             id: update.message.chat.peer.id,
             name: update.message.chat.peer.name,
@@ -110,7 +114,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
     var attempt = 0;
     var consecutiveErrors = 0;
     final id = uuid.v4();
-
+    final userId = await _sharedPreferencesGateway.getFromDisk('userId');
     while (!completer.isCompleted && attempt < maxRetries) {
       try {
         final newMessageRequest = SendMessageRequest(
@@ -145,6 +149,9 @@ class GrpcChatServiceImpl implements GrpcChatService {
                 completer.complete(
                   DialogMessageEntity(
                     dialogMessageContent: unpackedMessage.message.text,
+                    type: unpackedMessage.message.sender.id == userId
+                        ? MessageType.user
+                        : MessageType.operator,
                     peer: PeerInfo(
                       name: unpackedMessage.message.chat.peer.name,
                       type: unpackedMessage.message.chat.peer.type,
@@ -166,6 +173,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
             if (consecutiveErrors == maxRetries) {
               completer.complete(
                 DialogMessageEntity(
+                  type: MessageType.error,
                   dialogMessageContent: error.toString(),
                   peer: PeerInfo(
                     name: 'ERROR',
@@ -189,6 +197,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
       attempt++;
     }
     return DialogMessageEntity(
+      type: MessageType.error,
       dialogMessageContent: 'Unknown Error',
       peer: PeerInfo(
         name: 'ERROR',
