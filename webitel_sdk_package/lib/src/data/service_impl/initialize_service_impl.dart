@@ -32,6 +32,7 @@ class InitializeServiceImpl implements InitializeService {
     );
 
     final response = await _grpcGateway.stub.token(request);
+    _sharedPreferencesGateway.saveToDisk('userId', response.user.id);
     _grpcGateway.setAccessToken(response.accessToken);
   }
 }

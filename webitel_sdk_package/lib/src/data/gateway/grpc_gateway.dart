@@ -1,4 +1,6 @@
 import 'package:grpc/grpc.dart';
+import 'package:webitel_sdk_package/src/backbone/header_builder.dart';
+import 'package:webitel_sdk_package/src/data/interceptor/interceptor.dart';
 import 'package:webitel_sdk_package/src/generated/portal/customer.pbgrpc.dart';
 
 class GrpcGateway {
@@ -7,20 +9,6 @@ class GrpcGateway {
   late String _baseUrl;
   late String _deviceId;
   late String _clientToken;
-
-  CallOptions createCallOptions({
-    required String? deviceId,
-    required String clientToken,
-    required String accessToken,
-  }) {
-    return CallOptions(
-      metadata: {
-        'x-portal-device': deviceId ?? '',
-        'x-portal-client': clientToken,
-        'x-portal-access': accessToken,
-      },
-    );
-  }
 
   Future<void> init({
     required String baseUrl,
@@ -61,12 +49,10 @@ class GrpcGateway {
       port: 443,
       options: const ChannelOptions(),
     );
-    // channel.onConnectionStateChanged.listen((event) {
-    //   print(event);
-    // });
     _stub = CustomerClient(
+      interceptors: [GRPCInterceptor()],
       channel,
-      options: createCallOptions(
+      options: HeaderBuilder.createCallOptions(
         deviceId: deviceId,
         clientToken: clientToken,
         accessToken: _accessToken,
