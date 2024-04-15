@@ -119,7 +119,6 @@ class GrpcChatServiceImpl implements GrpcChatService {
     final completer = Completer<void>();
     final maxRetries = 5;
     var attempt = 0;
-    final id = uuid.v4();
 
     while (!completer.isCompleted && attempt < maxRetries) {
       try {
@@ -131,19 +130,17 @@ class GrpcChatServiceImpl implements GrpcChatService {
             name: message.peer.name,
           ),
         );
-
         final request = portal.Request(
           path: '/webitel.portal.ChatMessages/SendMessage',
           data: Any.pack(newMessageRequest),
-          id: id,
+          id: message.requestId,
         );
         if (connectClosed == true) {
           await connectToGrpcChannel();
         }
         _requestStreamController.add(request);
-
         _responseStreamController.stream.listen((response) {
-          if (response.id == id) {
+          if (response.id == message.requestId) {
             final canUnpackIntoUpdateNewMessage =
                 response.data.canUnpackInto(UpdateNewMessage());
             if (canUnpackIntoUpdateNewMessage == true) {
