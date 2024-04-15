@@ -14,7 +14,7 @@ import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/connect_to_grpc
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/fetch_dialogs_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/fetch_updates_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/listen_connect_status_usecase.dart';
-import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/listen_to_operator_messages_usecase.dart';
+import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/listen_to_messages_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/send_message_usecase.dart';
 
 import '../domain/usecase/initialize/init_grpc_usecase.dart';
@@ -38,8 +38,8 @@ Future<void> registerDi() async {
   locator.registerLazySingleton<ListenConnectStatusUseCase>(
       () => ListenConnectStatusImplUseCase(locator.get()),
       instanceName: "ListenConnectStatusUseCase");
-  locator.registerLazySingleton<ListenToOperatorMessagesUsecase>(
-      () => ListenToOperatorMessagesImplUseCase(locator.get()),
+  locator.registerLazySingleton<ListenToMessagesUsecase>(
+      () => ListenToMessagesImplUseCase(locator.get()),
       instanceName: "ListenToOperatorMessagesUsecase");
   locator.registerLazySingleton<InitGrpcUseCase>(
       () => GrpcInitImplUseCase(locator.get()),

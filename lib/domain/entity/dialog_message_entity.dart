@@ -4,11 +4,13 @@ class DialogMessageEntity {
   final String dialogMessageContent;
   final Peer peer;
   final MessageType? messageType;
+  final String requestId;
 
   DialogMessageEntity({
     this.messageType,
     required this.dialogMessageContent,
     required this.peer,
+    required this.requestId,
   });
 }
 

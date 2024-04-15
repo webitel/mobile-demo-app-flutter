@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:uuid/uuid.dart';
 import 'package:webitel_sdk/backbone/dependency_injection.dart' as di;
 import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 import 'package:webitel_sdk/presentation/bloc/chat/chat_bloc.dart';
@@ -139,10 +140,12 @@ class _ChatPageState extends State<ChatPage> {
                           const SizedBox(width: 16),
                           GestureDetector(
                             onTap: () {
+                              const uuid = Uuid();
                               _textEditingController.clear();
                               chatBloc.add(
                                 SendDialogMessageEvent(
                                   dialogMessageEntity: DialogMessageEntity(
+                                    requestId: uuid.v4(),
                                     dialogMessageContent: messageContent,
                                     peer: Peer(
                                       id: '',

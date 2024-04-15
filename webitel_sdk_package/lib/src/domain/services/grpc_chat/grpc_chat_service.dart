@@ -9,11 +9,9 @@ abstract interface class GrpcChatService {
 
   Future<List<DialogMessageEntity>> fetchUpdates();
 
-  Future<DialogMessageEntity> sendDialogMessage(
-      {required DialogMessageEntity message});
+  Future<void> sendDialogMessage({required DialogMessageEntity message});
 
-  Future<Stream<DialogMessageEntity>> listenToOperatorMessages(
-      {required String id});
+  Future<Stream<DialogMessageEntity>> listenToMessages();
 
   Future<ConnectStatus> listenConnectStatus();
 }
