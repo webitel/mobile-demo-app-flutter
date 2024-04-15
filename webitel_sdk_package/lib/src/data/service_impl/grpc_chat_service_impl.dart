@@ -109,12 +109,66 @@ class GrpcChatServiceImpl implements GrpcChatService {
   @override
   Future<DialogMessageEntity> sendDialogMessage(
       {required DialogMessageEntity message}) async {
+    final userId = await _sharedPreferencesGateway.getFromDisk('userId');
     final completer = Completer<DialogMessageEntity>();
+    final id = uuid.v4();
+
+    void handleResponse(portal.Response response) {
+      if (response.id == id) {
+        final canUnpackIntoUpdateNewMessage =
+            response.data.canUnpackInto(UpdateNewMessage());
+        if (canUnpackIntoUpdateNewMessage) {
+          final unpackedMessage = response.data.unpackInto(UpdateNewMessage());
+          final messageType = unpackedMessage.message.sender.id == userId
+              ? MessageType.user
+              : MessageType.operator;
+          completer.complete(DialogMessageEntity(
+            dialogMessageContent: unpackedMessage.message.text,
+            type: messageType,
+            peer: PeerInfo(
+              id: unpackedMessage.message.chat.peer.id,
+              name: unpackedMessage.message.chat.peer.name,
+              type: unpackedMessage.message.chat.peer.type,
+            ),
+          ));
+        }
+      }
+    }
+
+    void handleError(Object error) {
+      if (error is GrpcError) {
+        completer.complete(DialogMessageEntity(
+          type: MessageType.error,
+          dialogMessageContent: error.toString(),
+          peer: PeerInfo(
+            name: 'ERROR',
+            type: 'Unknown',
+            id: '',
+          ),
+        ));
+      }
+    }
+
+    _responseStreamController.stream
+        .where((response) => response.id == id)
+        .listen(handleResponse, onError: handleError)
+        .onDone(() {
+      if (!completer.isCompleted) {
+        completer.complete(DialogMessageEntity(
+          type: MessageType.error,
+          dialogMessageContent: 'Unknown Error',
+          peer: PeerInfo(
+            name: 'ERROR',
+            type: 'Unknown',
+            id: '',
+          ),
+        ));
+      }
+    });
+
     final maxRetries = 5;
     var attempt = 0;
-    var consecutiveErrors = 0;
-    final id = uuid.v4();
-    final userId = await _sharedPreferencesGateway.getFromDisk('userId');
+
     while (!completer.isCompleted && attempt < maxRetries) {
       try {
         final newMessageRequest = SendMessageRequest(
@@ -125,86 +179,25 @@ class GrpcChatServiceImpl implements GrpcChatService {
             name: message.peer.name,
           ),
         );
-
         final request = portal.Request(
           path: '/webitel.portal.ChatMessages/SendMessage',
           data: Any.pack(newMessageRequest),
           id: id,
         );
+
         if (connectClosed == true) {
           await connectToGrpcChannel();
         }
+
         _requestStreamController.add(request);
-
-        StreamSubscription<portal.Response>? subscription;
-        subscription = _responseStreamController.stream.listen((response) {
-          if (response.id == id) {
-            final canUnpackIntoUpdateNewMessage =
-                response.data.canUnpackInto(UpdateNewMessage());
-            if (canUnpackIntoUpdateNewMessage == true) {
-              final unpackedMessage =
-                  response.data.unpackInto(UpdateNewMessage());
-              _sharedPreferencesGateway.clearPreferences();
-              if (!completer.isCompleted) {
-                completer.complete(
-                  DialogMessageEntity(
-                    dialogMessageContent: unpackedMessage.message.text,
-                    type: unpackedMessage.message.sender.id == userId
-                        ? MessageType.user
-                        : MessageType.operator,
-                    peer: PeerInfo(
-                      name: unpackedMessage.message.chat.peer.name,
-                      type: unpackedMessage.message.chat.peer.type,
-                      id: unpackedMessage.message.chat.peer.id,
-                    ),
-                  ),
-                );
-              }
-
-              print('completed');
-              subscription?.cancel();
-            }
-          }
-        }, onError: (error) {
-          if (error is GrpcError) {
-            print(error);
-            subscription?.cancel();
-            consecutiveErrors++;
-            if (consecutiveErrors == maxRetries) {
-              completer.complete(
-                DialogMessageEntity(
-                  type: MessageType.error,
-                  dialogMessageContent: error.toString(),
-                  peer: PeerInfo(
-                    name: 'ERROR',
-                    type: 'Unknown',
-                    id: '',
-                  ),
-                ),
-              );
-            }
-          }
-        }, onDone: () {});
         await completer.future.timeout(Duration(seconds: 2));
-        if (completer.isCompleted) {
-          consecutiveErrors = 0;
-          attempt = 0;
-          return completer.future;
-        }
       } catch (error) {
         print(error);
       }
       attempt++;
     }
-    return DialogMessageEntity(
-      type: MessageType.error,
-      dialogMessageContent: 'Unknown Error',
-      peer: PeerInfo(
-        name: 'ERROR',
-        type: 'Unknown',
-        id: '',
-      ),
-    );
+
+    return completer.future;
   }
 
   @override

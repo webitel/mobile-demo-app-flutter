@@ -25,9 +25,10 @@ class InitializeServiceImpl implements InitializeService {
         await _sharedPreferencesGateway.getFromDisk('deviceId');
     if (savedDeviceId != null) {
       await _grpcGateway.init(
-          baseUrl: baseUrl,
-          clientToken: clientToken,
-          deviceId: deviceId ?? savedDeviceId);
+        baseUrl: baseUrl,
+        clientToken: clientToken,
+        deviceId: deviceId ?? savedDeviceId,
+      );
     }
     final request = TokenRequest(
       grantType: 'identity',
