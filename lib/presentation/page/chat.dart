@@ -80,9 +80,26 @@ class _ChatPageState extends State<ChatPage> {
                           reverse: true,
                           itemCount: state.dialogMessages.length,
                           itemBuilder: (BuildContext context, int index) {
-                            return MessageItem(
-                              content: state
-                                  .dialogMessages[index].dialogMessageContent,
+                            return Padding(
+                              padding: EdgeInsets.only(
+                                top: 8,
+                                bottom: 8,
+                                left: state.dialogMessages[index].messageType ==
+                                        MessageType.user
+                                    ? 200
+                                    : 20,
+                                right:
+                                    state.dialogMessages[index].messageType ==
+                                            MessageType.operator
+                                        ? 200
+                                        : 20,
+                              ),
+                              child: MessageItem(
+                                messageType:
+                                    state.dialogMessages[index].messageType!,
+                                content: state
+                                    .dialogMessages[index].dialogMessageContent,
+                              ),
                             );
                           },
                         );

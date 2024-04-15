@@ -19,8 +19,9 @@ class InitializeServiceImpl implements InitializeService {
   }) async {
     final uuid = Uuid();
     await _sharedPreferencesGateway.init();
-    deviceId ??
-        await _sharedPreferencesGateway.saveToDisk('deviceId', uuid.v4());
+    deviceId == null
+        ? await _sharedPreferencesGateway.saveToDisk('deviceId', uuid.v4())
+        : await _sharedPreferencesGateway.saveToDisk('deviceId', deviceId);
     final savedDeviceId =
         await _sharedPreferencesGateway.getFromDisk('deviceId');
     if (savedDeviceId != null) {
@@ -43,7 +44,7 @@ class InitializeServiceImpl implements InitializeService {
     );
 
     final response = await _grpcGateway.stub.token(request);
-    await _sharedPreferencesGateway.saveToDisk('userId', response.user.id);
+    await _sharedPreferencesGateway.saveToDisk('userId', response.chat.user.id);
     _grpcGateway.setAccessToken(response.accessToken);
   }
 }

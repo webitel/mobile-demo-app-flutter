@@ -17,6 +17,9 @@ class ChatServiceImpl implements ChatService {
     );
     return DialogMessageEntity(
       dialogMessageContent: dialogMessageEntityRes.dialogMessageContent,
+      messageType: dialogMessageEntityRes.type!.name == 'user'
+          ? MessageType.user
+          : MessageType.operator,
       peer: Peer(
         type: dialogMessageEntityRes.peer.type,
         id: dialogMessageEntityRes.peer.id,

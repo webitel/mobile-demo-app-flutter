@@ -87,12 +87,13 @@ class GrpcChatServiceImpl implements GrpcChatService {
   @override
   Future<Stream<DialogMessageEntity>> listenToOperatorMessages(
       {required String id}) async {
+    await _sharedPreferencesGateway.init();
     final userId = await _sharedPreferencesGateway.getFromDisk('userId');
     _updateStreamController.stream.listen((update) {
       _userMessagesController.add(
         DialogMessageEntity(
           dialogMessageContent: update.message.text,
-          type: update.message.sender.id == userId
+          type: update.message.from.id == userId
               ? MessageType.user
               : MessageType.operator,
           peer: PeerInfo(
@@ -119,12 +120,12 @@ class GrpcChatServiceImpl implements GrpcChatService {
             response.data.canUnpackInto(UpdateNewMessage());
         if (canUnpackIntoUpdateNewMessage) {
           final unpackedMessage = response.data.unpackInto(UpdateNewMessage());
-          final messageType = unpackedMessage.message.sender.id == userId
-              ? MessageType.user
-              : MessageType.operator;
+
           completer.complete(DialogMessageEntity(
             dialogMessageContent: unpackedMessage.message.text,
-            type: messageType,
+            type: unpackedMessage.message.from.id == userId
+                ? MessageType.user
+                : MessageType.operator,
             peer: PeerInfo(
               id: unpackedMessage.message.chat.peer.id,
               name: unpackedMessage.message.chat.peer.name,

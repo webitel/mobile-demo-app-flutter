@@ -1,5 +1,4 @@
 import 'package:bloc/bloc.dart';
-import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
@@ -33,6 +32,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
               List.from(currentMessages)
                 ..add(
                   DialogMessageEntity(
+                    messageType: message.type!.name == 'user'
+                        ? MessageType.user
+                        : MessageType.operator,
                     dialogMessageContent: message.dialogMessageContent,
                     peer: Peer(
                       id: message.peer.id,
@@ -55,10 +57,22 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             dialogMessageEntity: event.dialogMessageEntity);
         final List<DialogMessageEntity> currentMessages = state.dialogMessages;
         final List<DialogMessageEntity> updatedMessages =
-            List.from(currentMessages)..add(message);
+            List.from(currentMessages)
+              ..add(
+                DialogMessageEntity(
+                  dialogMessageContent: message.dialogMessageContent,
+                  messageType: message.messageType!.name == 'user'
+                      ? MessageType.user
+                      : MessageType.operator,
+                  peer: Peer(
+                    id: message.peer.id,
+                    type: message.peer.type,
+                    name: message.peer.name,
+                  ),
+                ),
+              );
         emit(state.copyWith(dialogMessages: updatedMessages));
       },
-      transformer: sequential(),
     );
   }
 }
