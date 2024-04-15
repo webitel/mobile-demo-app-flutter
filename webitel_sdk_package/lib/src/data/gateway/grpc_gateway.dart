@@ -13,14 +13,14 @@ class GrpcGateway {
   Future<void> init({
     required String baseUrl,
     required String clientToken,
-    String? deviceId,
+    required String deviceId,
   }) async {
     _baseUrl = baseUrl;
-    _deviceId = deviceId ?? '';
+    _deviceId = deviceId;
     _clientToken = clientToken;
     _createChannel(
       baseUrl: baseUrl,
-      deviceId: deviceId ?? '', //TODO if empty device id - generate
+      deviceId: deviceId,
       clientToken: clientToken,
     );
   }
