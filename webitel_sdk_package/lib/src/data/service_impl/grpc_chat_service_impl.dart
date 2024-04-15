@@ -96,10 +96,11 @@ class GrpcChatServiceImpl implements GrpcChatService {
           type: update.message.from.id == userId
               ? MessageType.user
               : MessageType.operator,
+          requestId: update.id,
           peer: PeerInfo(
-            id: update.message.chat.peer.id,
-            name: update.message.chat.peer.name,
-            type: update.message.chat.peer.type,
+            id: update.message.from.id,
+            name: update.message.from.name,
+            type: update.message.from.type,
           ),
         ),
       );
@@ -112,58 +113,66 @@ class GrpcChatServiceImpl implements GrpcChatService {
       {required DialogMessageEntity message}) async {
     final userId = await _sharedPreferencesGateway.getFromDisk('userId');
     final completer = Completer<DialogMessageEntity>();
-    final id = uuid.v4();
 
     void handleResponse(portal.Response response) {
-      if (response.id == id) {
+      if (response.id == message.requestId) {
         final canUnpackIntoUpdateNewMessage =
             response.data.canUnpackInto(UpdateNewMessage());
         if (canUnpackIntoUpdateNewMessage) {
           final unpackedMessage = response.data.unpackInto(UpdateNewMessage());
 
-          completer.complete(DialogMessageEntity(
-            dialogMessageContent: unpackedMessage.message.text,
-            type: unpackedMessage.message.from.id == userId
-                ? MessageType.user
-                : MessageType.operator,
-            peer: PeerInfo(
-              id: unpackedMessage.message.chat.peer.id,
-              name: unpackedMessage.message.chat.peer.name,
-              type: unpackedMessage.message.chat.peer.type,
+          completer.complete(
+            DialogMessageEntity(
+              dialogMessageContent: unpackedMessage.message.text,
+              type: unpackedMessage.message.from.id == userId
+                  ? MessageType.user
+                  : MessageType.operator,
+              requestId: unpackedMessage.id,
+              peer: PeerInfo(
+                id: unpackedMessage.message.from.id,
+                name: unpackedMessage.message.from.name,
+                type: unpackedMessage.message.from.type,
+              ),
             ),
-          ));
+          );
         }
       }
     }
 
     void handleError(Object error) {
       if (error is GrpcError) {
-        completer.complete(DialogMessageEntity(
-          type: MessageType.error,
-          dialogMessageContent: error.toString(),
-          peer: PeerInfo(
-            name: 'ERROR',
-            type: 'Unknown',
-            id: '',
+        completer.complete(
+          DialogMessageEntity(
+            type: MessageType.error,
+            dialogMessageContent: error.toString(),
+            requestId: '',
+            peer: PeerInfo(
+              name: 'ERROR',
+              type: 'Unknown',
+              id: '',
+            ),
           ),
-        ));
+        );
       }
     }
 
     _responseStreamController.stream
-        .where((response) => response.id == id)
+        .where((response) => response.id == message.requestId)
         .listen(handleResponse, onError: handleError)
         .onDone(() {
       if (!completer.isCompleted) {
-        completer.complete(DialogMessageEntity(
-          type: MessageType.error,
-          dialogMessageContent: 'Unknown Error',
-          peer: PeerInfo(
-            name: 'ERROR',
-            type: 'Unknown',
-            id: '',
+        completer.complete(
+          DialogMessageEntity(
+            type: MessageType.error,
+            dialogMessageContent: 'Unknown Error',
+            requestId: '',
+            peer: PeerInfo(
+              name: 'ERROR',
+              type: 'Unknown',
+              id: '',
+            ),
           ),
-        ));
+        );
       }
     });
 
@@ -183,7 +192,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
         final request = portal.Request(
           path: '/webitel.portal.ChatMessages/SendMessage',
           data: Any.pack(newMessageRequest),
-          id: id,
+          id: message.requestId,
         );
 
         if (connectClosed == true) {
@@ -236,6 +245,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
               for (var unpackedMessage in unpackedDialogMessages.messages) {
                 messages.add(
                   DialogMessageEntity(
+                    requestId: '',
                     dialogMessageContent: unpackedMessage.text,
                     peer: PeerInfo(
                       name: unpackedMessage.chat.peer.name,
@@ -308,6 +318,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
               for (var unpackedMessage in unpackedDialogMessages.messages) {
                 messages.add(
                   DialogMessageEntity(
+                    requestId: '',
                     dialogMessageContent: unpackedMessage.text,
                     peer: PeerInfo(
                       name: unpackedMessage.chat.peer.name,

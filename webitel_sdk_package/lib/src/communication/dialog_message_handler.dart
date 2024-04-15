@@ -33,10 +33,12 @@ class DialogMessageHandler {
     required String peerType,
     required String peerName,
     required String peerId,
+    required String requestId,
   }) async {
     return await _sendDialogMessageUseCase(
       message: DialogMessageEntity(
         dialogMessageContent: dialogMessageContent,
+        requestId: requestId,
         peer: PeerInfo(
           type: peerType,
           name: peerName,
