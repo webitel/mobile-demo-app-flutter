@@ -23,6 +23,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
   late final StreamController<portal.Response> _responseStreamController;
   late final StreamController<UpdateNewMessage> _updateStreamController;
   late final StreamController<DialogMessageEntity> _userMessagesController;
+  late final StreamController<ConnectStatus> _connectStatusController;
 
   final uuid = Uuid();
   bool? connectClosed;
@@ -35,18 +36,12 @@ class GrpcChatServiceImpl implements GrpcChatService {
     _responseStreamController = StreamController<portal.Response>.broadcast();
     _updateStreamController = StreamController<UpdateNewMessage>.broadcast();
     _userMessagesController = StreamController<DialogMessageEntity>.broadcast();
+    _connectStatusController = StreamController<ConnectStatus>.broadcast();
   }
 
   @override
-  Future<ConnectStatus> listenConnectStatus() async {
-    if (connectClosed != null) {
-      if (connectClosed == true) {
-        return ConnectStatus.closed;
-      } else if (connectClosed == false) {
-        return ConnectStatus.opened;
-      }
-    }
-    return ConnectStatus.closed;
+  Future<Stream<ConnectStatus>> listenConnectStatus() async {
+    return _connectStatusController.stream;
   }
 
   @override
@@ -54,6 +49,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
     _grpcGateway.stub.connect(_requestStreamController.stream).listen(
       (update) {
         connectClosed = false;
+        _connectStatusController.add(ConnectStatus.opened);
         final canUnpackIntoResponse =
             update.data.canUnpackInto(portal.Response());
         final canUnpackIntoUpdateNewMessage =
@@ -67,9 +63,11 @@ class GrpcChatServiceImpl implements GrpcChatService {
         }
       },
       onError: (error) {
+        _connectStatusController.add(ConnectStatus.closed);
         connectClosed = true;
       },
       onDone: () {
+        _connectStatusController.add(ConnectStatus.closed);
         connectClosed = true;
       },
       cancelOnError: true,
@@ -131,6 +129,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
           ),
         );
         final request = portal.Request(
+          // path: '/webitel.portal.ChatMessages/SendMessage',
           path: '/webitel.portal.ChatMessages/SendMessage',
           data: Any.pack(newMessageRequest),
           id: message.requestId,

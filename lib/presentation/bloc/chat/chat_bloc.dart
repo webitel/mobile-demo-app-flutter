@@ -13,7 +13,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final SendDialogMessageUseCase _sendDialogMessageUseCase;
 
   ChatBloc(this._sendDialogMessageUseCase) : super(ChatState.initial()) {
-    on<ListenIncomingOperatorMessages>(
+    on<ListenIncomingOperatorMessagesEvent>(
       (event, emit) async {
         final stream = await WebitelSdkPackage
             .instance.dialogListHandler.dialogMessageHandler
@@ -39,6 +39,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         });
       },
     );
+    on<ListenConnectStatusEvent>((event, emit) async {
+      final connectStatusStream = await WebitelSdkPackage
+          .instance.dialogListHandler
+          .listenConnectStatus();
+
+      await emit.onEach(connectStatusStream, onData: (status) {
+        if (kDebugMode) {
+          print(status.name);
+        }
+      });
+    });
 
     on<SendDialogMessageEvent>(
       (event, emit) async {

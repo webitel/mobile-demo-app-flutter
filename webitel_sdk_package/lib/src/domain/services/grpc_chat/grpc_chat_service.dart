@@ -13,5 +13,5 @@ abstract interface class GrpcChatService {
 
   Future<Stream<DialogMessageEntity>> listenToMessages();
 
-  Future<ConnectStatus> listenConnectStatus();
+  Future<Stream<ConnectStatus>> listenConnectStatus();
 }

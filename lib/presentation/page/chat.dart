@@ -39,7 +39,8 @@ class _ChatPageState extends State<ChatPage> {
           '49sFBWUGEtlHz7iTWjIXIgRGnZXQ4dQZOy7fdM8AyffZ3oEQzNC5Noa6Aeem6BAw',
       baseUrl: 'dev.webitel.com',
     );
-    chatBloc.add(ListenIncomingOperatorMessages());
+    chatBloc.add(ListenIncomingOperatorMessagesEvent());
+    chatBloc.add(ListenConnectStatusEvent());
     super.initState();
   }
 

@@ -1,7 +1,6 @@
+import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 import 'package:webitel_sdk/domain/service/chat_service.dart';
 import 'package:webitel_sdk_package/webitel_sdk_package.dart';
-
-import '../../domain/entity/dialog_message_entity.dart';
 
 class ChatServiceImpl implements ChatService {
   @override

@@ -9,4 +9,6 @@ class SendDialogMessageEvent extends ChatEvent {
   SendDialogMessageEvent({required this.dialogMessageEntity});
 }
 
-class ListenIncomingOperatorMessages extends ChatEvent {}
+class ListenIncomingOperatorMessagesEvent extends ChatEvent {}
+
+class ListenConnectStatusEvent extends ChatEvent {}
