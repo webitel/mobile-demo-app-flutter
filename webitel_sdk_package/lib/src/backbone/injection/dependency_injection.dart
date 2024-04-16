@@ -16,8 +16,7 @@ import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/fetch_updates_u
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/listen_connect_status_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/listen_to_messages_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/send_message_usecase.dart';
-
-import '../domain/usecase/initialize/init_grpc_usecase.dart';
+import 'package:webitel_sdk_package/src/domain/usecase/initialize/init_grpc_usecase.dart';
 
 final GetIt locator = GetIt.instance;
 

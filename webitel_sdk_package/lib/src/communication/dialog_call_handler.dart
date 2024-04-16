@@ -1,7 +1,7 @@
+import 'package:webitel_sdk_package/src/backbone/injection/dependency_injection.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_call/end_call_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_call/hold_call_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_call/make_call_usecase.dart';
-import 'package:webitel_sdk_package/src/injection/dependency_injection.dart';
 
 class DialogCallHandler {
   late MakeCallUseCase _makeCallUseCase;

@@ -3,10 +3,11 @@ import 'dart:async';
 import 'package:grpc/grpc.dart';
 import 'package:grpc/grpc_or_grpcweb.dart';
 import 'package:uuid/uuid.dart';
-import 'package:webitel_sdk_package/src/builder/dialog_message_builder.dart';
-import 'package:webitel_sdk_package/src/builder/error_message_builder.dart';
-import 'package:webitel_sdk_package/src/builder/portal_request_builder.dart';
-import 'package:webitel_sdk_package/src/builder/send_message_request_builder.dart';
+import 'package:webitel_sdk_package/src/backbone/builder/connect_status_builder.dart';
+import 'package:webitel_sdk_package/src/backbone/builder/dialog_message_builder.dart';
+import 'package:webitel_sdk_package/src/backbone/builder/error_message_builder.dart';
+import 'package:webitel_sdk_package/src/backbone/builder/portal_request_builder.dart';
+import 'package:webitel_sdk_package/src/backbone/builder/send_message_request_builder.dart';
 import 'package:webitel_sdk_package/src/data/gateway/grpc_gateway.dart';
 import 'package:webitel_sdk_package/src/data/gateway/shared_preferences_gateway.dart';
 import 'package:webitel_sdk_package/src/domain/entities/connect_status.dart';
@@ -69,21 +70,19 @@ class GrpcChatServiceImpl implements GrpcChatService {
         }
       },
       onError: (error) {
-        _connectController.add(
-          ConnectStreamStatus(
-            status: ConnectStatus.closed,
-            errorMessage: error.toString(),
-          ),
-        );
+        final status = ConnectStreamStatusBuilder()
+            .setStatus(ConnectStatus.initial)
+            .setErrorMessage(error.toString())
+            .build();
+        _connectController.add(status);
         connectClosed = true;
       },
       onDone: () {
-        _connectController.add(
-          ConnectStreamStatus(
-            status: ConnectStatus.closed,
-            errorMessage: 'Stream was closed',
-          ),
-        );
+        final status = ConnectStreamStatusBuilder()
+            .setStatus(ConnectStatus.initial)
+            .setErrorMessage('Stream was closed')
+            .build();
+        _connectController.add(status);
         connectClosed = true;
       },
       cancelOnError: true,

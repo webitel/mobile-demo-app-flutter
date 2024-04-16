@@ -1,5 +1,5 @@
 import 'package:grpc/grpc.dart';
-import 'package:webitel_sdk_package/src/builder/call_options_builder.dart';
+import 'package:webitel_sdk_package/src/backbone/builder/call_options_builder.dart';
 import 'package:webitel_sdk_package/src/data/interceptor/interceptor.dart';
 import 'package:webitel_sdk_package/src/generated/portal/customer.pbgrpc.dart';
 

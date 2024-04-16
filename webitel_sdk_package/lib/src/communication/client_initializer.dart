@@ -1,5 +1,5 @@
+import 'package:webitel_sdk_package/src/backbone/injection/dependency_injection.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/initialize/init_grpc_usecase.dart';
-import 'package:webitel_sdk_package/src/injection/dependency_injection.dart';
 
 class ClientInitializer {
   late InitGrpcUseCase _initGrpcUseCase;
