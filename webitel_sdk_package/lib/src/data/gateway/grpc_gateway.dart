@@ -1,5 +1,5 @@
 import 'package:grpc/grpc.dart';
-import 'package:webitel_sdk_package/src/backbone/header_builder.dart';
+import 'package:webitel_sdk_package/src/builder/call_options_builder.dart';
 import 'package:webitel_sdk_package/src/data/interceptor/interceptor.dart';
 import 'package:webitel_sdk_package/src/generated/portal/customer.pbgrpc.dart';
 
@@ -52,11 +52,11 @@ class GrpcGateway {
     _stub = CustomerClient(
       interceptors: [GRPCInterceptor()],
       channel,
-      options: HeaderBuilder.createCallOptions(
-        deviceId: deviceId,
-        clientToken: clientToken,
-        accessToken: _accessToken,
-      ),
+      options: CallOptionsBuilder()
+          .setDeviceId(deviceId)
+          .setClientToken(clientToken)
+          .setAccessToken(_accessToken)
+          .build(),
     );
   }
 }

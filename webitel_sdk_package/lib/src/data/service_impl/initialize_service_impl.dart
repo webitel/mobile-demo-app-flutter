@@ -1,10 +1,10 @@
 import 'package:uuid/uuid.dart';
+import 'package:webitel_sdk_package/src/builder/token_request_builder.dart';
 import 'package:webitel_sdk_package/src/data/gateway/grpc_gateway.dart';
 import 'package:webitel_sdk_package/src/data/gateway/shared_preferences_gateway.dart';
 import 'package:webitel_sdk_package/src/domain/entities/request_status_response.dart';
 import 'package:webitel_sdk_package/src/domain/services/initialize/initialize_service.dart';
 import 'package:webitel_sdk_package/src/generated/portal/account.pb.dart';
-import 'package:webitel_sdk_package/src/generated/portal/auth.pb.dart';
 
 class InitializeServiceImpl implements InitializeService {
   final SharedPreferencesGateway _sharedPreferencesGateway;
@@ -31,17 +31,17 @@ class InitializeServiceImpl implements InitializeService {
         deviceId: deviceId ?? savedDeviceId,
       );
     }
-    final request = TokenRequest(
-      grantType: 'identity',
-      responseType: ['user', 'token', 'chat'],
-      appToken:
-          '49sFBWUGEtlHz7iTWjIXIgRGnZXQ4dQZOy7fdM8AyffZ3oEQzNC5Noa6Aeem6BAw',
-      identity: Identity(
-        name: 'Volodia',
-        sub: 'Test',
-        iss: 'https://dev.webitel.com/portal',
-      ),
-    );
+    final request = TokenRequestBuilder()
+        .setGrantType('identity')
+        .setResponseType(['user', 'token', 'chat'])
+        .setAppToken(
+            '49sFBWUGEtlHz7iTWjIXIgRGnZXQ4dQZOy7fdM8AyffZ3oEQzNC5Noa6Aeem6BAw')
+        .setIdentity(Identity(
+          name: 'Volodia',
+          sub: 'Test',
+          iss: 'https://dev.webitel.com/portal',
+        ))
+        .build();
 
     try {
       final response = await _grpcGateway.stub.token(request);

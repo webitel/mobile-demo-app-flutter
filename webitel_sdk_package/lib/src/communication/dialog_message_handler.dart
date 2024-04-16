@@ -1,9 +1,9 @@
-import 'package:webitel_sdk_package/src/backbone/dependency_injection.dart';
 import 'package:webitel_sdk_package/src/domain/entities/dialog_message.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/fetch_dialogs_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/fetch_updates_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/listen_to_messages_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/send_message_usecase.dart';
+import 'package:webitel_sdk_package/src/injection/dependency_injection.dart';
 
 class DialogMessageHandler {
   late SendDialogMessageUseCase _sendDialogMessageUseCase;

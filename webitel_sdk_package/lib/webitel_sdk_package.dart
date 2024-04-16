@@ -1,8 +1,8 @@
-import 'package:webitel_sdk_package/src/backbone/dependency_injection.dart';
 import 'package:webitel_sdk_package/src/communication/client_initializer.dart';
 import 'package:webitel_sdk_package/src/communication/dialog_list_handler.dart';
 
 import 'src/communication/grpc_stream_initializer.dart';
+import 'src/injection/dependency_injection.dart';
 
 class WebitelSdkPackage {
   late GrpcStreamInitializer _streamInitializer;

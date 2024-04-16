@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:grpc/grpc.dart';
 import 'package:grpc/grpc_or_grpcweb.dart';
 import 'package:uuid/uuid.dart';
-import 'package:webitel_sdk_package/src/backbone/dialog_message_builder.dart';
-import 'package:webitel_sdk_package/src/backbone/error_message_builder.dart';
+import 'package:webitel_sdk_package/src/builder/dialog_message_builder.dart';
+import 'package:webitel_sdk_package/src/builder/error_message_builder.dart';
+import 'package:webitel_sdk_package/src/builder/portal_request_builder.dart';
+import 'package:webitel_sdk_package/src/builder/send_message_request_builder.dart';
 import 'package:webitel_sdk_package/src/data/gateway/grpc_gateway.dart';
 import 'package:webitel_sdk_package/src/data/gateway/shared_preferences_gateway.dart';
 import 'package:webitel_sdk_package/src/domain/entities/connect_status.dart';
@@ -94,16 +96,18 @@ class GrpcChatServiceImpl implements GrpcChatService {
     final userId = await _sharedPreferencesGateway.readUserId();
     _updateStreamController.stream.listen((update) {
       if (update.message.from.type == 'Error') {
+        final errorMessage =
+            ErrorMessageBuilder().setErrorMessage(update.message.text).build();
         _userMessagesController.add(
-          ErrorMessageBuilder.buildErrorMessage(update.message.text),
+          errorMessage,
         );
       } else {
-        final dialogMessage = DialogMessageBuilder.buildDialogMessage(
-          dialogMessageContent: update.message.text,
-          requestId: update.id,
-          userId: userId ?? '',
-          update: update,
-        );
+        final dialogMessage = DialogMessageBuilder()
+            .setDialogMessageContent(update.message.text)
+            .setRequestId(update.id)
+            .setUserId(userId ?? '')
+            .setUpdate(update)
+            .build();
         _userMessagesController.add(dialogMessage);
       }
     });
@@ -118,19 +122,21 @@ class GrpcChatServiceImpl implements GrpcChatService {
 
     while (!completer.isCompleted && attempt < maxRetries) {
       try {
-        final newMessageRequest = SendMessageRequest(
-          text: message.dialogMessageContent,
-          peer: Peer(
-            id: message.peer.id,
-            type: message.peer.type,
-            name: message.peer.name,
-          ),
-        );
-        final request = portal.Request(
-          path: '/webitel.portal.ChatMessages/SendMessage',
-          data: Any.pack(newMessageRequest),
-          id: message.requestId,
-        );
+        final newMessageRequest = SendMessageRequestBuilder()
+            .setText(message.dialogMessageContent)
+            .setPeer(Peer(
+              id: message.peer.id,
+              type: message.peer.type,
+              name: message.peer.name,
+            ))
+            .build();
+
+        final request = PortalRequestBuilder()
+            .setPath('/webitel.portal.ChatMessages/SendMessage')
+            .setData(Any.pack(newMessageRequest))
+            .setId(message.requestId)
+            .build();
+
         if (connectClosed == true) {
           await connectToGrpcChannel();
         }

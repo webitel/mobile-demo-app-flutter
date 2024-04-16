@@ -1,9 +1,16 @@
 import 'package:webitel_sdk_package/src/domain/entities/dialog_message.dart';
 
 class ErrorMessageBuilder {
-  static DialogMessageEntity buildErrorMessage(String errorMessage) {
+  late String _errorMessage;
+
+  ErrorMessageBuilder setErrorMessage(String errorMessage) {
+    _errorMessage = errorMessage;
+    return this;
+  }
+
+  DialogMessageEntity build() {
     return DialogMessageEntity(
-      dialogMessageContent: errorMessage,
+      dialogMessageContent: _errorMessage,
       type: MessageType.error,
       requestId: '',
       peer: PeerInfo(id: '', name: '', type: ''),

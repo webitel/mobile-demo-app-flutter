@@ -1,8 +1,8 @@
-import 'package:webitel_sdk_package/src/backbone/dependency_injection.dart';
 import 'package:webitel_sdk_package/src/communication/dialog_call_handler.dart';
 import 'package:webitel_sdk_package/src/communication/dialog_message_handler.dart';
 import 'package:webitel_sdk_package/src/domain/entities/connect_status.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/listen_connect_status_usecase.dart';
+import 'package:webitel_sdk_package/src/injection/dependency_injection.dart';
 
 class DialogListHandler {
   late DialogCallHandler dialogCallHandler;
