@@ -46,7 +46,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
       await emit.onEach(connectStatusStream, onData: (status) {
         if (kDebugMode) {
-          print(status.name);
+          print(status.status.name);
+          print(status.errorMessage);
         }
       });
     });

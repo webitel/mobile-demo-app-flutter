@@ -1,6 +1,7 @@
 import 'package:uuid/uuid.dart';
 import 'package:webitel_sdk_package/src/data/gateway/grpc_gateway.dart';
 import 'package:webitel_sdk_package/src/data/gateway/shared_preferences_gateway.dart';
+import 'package:webitel_sdk_package/src/domain/entities/request_status_response.dart';
 import 'package:webitel_sdk_package/src/domain/services/initialize/initialize_service.dart';
 import 'package:webitel_sdk_package/src/generated/portal/account.pb.dart';
 import 'package:webitel_sdk_package/src/generated/portal/auth.pb.dart';
@@ -12,7 +13,7 @@ class InitializeServiceImpl implements InitializeService {
   InitializeServiceImpl(this._grpcGateway, this._sharedPreferencesGateway);
 
   @override
-  Future<void> initGrpcClient({
+  Future<RequestStatusResponse> initGrpcClient({
     required String baseUrl,
     required String clientToken,
     String? deviceId,
@@ -20,10 +21,9 @@ class InitializeServiceImpl implements InitializeService {
     final uuid = Uuid();
     await _sharedPreferencesGateway.init();
     deviceId == null
-        ? await _sharedPreferencesGateway.saveToDisk('deviceId', uuid.v4())
-        : await _sharedPreferencesGateway.saveToDisk('deviceId', deviceId);
-    final savedDeviceId =
-        await _sharedPreferencesGateway.getFromDisk('deviceId');
+        ? await _sharedPreferencesGateway.saveDeviceId(uuid.v4())
+        : await _sharedPreferencesGateway.saveDeviceId(deviceId);
+    final savedDeviceId = await _sharedPreferencesGateway.readDeviceId();
     if (savedDeviceId != null) {
       await _grpcGateway.init(
         baseUrl: baseUrl,
@@ -43,8 +43,14 @@ class InitializeServiceImpl implements InitializeService {
       ),
     );
 
-    final response = await _grpcGateway.stub.token(request);
-    await _sharedPreferencesGateway.saveToDisk('userId', response.chat.user.id);
-    _grpcGateway.setAccessToken(response.accessToken);
+    try {
+      final response = await _grpcGateway.stub.token(request);
+      await _sharedPreferencesGateway.saveUserId(response.chat.user.id);
+      _grpcGateway.setAccessToken(response.accessToken);
+      return RequestStatusResponse(status: RequestStatus.success);
+    } catch (error) {
+      return RequestStatusResponse(
+          status: RequestStatus.error, message: error.toString());
+    }
   }
 }

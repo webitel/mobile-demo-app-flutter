@@ -39,4 +39,20 @@ class SharedPreferencesGateway {
     }
     throw UnsupportedError('Type $T is not supported by Shared Preferences');
   }
+
+  Future<void> saveDeviceId(String deviceId) async {
+    await saveToDisk('deviceId', deviceId);
+  }
+
+  Future<String?> readDeviceId() async {
+    return await getFromDisk('deviceId');
+  }
+
+  Future<void> saveUserId(String userId) async {
+    await saveToDisk('userId', userId);
+  }
+
+  Future<String?> readUserId() async {
+    return await getFromDisk('userId');
+  }
 }

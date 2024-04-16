@@ -1,7 +1,7 @@
 import 'package:webitel_sdk_package/src/backbone/dependency_injection.dart';
 import 'package:webitel_sdk_package/src/communication/dialog_call_handler.dart';
 import 'package:webitel_sdk_package/src/communication/dialog_message_handler.dart';
-import 'package:webitel_sdk_package/src/domain/services/grpc_chat/grpc_chat_service.dart';
+import 'package:webitel_sdk_package/src/domain/entities/connect_status.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/listen_connect_status_usecase.dart';
 
 class DialogListHandler {
@@ -16,7 +16,7 @@ class DialogListHandler {
     dialogMessageHandler = DialogMessageHandler();
   }
 
-  Future<Stream<ConnectStatus>> listenConnectStatus() async {
+  Future<Stream<ConnectStreamStatus>> listenConnectStatus() async {
     final connectStreamStatusListener = await _listenConnectStatusUseCase();
     return connectStreamStatusListener;
   }

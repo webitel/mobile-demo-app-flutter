@@ -3,8 +3,11 @@ import 'dart:async';
 import 'package:grpc/grpc.dart';
 import 'package:grpc/grpc_or_grpcweb.dart';
 import 'package:uuid/uuid.dart';
+import 'package:webitel_sdk_package/src/backbone/dialog_message_builder.dart';
+import 'package:webitel_sdk_package/src/backbone/error_message_builder.dart';
 import 'package:webitel_sdk_package/src/data/gateway/grpc_gateway.dart';
 import 'package:webitel_sdk_package/src/data/gateway/shared_preferences_gateway.dart';
+import 'package:webitel_sdk_package/src/domain/entities/connect_status.dart';
 import 'package:webitel_sdk_package/src/domain/entities/dialog_message.dart';
 import 'package:webitel_sdk_package/src/domain/services/grpc_chat/grpc_chat_service.dart';
 import 'package:webitel_sdk_package/src/generated/chat/messages/history.pb.dart';
@@ -23,7 +26,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
   late final StreamController<portal.Response> _responseStreamController;
   late final StreamController<UpdateNewMessage> _updateStreamController;
   late final StreamController<DialogMessageEntity> _userMessagesController;
-  late final StreamController<ConnectStatus> _connectStatusController;
+  late final StreamController<ConnectStreamStatus> _connectController;
 
   final uuid = Uuid();
   bool? connectClosed;
@@ -36,12 +39,12 @@ class GrpcChatServiceImpl implements GrpcChatService {
     _responseStreamController = StreamController<portal.Response>.broadcast();
     _updateStreamController = StreamController<UpdateNewMessage>.broadcast();
     _userMessagesController = StreamController<DialogMessageEntity>.broadcast();
-    _connectStatusController = StreamController<ConnectStatus>.broadcast();
+    _connectController = StreamController<ConnectStreamStatus>.broadcast();
   }
 
   @override
-  Future<Stream<ConnectStatus>> listenConnectStatus() async {
-    return _connectStatusController.stream;
+  Future<Stream<ConnectStreamStatus>> listenConnectStatus() async {
+    return _connectController.stream;
   }
 
   @override
@@ -49,7 +52,8 @@ class GrpcChatServiceImpl implements GrpcChatService {
     _grpcGateway.stub.connect(_requestStreamController.stream).listen(
       (update) {
         connectClosed = false;
-        _connectStatusController.add(ConnectStatus.opened);
+        _connectController
+            .add(ConnectStreamStatus(status: ConnectStatus.opened));
         final canUnpackIntoResponse =
             update.data.canUnpackInto(portal.Response());
         final canUnpackIntoUpdateNewMessage =
@@ -63,11 +67,21 @@ class GrpcChatServiceImpl implements GrpcChatService {
         }
       },
       onError: (error) {
-        _connectStatusController.add(ConnectStatus.closed);
+        _connectController.add(
+          ConnectStreamStatus(
+            status: ConnectStatus.closed,
+            errorMessage: error.toString(),
+          ),
+        );
         connectClosed = true;
       },
       onDone: () {
-        _connectStatusController.add(ConnectStatus.closed);
+        _connectController.add(
+          ConnectStreamStatus(
+            status: ConnectStatus.closed,
+            errorMessage: 'Stream was closed',
+          ),
+        );
         connectClosed = true;
       },
       cancelOnError: true,
@@ -77,36 +91,20 @@ class GrpcChatServiceImpl implements GrpcChatService {
   @override
   Future<Stream<DialogMessageEntity>> listenToMessages() async {
     await _sharedPreferencesGateway.init();
-    final userId = await _sharedPreferencesGateway.getFromDisk('userId');
+    final userId = await _sharedPreferencesGateway.readUserId();
     _updateStreamController.stream.listen((update) {
       if (update.message.from.type == 'Error') {
         _userMessagesController.add(
-          DialogMessageEntity(
-            dialogMessageContent: update.message.text,
-            type: MessageType.error,
-            requestId: update.id,
-            peer: PeerInfo(
-              id: '',
-              name: '',
-              type: '',
-            ),
-          ),
+          ErrorMessageBuilder.buildErrorMessage(update.message.text),
         );
       } else {
-        _userMessagesController.add(
-          DialogMessageEntity(
-            dialogMessageContent: update.message.text,
-            type: update.message.from.id == userId
-                ? MessageType.user
-                : MessageType.operator,
-            requestId: update.id,
-            peer: PeerInfo(
-              id: update.message.from.id,
-              name: update.message.from.name,
-              type: update.message.from.type,
-            ),
-          ),
+        final dialogMessage = DialogMessageBuilder.buildDialogMessage(
+          dialogMessageContent: update.message.text,
+          requestId: update.id,
+          userId: userId ?? '',
+          update: update,
         );
+        _userMessagesController.add(dialogMessage);
       }
     });
     return _userMessagesController.stream;
@@ -129,7 +127,6 @@ class GrpcChatServiceImpl implements GrpcChatService {
           ),
         );
         final request = portal.Request(
-          // path: '/webitel.portal.ChatMessages/SendMessage',
           path: '/webitel.portal.ChatMessages/SendMessage',
           data: Any.pack(newMessageRequest),
           id: message.requestId,
@@ -324,6 +321,21 @@ class GrpcChatServiceImpl implements GrpcChatService {
     _userMessagesController.close();
   }
 }
+
+// _userMessagesController.add(
+//   DialogMessageEntity(
+//     dialogMessageContent: update.message.text,
+//     type: update.message.from.id == userId
+//         ? MessageType.user
+//         : MessageType.operator,
+//     requestId: update.id,
+//     peer: PeerInfo(
+//       id: update.message.from.id,
+//       name: update.message.from.name,
+//       type: update.message.from.type,
+//     ),
+//   ),
+// );
 
 // @override
 // Future<void> sendDialogMessage({required DialogMessageEntity message}) async {

@@ -1,6 +1,5 @@
+import 'package:webitel_sdk_package/src/domain/entities/connect_status.dart';
 import 'package:webitel_sdk_package/src/domain/entities/dialog_message.dart';
-
-enum ConnectStatus { initial, opened, closed }
 
 abstract interface class GrpcChatService {
   Future<void> connectToGrpcChannel();
@@ -13,5 +12,5 @@ abstract interface class GrpcChatService {
 
   Future<Stream<DialogMessageEntity>> listenToMessages();
 
-  Future<Stream<ConnectStatus>> listenConnectStatus();
+  Future<Stream<ConnectStreamStatus>> listenConnectStatus();
 }

@@ -1,7 +1,8 @@
+import 'package:webitel_sdk_package/src/domain/entities/request_status_response.dart';
 import 'package:webitel_sdk_package/src/domain/services/initialize/initialize_service.dart';
 
 abstract interface class InitGrpcUseCase {
-  Future<void> call({
+  Future<RequestStatusResponse> call({
     required String baseUrl,
     required String clientToken,
     String? deviceId,
@@ -14,7 +15,7 @@ class GrpcInitImplUseCase implements InitGrpcUseCase {
   GrpcInitImplUseCase(this._initializeService);
 
   @override
-  Future<void> call({
+  Future<RequestStatusResponse> call({
     required String baseUrl,
     required String clientToken,
     String? deviceId,
