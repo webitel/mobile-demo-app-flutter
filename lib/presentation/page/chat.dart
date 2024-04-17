@@ -24,7 +24,6 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  String _userAgent = '<unknown>';
   late ChatBloc chatBloc;
   late DeviceInfoBloc deviceInfoBloc;
   DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
@@ -44,7 +43,7 @@ class _ChatPageState extends State<ChatPage> {
           '49sFBWUGEtlHz7iTWjIXIgRGnZXQ4dQZOy7fdM8AyffZ3oEQzNC5Noa6Aeem6BAw',
       baseUrl: 'dev.webitel.com',
     );
-    chatBloc.add(ListenIncomingOperatorMessagesEvent());
+
     super.initState();
   }
 
@@ -80,8 +79,7 @@ class _ChatPageState extends State<ChatPage> {
         deviceModel: iosInfo.model,
       );
     }
-
-    WebitelSdkPackage.instance.streamInitializer.connectToChannel();
+    chatBloc.add(ListenIncomingOperatorMessagesEvent());
   }
 
   @override

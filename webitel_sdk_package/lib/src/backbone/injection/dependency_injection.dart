@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:webitel_sdk_package/src/data/gateway/connect_listener_gateway.dart';
 import 'package:webitel_sdk_package/src/data/gateway/grpc_gateway.dart';
 import 'package:webitel_sdk_package/src/data/gateway/shared_preferences_gateway.dart';
 import 'package:webitel_sdk_package/src/data/service_impl/auth_service_impl.dart';
@@ -14,7 +15,6 @@ import 'package:webitel_sdk_package/src/domain/usecase/auth/register_device_usec
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_call/end_call_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_call/hold_call_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_call/make_call_usecase.dart';
-import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/connect_to_grpc_channel_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/fetch_dialogs_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/fetch_updates_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/listen_connect_status_usecase.dart';
@@ -29,6 +29,8 @@ Future<void> registerDi() async {
   locator.registerLazySingleton<GrpcGateway>(() => GrpcGateway());
   locator.registerLazySingleton<SharedPreferencesGateway>(
       () => SharedPreferencesGateway());
+  locator.registerLazySingleton<ConnectListenerGateway>(
+      () => ConnectListenerGateway(locator.get()));
 
   //Service
   locator.registerLazySingleton<InitializeService>(
@@ -55,9 +57,6 @@ Future<void> registerDi() async {
   locator.registerLazySingleton<InitGrpcUseCase>(
       () => GrpcInitImplUseCase(locator.get()),
       instanceName: "InitGrpcUseCase");
-  locator.registerLazySingleton<ConnectToGrpcChannelUseCase>(
-      () => ConnectToGrpcChannelImplUseCase(locator.get()),
-      instanceName: "ConnectToGrpcChannelUseCase");
   locator.registerLazySingleton<FetchDialogsUseCase>(
       () => FetchDialogsImplUseCase(locator.get()),
       instanceName: "FetchDialogsUseCase");
