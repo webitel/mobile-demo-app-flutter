@@ -15,6 +15,7 @@ dependencies:
   cupertino_icons: ^1.0.6
   flutter_bloc: ^8.1.5
   bloc: ^8.1.4
+  device_info_plus: ^10.1.0
   bloc_concurrency: ^0.2.5
   equatable: ^2.0.5
   uuid: ^4.4.0
@@ -22,6 +23,7 @@ dependencies:
   flutter_svg: ^2.0.10+1
   build_runner: ^2.4.9
   get_it: ^7.6.8
+  package_info_plus: ^7.0.0
   webitel_sdk_package:
     path: webitel_sdk_package/
 

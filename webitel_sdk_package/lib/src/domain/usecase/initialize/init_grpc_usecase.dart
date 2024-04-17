@@ -5,6 +5,11 @@ abstract interface class InitGrpcUseCase {
   Future<RequestStatusResponse> call({
     required String baseUrl,
     required String clientToken,
+    required String appName,
+    required String appVersion,
+    required String osName,
+    required String osVersion,
+    required String deviceModel,
     String? deviceId,
   });
 }
@@ -18,11 +23,21 @@ class GrpcInitImplUseCase implements InitGrpcUseCase {
   Future<RequestStatusResponse> call({
     required String baseUrl,
     required String clientToken,
+    required String appName,
+    required String appVersion,
+    required String osName,
+    required String osVersion,
+    required String deviceModel,
     String? deviceId,
   }) =>
       _initializeService.initGrpcClient(
         baseUrl: baseUrl,
         clientToken: clientToken,
         deviceId: deviceId,
+        appName: appName,
+        appVersion: appVersion,
+        osName: osName,
+        osVersion: osVersion,
+        deviceModel: deviceModel,
       );
 }

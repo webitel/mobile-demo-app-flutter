@@ -1,5 +1,6 @@
 import 'package:uuid/uuid.dart';
 import 'package:webitel_sdk_package/src/backbone/builder/token_request_builder.dart';
+import 'package:webitel_sdk_package/src/backbone/builder/user_agent_builder.dart';
 import 'package:webitel_sdk_package/src/data/gateway/grpc_gateway.dart';
 import 'package:webitel_sdk_package/src/data/gateway/shared_preferences_gateway.dart';
 import 'package:webitel_sdk_package/src/domain/entities/request_status_response.dart';
@@ -16,6 +17,11 @@ class InitializeServiceImpl implements InitializeService {
   Future<RequestStatusResponse> initGrpcClient({
     required String baseUrl,
     required String clientToken,
+    required String appName,
+    required String appVersion,
+    required String osName,
+    required String osVersion,
+    required String deviceModel,
     String? deviceId,
   }) async {
     final uuid = Uuid();
@@ -29,6 +35,13 @@ class InitializeServiceImpl implements InitializeService {
         baseUrl: baseUrl,
         clientToken: clientToken,
         deviceId: deviceId ?? savedDeviceId,
+        userAgentBuilder: UserAgentBuilder(
+          appName: appName,
+          appVersion: appVersion,
+          osName: osName,
+          osVersion: osVersion,
+          deviceModel: deviceModel,
+        ),
       );
     }
     final request = TokenRequestBuilder()

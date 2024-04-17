@@ -1,12 +1,16 @@
 import 'package:get_it/get_it.dart';
 import 'package:webitel_sdk_package/src/data/gateway/grpc_gateway.dart';
 import 'package:webitel_sdk_package/src/data/gateway/shared_preferences_gateway.dart';
+import 'package:webitel_sdk_package/src/data/service_impl/auth_service_impl.dart';
 import 'package:webitel_sdk_package/src/data/service_impl/grpc_call_service_impl.dart';
 import 'package:webitel_sdk_package/src/data/service_impl/grpc_chat_service_impl.dart';
 import 'package:webitel_sdk_package/src/data/service_impl/initialize_service_impl.dart';
+import 'package:webitel_sdk_package/src/domain/services/auth/auth_service.dart';
 import 'package:webitel_sdk_package/src/domain/services/grpc_call/grpc_call_service.dart';
 import 'package:webitel_sdk_package/src/domain/services/grpc_chat/grpc_chat_service.dart';
 import 'package:webitel_sdk_package/src/domain/services/initialize/initialize_service.dart';
+import 'package:webitel_sdk_package/src/domain/usecase/auth/logout_usecase.dart';
+import 'package:webitel_sdk_package/src/domain/usecase/auth/register_device_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_call/end_call_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_call/hold_call_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_call/make_call_usecase.dart';
@@ -32,8 +36,16 @@ Future<void> registerDi() async {
   locator.registerLazySingleton<GrpcChatService>(
       () => GrpcChatServiceImpl(locator.get(), locator.get()));
   locator.registerLazySingleton<GrpcCallService>(() => GrpcCallServiceImpl());
+  locator
+      .registerLazySingleton<AuthService>(() => AuthServiceImpl(locator.get()));
 
   //Use case
+  locator.registerLazySingleton<RegisterDeviceUseCase>(
+      () => RegisterDeviceImplUseCase(locator.get()),
+      instanceName: "RegisterDeviceUseCase");
+  locator.registerLazySingleton<LogoutUseCase>(
+      () => LogoutImplUseCase(locator.get()),
+      instanceName: "LogoutUseCase");
   locator.registerLazySingleton<ListenConnectStatusUseCase>(
       () => ListenConnectStatusImplUseCase(locator.get()),
       instanceName: "ListenConnectStatusUseCase");

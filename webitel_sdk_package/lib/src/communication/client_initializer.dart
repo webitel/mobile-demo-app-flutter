@@ -13,12 +13,22 @@ class ClientInitializer {
   Future<void> initializeClient({
     required String baseUrl,
     required String clientToken,
+    required String appName,
+    required String appVersion,
+    required String osName,
+    required String osVersion,
+    required String deviceModel,
     String? deviceId,
   }) async {
     await _initGrpcUseCase(
       baseUrl: baseUrl,
       clientToken: clientToken,
       deviceId: deviceId,
+      appName: appName,
+      appVersion: appVersion,
+      osName: osName,
+      osVersion: osVersion,
+      deviceModel: deviceModel,
     );
   }
 }
