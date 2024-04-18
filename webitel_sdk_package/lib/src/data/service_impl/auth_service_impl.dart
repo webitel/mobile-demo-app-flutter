@@ -70,13 +70,13 @@ class AuthServiceImpl implements AuthService {
   }
 
   @override
-  Future<void> logout() async {
-    await _grpcGateway.stub.logout(LogoutRequest());
-  }
-
-  @override
   Future<void> registerDevice() async {
     await _grpcGateway.stub
         .registerDevice(RegisterDeviceRequest(push: DevicePush()));
+  }
+
+  @override
+  Future<void> logout() async {
+    await _grpcGateway.stub.logout(LogoutRequest());
   }
 }

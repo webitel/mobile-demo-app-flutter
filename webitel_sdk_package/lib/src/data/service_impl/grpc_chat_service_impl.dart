@@ -6,7 +6,6 @@ import 'package:uuid/uuid.dart';
 import 'package:webitel_sdk_package/src/backbone/builder/dialog_message_builder.dart';
 import 'package:webitel_sdk_package/src/data/gateway/connect_listener_gateway.dart';
 import 'package:webitel_sdk_package/src/data/gateway/shared_preferences_gateway.dart';
-import 'package:webitel_sdk_package/src/domain/entities/connect_status.dart';
 import 'package:webitel_sdk_package/src/domain/entities/dialog_message.dart';
 import 'package:webitel_sdk_package/src/domain/services/grpc_chat/grpc_chat_service.dart';
 import 'package:webitel_sdk_package/src/generated/chat/messages/history.pb.dart';
@@ -31,12 +30,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
   }
 
   @override
-  Future<Stream<ConnectStreamStatus>> listenConnectStatus() async {
-    return _connectListenerGateway.connectStatusStream;
-  }
-
-  @override
-  Future<Stream<DialogMessageEntity>> listenToMessages() async {
+  Future<StreamController<DialogMessageEntity>> listenToMessages() async {
     await _sharedPreferencesGateway.init();
     final userId = await _sharedPreferencesGateway.readUserId();
 
@@ -49,7 +43,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
           .build();
       _userMessagesController.add(dialogMessage);
     });
-    return _userMessagesController.stream;
+    return _userMessagesController;
   }
 
   @override

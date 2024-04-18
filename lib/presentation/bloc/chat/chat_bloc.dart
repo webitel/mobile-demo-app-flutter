@@ -15,10 +15,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   ChatBloc(this._sendDialogMessageUseCase) : super(ChatState.initial()) {
     on<ListenIncomingOperatorMessagesEvent>(
       (event, emit) async {
-        final stream =
+        final messagesStreamController =
             await WebitelSdkPackage.instance.eventHandler.listenToMessages();
 
-        await emit.forEach(stream, onData: (message) {
+        await emit.forEach(messagesStreamController.stream, onData: (message) {
           final List<DialogMessageEntity> currentMessages = [
             DialogMessageEntity(
               requestId: message.requestId,
@@ -39,10 +39,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       },
     );
     on<ListenConnectStatusEvent>((event, emit) async {
-      final connectStatusStream =
+      final connectStatusStreamController =
           await WebitelSdkPackage.instance.eventHandler.listenConnectStatus();
 
-      await emit.onEach(connectStatusStream, onData: (status) {
+      await emit.onEach(connectStatusStreamController.stream, onData: (status) {
         if (kDebugMode) {
           print(status.status.name);
           print(status.errorMessage);

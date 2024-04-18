@@ -71,8 +71,8 @@ class ConnectListenerGateway {
 
   Stream<UpdateNewMessage> get updateStream => _updateStreamController.stream;
 
-  Stream<ConnectStreamStatus> get connectStatusStream =>
-      _connectController.stream;
+  StreamController<ConnectStreamStatus> get connectStatusStream =>
+      _connectController;
 
   void dispose() {
     _requestStreamController.close();

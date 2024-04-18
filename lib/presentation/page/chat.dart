@@ -74,12 +74,13 @@ class _ChatPageState extends State<ChatPage> {
         deviceId: deviceId,
         appName: packageInfo.appName,
         appVersion: packageInfo.version,
-        osName: 'iOS',
+        osName: iosInfo.systemName,
         osVersion: iosInfo.systemVersion,
         deviceModel: iosInfo.model,
       );
     }
     chatBloc.add(ListenIncomingOperatorMessagesEvent());
+    chatBloc.add(ListenConnectStatusEvent());
   }
 
   @override
