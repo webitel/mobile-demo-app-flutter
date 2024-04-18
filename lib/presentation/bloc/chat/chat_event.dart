@@ -12,3 +12,5 @@ class SendDialogMessageEvent extends ChatEvent {
 class ListenIncomingOperatorMessagesEvent extends ChatEvent {}
 
 class ListenConnectStatusEvent extends ChatEvent {}
+
+class FetchUpdatesEvent extends ChatEvent {}

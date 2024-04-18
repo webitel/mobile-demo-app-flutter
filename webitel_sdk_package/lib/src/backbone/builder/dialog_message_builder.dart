@@ -5,6 +5,8 @@ class DialogMessageBuilder {
   late String _dialogMessageContent;
   late String _requestId;
   late String _userId;
+  late String _chatId;
+  late String _messageId;
   late UpdateNewMessage _update;
 
   DialogMessageBuilder setDialogMessageContent(String dialogMessageContent) {
@@ -19,6 +21,16 @@ class DialogMessageBuilder {
 
   DialogMessageBuilder setUserId(String userId) {
     _userId = userId;
+    return this;
+  }
+
+  DialogMessageBuilder setChatId(String chatId) {
+    _chatId = chatId;
+    return this;
+  }
+
+  DialogMessageBuilder setMessageId(String messageId) {
+    _messageId = messageId;
     return this;
   }
 
@@ -39,10 +51,12 @@ class DialogMessageBuilder {
     );
 
     return DialogMessageEntity(
+      chatId: _chatId,
       dialogMessageContent: _dialogMessageContent,
       type: messageType,
       requestId: _requestId,
       peer: peerInfo,
+      messageId: _messageId,
     );
   }
 }

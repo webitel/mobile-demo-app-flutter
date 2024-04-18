@@ -5,12 +5,16 @@ class DialogMessageEntity {
   final PeerInfo peer;
   final MessageType? type;
   final String requestId;
+  final String? chatId;
+  final String? messageId;
 
   DialogMessageEntity({
     required this.requestId,
     required this.dialogMessageContent,
     required this.peer,
     this.type,
+    this.chatId,
+    this.messageId,
   });
 }
 

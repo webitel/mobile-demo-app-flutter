@@ -12,8 +12,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.6
+  cupertino_icons: ^1.0.8
   flutter_bloc: ^8.1.5
+  sqflite: ^2.3.3
   bloc: ^8.1.4
   device_info_plus: ^10.1.0
   bloc_concurrency: ^0.2.5
@@ -22,7 +23,8 @@ dependencies:
   shared_preferences: ^2.2.3
   flutter_svg: ^2.0.10+1
   build_runner: ^2.4.9
-  get_it: ^7.6.8
+  path: ^1.9.0
+  get_it: ^7.7.0
   package_info_plus: ^7.0.0
   webitel_sdk_package:
     path: webitel_sdk_package/

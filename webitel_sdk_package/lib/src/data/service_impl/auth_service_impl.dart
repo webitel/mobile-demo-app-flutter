@@ -52,8 +52,8 @@ class AuthServiceImpl implements AuthService {
         .setAppToken(
             '49sFBWUGEtlHz7iTWjIXIgRGnZXQ4dQZOy7fdM8AyffZ3oEQzNC5Noa6Aeem6BAw')
         .setIdentity(Identity(
-          name: 'Volodia',
-          sub: 'Test',
+          name: 'Volodia Acc 2',
+          sub: 'Test 2',
           iss: 'https://dev.webitel.com/portal',
         ))
         .build();

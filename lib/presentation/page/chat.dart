@@ -81,6 +81,7 @@ class _ChatPageState extends State<ChatPage> {
     }
     chatBloc.add(ListenIncomingOperatorMessagesEvent());
     chatBloc.add(ListenConnectStatusEvent());
+    chatBloc.add(FetchUpdatesEvent());
   }
 
   @override

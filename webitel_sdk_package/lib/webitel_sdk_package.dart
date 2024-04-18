@@ -1,5 +1,6 @@
 import 'package:webitel_sdk_package/src/backbone/injection/dependency_injection.dart';
 import 'package:webitel_sdk_package/src/communication/auth_handler.dart';
+import 'package:webitel_sdk_package/src/communication/chat_list_handler.dart';
 import 'package:webitel_sdk_package/src/communication/event_handler.dart';
 import 'package:webitel_sdk_package/src/communication/message_handler.dart';
 
@@ -7,11 +8,13 @@ class WebitelSdkPackage {
   late MessageHandler _messageHandler;
   late EventHandler _eventHandler;
   late AuthHandler _authHandler;
+  late ChatListHandler _chatListHandler;
 
   static WebitelSdkPackage? _instance;
 
   WebitelSdkPackage._internal() {
     _initDi();
+    _chatListHandler = ChatListHandler();
     _authHandler = AuthHandler();
     _eventHandler = EventHandler();
     _messageHandler = MessageHandler();
@@ -25,6 +28,8 @@ class WebitelSdkPackage {
   Future<void> _initDi() async {
     await registerDi();
   }
+
+  ChatListHandler get chatListHandler => _chatListHandler;
 
   EventHandler get eventHandler => _eventHandler;
 

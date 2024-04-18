@@ -13,6 +13,7 @@ class ErrorMessageBuilder {
       dialogMessageContent: _errorMessage,
       type: MessageType.error,
       requestId: '',
+      chatId: '',
       peer: PeerInfo(id: '', name: '', type: ''),
     );
   }
