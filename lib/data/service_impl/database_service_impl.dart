@@ -15,8 +15,8 @@ class DatabaseServiceImpl implements DatabaseService {
     final db = await database.database;
     final List<Map<String, dynamic>> maps = await db.query(
       DatabaseProvider.messageTable,
-      // where: 'chatId = ?',
-      // whereArgs: ['AxUSFAMCDxQ'],
+      where: 'chatId = ?',
+      whereArgs: ['AxUSFAMCDxQ'],
     );
     final messages = maps
         .map(
@@ -31,7 +31,7 @@ class DatabaseServiceImpl implements DatabaseService {
           ),
         )
         .toList();
-    print(messages);
+
     return messages;
   }
 
@@ -46,27 +46,31 @@ class DatabaseServiceImpl implements DatabaseService {
     final messagesFromServer = await WebitelSdkPackage.instance.messageHandler
         .fetchMessages(limit: 20);
 
-    final db = await database.database;
-    await db.transaction((txn) async {
-      for (final message in messagesFromServer) {
-        await txn.insert(
-          DatabaseProvider.messageTable,
-          {
-            'chatId': message.chatId,
-            'messageId': message.messageId,
-            'messageType': message.type!.name,
-            'dialogMessageContent': message.dialogMessageContent,
-            'peerId': message.peer.id,
-            'peerType': message.peer.type,
-            'peerName': message.peer.name,
-            'requestId': message.requestId,
-            'messageStatus': 'Success',
-            'timestamp': DateTime.now().millisecondsSinceEpoch,
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-      }
-    });
+    if (messagesFromServer.isNotEmpty) {
+      final db = await database.database;
+      await db.transaction((txn) async {
+        for (final message in messagesFromServer) {
+          await txn.insert(
+            DatabaseProvider.messageTable,
+            {
+              'chatId': message.chatId,
+              'messageId': message.messageId,
+              'messageType': message.type!.name,
+              'dialogMessageContent': message.dialogMessageContent,
+              'peerId': message.peer.id,
+              'peerType': message.peer.type,
+              'peerName': message.peer.name,
+              'requestId': message.requestId,
+              'messageStatus': 'Success',
+              'timestamp': DateTime.now().millisecondsSinceEpoch,
+            },
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+      });
+    } else {
+      return;
+    }
   }
 
   @override

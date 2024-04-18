@@ -169,7 +169,8 @@ class ChatServiceImpl implements ChatService {
 
     try {
       final response = await _connectListenerGateway.responseStream
-          .firstWhere((response) => response.id == id);
+          .firstWhere((response) => response.id == id)
+          .timeout(Duration(seconds: 4)); // Timeout added here
 
       final canUnpackIntoDialogMessages =
           response.data.canUnpackInto(ChatMessages());
@@ -179,17 +180,18 @@ class ChatServiceImpl implements ChatService {
         final messages = unpackedDialogMessages.messages.map((unpackedMessage) {
           final peerIndex = int.parse(unpackedMessage.from.id) - 1;
           return DialogMessageEntity(
-              requestId: '',
-              chatId: chatId ?? '',
-              type: peers[peerIndex].id == userId
-                  ? MessageType.user
-                  : MessageType.operator,
-              dialogMessageContent: unpackedMessage.text,
-              peer: PeerInfo(
-                name: '',
-                type: '',
-                id: '',
-              ));
+            requestId: '',
+            chatId: chatId ?? '',
+            type: peers[peerIndex].id == userId
+                ? MessageType.user
+                : MessageType.operator,
+            dialogMessageContent: unpackedMessage.text,
+            peer: PeerInfo(
+              name: '',
+              type: '',
+              id: '',
+            ),
+          );
         }).toList();
 
         return messages;
@@ -219,7 +221,8 @@ class ChatServiceImpl implements ChatService {
 
     try {
       final response = await _connectListenerGateway.responseStream
-          .firstWhere((response) => response.id == id);
+          .firstWhere((response) => response.id == id)
+          .timeout(Duration(seconds: 4)); // Timeout added here
 
       final canUnpackIntoDialogMessages =
           response.data.canUnpackInto(ChatMessages());
@@ -246,7 +249,7 @@ class ChatServiceImpl implements ChatService {
         return messages;
       }
     } catch (error) {
-      print(error);
+      return [];
     }
 
     return [];

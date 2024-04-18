@@ -23,8 +23,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   ) : super(ChatState.initial()) {
     on<FetchUpdatesEvent>(
       (event, emit) async {
-        await _writeMessageToDatabaseUseCase(); // To write updates to local storage
-        final messages = await _fetchMessagesByChatIdUseCase();
+        await _writeMessageToDatabaseUseCase(); // To write updates to DB
+        final messages =
+            await _fetchMessagesByChatIdUseCase(); // Fetch newest 20 messages from DB
         emit(state.copyWith(dialogMessages: messages));
       },
     );
