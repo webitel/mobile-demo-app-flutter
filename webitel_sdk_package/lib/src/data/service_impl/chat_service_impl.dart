@@ -32,15 +32,14 @@ class ChatServiceImpl implements ChatService {
   @override
   Future<StreamController<DialogMessageEntity>> listenToMessages() async {
     await _sharedPreferencesGateway.init();
-    final userId = await _sharedPreferencesGateway.readUserId();
 
     _connectListenerGateway.updateStream.listen((update) {
       final dialogMessage = DialogMessageBuilder()
           .setDialogMessageContent(update.message.text)
           .setRequestId(update.id)
           .setMessageId(update.id)
-          .setUserId(userId ?? '')
-          .setChatId(update.message.chat.id)
+          .setUserId(update.message.sender.id)
+          .setChatId(update.message.chat.id) //TODO
           .setUpdate(update)
           .build();
       _userMessagesController.add(dialogMessage);
@@ -156,6 +155,7 @@ class ChatServiceImpl implements ChatService {
   Future<List<DialogMessageEntity>> fetchMessages(
       {int? limit, String? offset}) async {
     final chatId = await _sharedPreferencesGateway.getFromDisk('chatId');
+    final userId = await _sharedPreferencesGateway.readUserId();
     final id = uuid.v4();
     final fetchMessagesRequest =
         ChatMessagesRequest(chatId: chatId, limit: limit ?? 20);
@@ -175,22 +175,22 @@ class ChatServiceImpl implements ChatService {
           response.data.canUnpackInto(ChatMessages());
       if (canUnpackIntoDialogMessages == true) {
         final unpackedDialogMessages = response.data.unpackInto(ChatMessages());
-
-        final messages = unpackedDialogMessages.messages
-            .map((unpackedMessage) => DialogMessageEntity(
-                  requestId: '',
-                  chatId: chatId ?? '',
-                  type: unpackedMessage.from.id == '1' //TODO
-                      ? MessageType.operator
-                      : MessageType.user,
-                  dialogMessageContent: unpackedMessage.text,
-                  peer: PeerInfo(
-                    name: '',
-                    type: '',
-                    id: '',
-                  ),
-                ))
-            .toList();
+        final peers = unpackedDialogMessages.peers;
+        final messages = unpackedDialogMessages.messages.map((unpackedMessage) {
+          final peerIndex = int.parse(unpackedMessage.from.id) - 1;
+          return DialogMessageEntity(
+              requestId: '',
+              chatId: chatId ?? '',
+              type: peers[peerIndex].id == userId
+                  ? MessageType.user
+                  : MessageType.operator,
+              dialogMessageContent: unpackedMessage.text,
+              peer: PeerInfo(
+                name: '',
+                type: '',
+                id: '',
+              ));
+        }).toList();
 
         return messages;
       }
@@ -205,6 +205,7 @@ class ChatServiceImpl implements ChatService {
   Future<List<DialogMessageEntity>> fetchMessageUpdates(
       {int? limit, String? offset}) async {
     final chatId = await _sharedPreferencesGateway.getFromDisk('chatId');
+    final userId = await _sharedPreferencesGateway.readUserId();
     final id = uuid.v4();
     final fetchMessageUpdatesRequest =
         ChatMessagesRequest(chatId: chatId, limit: limit ?? 20);
@@ -224,19 +225,23 @@ class ChatServiceImpl implements ChatService {
           response.data.canUnpackInto(ChatMessages());
       if (canUnpackIntoDialogMessages == true) {
         final unpackedDialogMessages = response.data.unpackInto(ChatMessages());
-
-        final messages = unpackedDialogMessages.messages
-            .map((unpackedMessage) => DialogMessageEntity(
-                  requestId: '',
-                  chatId: '',
-                  dialogMessageContent: unpackedMessage.text,
-                  peer: PeerInfo(
-                    name: unpackedMessage.chat.peer.name,
-                    type: unpackedMessage.chat.peer.type,
-                    id: unpackedMessage.chat.peer.id,
-                  ),
-                ))
-            .toList();
+        final peers = unpackedDialogMessages.peers;
+        final messages = unpackedDialogMessages.messages.map((unpackedMessage) {
+          final peerIndex = int.parse(unpackedMessage.from.id) - 1;
+          return DialogMessageEntity(
+            requestId: '',
+            chatId: chatId,
+            type: peers[peerIndex].id == userId
+                ? MessageType.user
+                : MessageType.operator,
+            dialogMessageContent: unpackedMessage.text,
+            peer: PeerInfo(
+              name: unpackedMessage.chat.peer.name,
+              type: unpackedMessage.chat.peer.type,
+              id: unpackedMessage.chat.peer.id,
+            ),
+          );
+        }).toList();
 
         return messages;
       }
