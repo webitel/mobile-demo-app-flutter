@@ -153,7 +153,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
   }
 
   @override
-  Future<List<DialogMessageEntity>> fetchDialogs() async {
+  Future<List<DialogMessageEntity>> fetchMessages() async {
     final maxRetries = 5;
     var attempt = 0;
     var consecutiveErrors = 0;
@@ -224,7 +224,7 @@ class GrpcChatServiceImpl implements GrpcChatService {
   }
 
   @override
-  Future<List<DialogMessageEntity>> fetchUpdates() async {
+  Future<List<DialogMessageEntity>> fetchMessageUpdates() async {
     final maxRetries = 5;
     var attempt = 0;
     var consecutiveErrors = 0;

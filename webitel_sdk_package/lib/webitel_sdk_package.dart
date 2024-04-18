@@ -1,11 +1,11 @@
 import 'package:webitel_sdk_package/src/backbone/injection/dependency_injection.dart';
 import 'package:webitel_sdk_package/src/communication/auth_handler.dart';
-import 'package:webitel_sdk_package/src/communication/client_initializer.dart';
-import 'package:webitel_sdk_package/src/communication/dialog_list_handler.dart';
+import 'package:webitel_sdk_package/src/communication/event_handler.dart';
+import 'package:webitel_sdk_package/src/communication/message_handler.dart';
 
 class WebitelSdkPackage {
-  late DialogListHandler _dialogListHandler;
-  late ClientInitializer _clientInitializer;
+  late MessageHandler _messageHandler;
+  late EventHandler _eventHandler;
   late AuthHandler _authHandler;
 
   static WebitelSdkPackage? _instance;
@@ -13,9 +13,8 @@ class WebitelSdkPackage {
   WebitelSdkPackage._internal() {
     _initDi();
     _authHandler = AuthHandler();
-    _dialogListHandler = DialogListHandler();
-
-    _clientInitializer = ClientInitializer();
+    _eventHandler = EventHandler();
+    _messageHandler = MessageHandler();
   }
 
   static WebitelSdkPackage get instance {
@@ -27,9 +26,9 @@ class WebitelSdkPackage {
     await registerDi();
   }
 
-  ClientInitializer get clientInitializer => _clientInitializer;
+  EventHandler get eventHandler => _eventHandler;
+
+  MessageHandler get messageHandler => _messageHandler;
 
   AuthHandler get authHandler => _authHandler;
-
-  DialogListHandler get dialogListHandler => _dialogListHandler;
 }

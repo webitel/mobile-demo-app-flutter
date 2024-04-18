@@ -66,12 +66,6 @@ class ConnectListenerGateway {
     _requestStreamController.add(request);
   }
 
-  Future<void> initialConnect() async {
-    if (connectClosed == true) {
-      await _connect();
-    }
-  }
-
   Stream<portal.Response> get responseStream =>
       _responseStreamController.stream;
 

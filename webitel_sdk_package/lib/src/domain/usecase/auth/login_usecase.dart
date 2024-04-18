@@ -1,7 +1,7 @@
 import 'package:webitel_sdk_package/src/domain/entities/request_status_response.dart';
-import 'package:webitel_sdk_package/src/domain/services/initialize/initialize_service.dart';
+import 'package:webitel_sdk_package/src/domain/services/auth/auth_service.dart';
 
-abstract interface class InitGrpcUseCase {
+abstract interface class LoginUseCase {
   Future<RequestStatusResponse> call({
     required String baseUrl,
     required String clientToken,
@@ -14,10 +14,10 @@ abstract interface class InitGrpcUseCase {
   });
 }
 
-class GrpcInitImplUseCase implements InitGrpcUseCase {
-  final InitializeService _initializeService;
+class LoginImplUseCase implements LoginUseCase {
+  final AuthService _authService;
 
-  GrpcInitImplUseCase(this._initializeService);
+  LoginImplUseCase(this._authService);
 
   @override
   Future<RequestStatusResponse> call({
@@ -30,7 +30,7 @@ class GrpcInitImplUseCase implements InitGrpcUseCase {
     required String deviceModel,
     String? deviceId,
   }) =>
-      _initializeService.initGrpcClient(
+      _authService.login(
         baseUrl: baseUrl,
         clientToken: clientToken,
         deviceId: deviceId,

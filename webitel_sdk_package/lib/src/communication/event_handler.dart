@@ -1,20 +1,22 @@
 import 'package:webitel_sdk_package/src/backbone/injection/dependency_injection.dart';
-import 'package:webitel_sdk_package/src/communication/dialog_call_handler.dart';
-import 'package:webitel_sdk_package/src/communication/dialog_message_handler.dart';
 import 'package:webitel_sdk_package/src/domain/entities/connect_status.dart';
+import 'package:webitel_sdk_package/src/domain/entities/dialog_message.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/listen_connect_status_usecase.dart';
+import 'package:webitel_sdk_package/src/domain/usecase/grpc_chat/listen_to_messages_usecase.dart';
 
-class DialogListHandler {
-  late DialogCallHandler dialogCallHandler;
-  late DialogMessageHandler dialogMessageHandler;
+class EventHandler {
+  late ListenToMessagesUsecase _listenToMessagesUsecase;
   late ListenConnectStatusUseCase _listenConnectStatusUseCase;
 
-  DialogListHandler() {
+  EventHandler() {
+    _listenToMessagesUsecase = locator.get<ListenToMessagesUsecase>(
+        instanceName: "ListenToOperatorMessagesUsecase");
     _listenConnectStatusUseCase = locator.get<ListenConnectStatusUseCase>(
         instanceName: "ListenConnectStatusUseCase");
+  }
 
-    dialogCallHandler = DialogCallHandler();
-    dialogMessageHandler = DialogMessageHandler();
+  Future<Stream<DialogMessageEntity>> listenToMessages() async {
+    return await _listenToMessagesUsecase();
   }
 
   Future<Stream<ConnectStreamStatus>> listenConnectStatus() async {

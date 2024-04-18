@@ -7,8 +7,7 @@ class ChatServiceImpl implements ChatService {
   Future<void> sendDialogMessage({
     required DialogMessageEntity dialogMessageEntity,
   }) async {
-    await WebitelSdkPackage.instance.dialogListHandler.dialogMessageHandler
-        .sendDialogMessage(
+    await WebitelSdkPackage.instance.messageHandler.sendDialogMessage(
       dialogMessageContent: dialogMessageEntity.dialogMessageContent,
       requestId: dialogMessageEntity.requestId,
       peerType: dialogMessageEntity.peer.type,

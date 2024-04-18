@@ -56,7 +56,7 @@ class _ChatPageState extends State<ChatPage> {
     if (Platform.isAndroid) {
       AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
 
-      await WebitelSdkPackage.instance.clientInitializer.initializeClient(
+      await WebitelSdkPackage.instance.authHandler.login(
         baseUrl: baseUrl,
         clientToken: clientToken,
         deviceId: deviceId,
@@ -68,7 +68,7 @@ class _ChatPageState extends State<ChatPage> {
       );
     } else if (Platform.isIOS) {
       IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
-      await WebitelSdkPackage.instance.clientInitializer.initializeClient(
+      await WebitelSdkPackage.instance.authHandler.login(
         baseUrl: baseUrl,
         clientToken: clientToken,
         deviceId: deviceId,
