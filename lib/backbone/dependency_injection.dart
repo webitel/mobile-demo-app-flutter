@@ -7,7 +7,9 @@ import 'package:webitel_sdk/database/database_provider.dart';
 import 'package:webitel_sdk/domain/service/chat_service.dart';
 import 'package:webitel_sdk/domain/service/data_base_service.dart';
 import 'package:webitel_sdk/domain/service/local_storage_service.dart';
+import 'package:webitel_sdk/domain/usecase/database/clear_usecase.dart';
 import 'package:webitel_sdk/domain/usecase/database/fetch_messages_by_chat_id.dart';
+import 'package:webitel_sdk/domain/usecase/database/write_message_to_database_usecase.dart';
 import 'package:webitel_sdk/domain/usecase/database/write_messages_to_database_usecase.dart';
 import 'package:webitel_sdk/domain/usecase/fetch_device_id_usecase.dart';
 import 'package:webitel_sdk/domain/usecase/send_dialog_message_usecase.dart';
@@ -30,12 +32,18 @@ Future<void> registerDi() async {
       () => LocalStorageServiceImpl(locator.get()));
 
   //Use case
+  locator.registerLazySingleton<ClearDatabaseUseCase>(
+      () => ClearDatabaseImplUseCase(locator.get()),
+      instanceName: "ClearDatabaseUseCase");
   locator.registerLazySingleton<SendDialogMessageUseCase>(
       () => SendDialogMessageImplUseCase(locator.get()),
       instanceName: "SendDialogMessageUseCase");
   locator.registerLazySingleton<FetchMessagesByChatIdUseCase>(
       () => FetchMessagesByChatIdImplUseCase(locator.get()),
       instanceName: "FetchMessagesByChatIdUseCase");
+  locator.registerLazySingleton<WriteMessagesToDatabaseUseCase>(
+      () => WriteMessagesToDatabaseImplUseCase(locator.get()),
+      instanceName: "WriteMessagesToDatabaseUseCase");
   locator.registerLazySingleton<WriteMessageToDatabaseUseCase>(
       () => WriteMessageToDatabaseImplUseCase(locator.get()),
       instanceName: "WriteMessageToDatabaseUseCase");
@@ -46,10 +54,11 @@ Future<void> registerDi() async {
   //BloC
   locator.registerLazySingleton<ChatBloc>(
     () => ChatBloc(
+      locator<ClearDatabaseUseCase>(instanceName: "ClearDatabaseUseCase"),
       locator<SendDialogMessageUseCase>(
           instanceName: "SendDialogMessageUseCase"),
-      locator<WriteMessageToDatabaseUseCase>(
-          instanceName: "WriteMessageToDatabaseUseCase"),
+      locator<WriteMessagesToDatabaseUseCase>(
+          instanceName: "WriteMessagesToDatabaseUseCase"),
       locator<FetchMessagesByChatIdUseCase>(
           instanceName: "FetchMessagesByChatIdUseCase"),
     ),

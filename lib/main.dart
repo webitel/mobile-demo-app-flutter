@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:webitel_sdk/backbone/dependency_injection.dart';
-
 import 'presentation/page/chat.dart';
 
 void main() async {

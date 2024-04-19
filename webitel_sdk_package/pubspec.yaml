@@ -9,6 +9,7 @@ dependencies:
   build_runner: ^2.4.9
   get_it: ^7.7.0
   shared_preferences: ^2.2.3
+  synchronized: ^3.1.0+1
   grpc: ^3.2.4
   flutter_dotenv: ^5.1.0
   protobuf: ^3.1.0

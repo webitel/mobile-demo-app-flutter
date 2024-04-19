@@ -35,8 +35,6 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     chatBloc = di.locator.get<ChatBloc>();
-    deviceInfoBloc = di.locator.get<DeviceInfoBloc>();
-    deviceInfoBloc.add(FetchDeviceIdEvent());
     initClient(
       deviceId: '8b98475e-21f9-47bf-b10a-125a83731a33',
       clientToken:

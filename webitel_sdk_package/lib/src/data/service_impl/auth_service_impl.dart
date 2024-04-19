@@ -13,7 +13,10 @@ class AuthServiceImpl implements AuthService {
   final SharedPreferencesGateway _sharedPreferencesGateway;
   final GrpcGateway _grpcGateway;
 
-  AuthServiceImpl(this._grpcGateway, this._sharedPreferencesGateway);
+  AuthServiceImpl(
+    this._grpcGateway,
+    this._sharedPreferencesGateway,
+  );
 
   @override
   Future<RequestStatusResponse> login({
@@ -52,8 +55,8 @@ class AuthServiceImpl implements AuthService {
         .setAppToken(
             '49sFBWUGEtlHz7iTWjIXIgRGnZXQ4dQZOy7fdM8AyffZ3oEQzNC5Noa6Aeem6BAw')
         .setIdentity(Identity(
-          name: 'Volodia Acc 2',
-          sub: 'Test 2',
+          name: 'Volodia',
+          sub: 'Test',
           iss: 'https://dev.webitel.com/portal',
         ))
         .build();

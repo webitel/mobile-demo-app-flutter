@@ -19,6 +19,7 @@ class ChatListServiceImpl implements ChatListService {
   @override
   Future<void> fetchDialogs() async {
     final id = uuid.v4();
+    await _sharedPreferencesGateway.init();
     final chatDialogsRequest = ChatDialogsRequest();
     final request = portal.Request(
       path: '/webitel.portal.ChatMessages/ChatDialogs',
@@ -26,7 +27,7 @@ class ChatListServiceImpl implements ChatListService {
       id: id,
     );
 
-    _connectListenerGateway.sendRequest(request);
+    await _connectListenerGateway.sendRequest(request);
 
     try {
       final response = await _connectListenerGateway.responseStream

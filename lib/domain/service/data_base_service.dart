@@ -10,4 +10,6 @@ abstract interface class DatabaseService {
       {required String requestId, required MessageStatus newStatus});
 
   Future<void> writeMessages();
+
+  Future<void> clear();
 }

@@ -32,13 +32,14 @@ class ChatServiceImpl implements ChatService {
   @override
   Future<StreamController<DialogMessageEntity>> listenToMessages() async {
     await _sharedPreferencesGateway.init();
+    final userId = await _sharedPreferencesGateway.readUserId();
 
     _connectListenerGateway.updateStream.listen((update) {
       final dialogMessage = DialogMessageBuilder()
           .setDialogMessageContent(update.message.text)
           .setRequestId(update.id)
           .setMessageId(update.id)
-          .setUserId(update.message.sender.id)
+          .setUserId(userId ?? '')
           .setChatId(update.message.chat.id) //TODO
           .setUpdate(update)
           .build();
@@ -165,12 +166,12 @@ class ChatServiceImpl implements ChatService {
       id: id,
     );
 
-    _connectListenerGateway.sendRequest(request);
+    await _connectListenerGateway.sendRequest(request);
 
     try {
       final response = await _connectListenerGateway.responseStream
           .firstWhere((response) => response.id == id)
-          .timeout(Duration(seconds: 4)); // Timeout added here
+          .timeout(Duration(seconds: 5));
 
       final canUnpackIntoDialogMessages =
           response.data.canUnpackInto(ChatMessages());
@@ -222,7 +223,7 @@ class ChatServiceImpl implements ChatService {
     try {
       final response = await _connectListenerGateway.responseStream
           .firstWhere((response) => response.id == id)
-          .timeout(Duration(seconds: 4)); // Timeout added here
+          .timeout(Duration(seconds: 5));
 
       final canUnpackIntoDialogMessages =
           response.data.canUnpackInto(ChatMessages());

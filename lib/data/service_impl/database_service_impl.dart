@@ -47,6 +47,7 @@ class DatabaseServiceImpl implements DatabaseService {
         .fetchMessages(limit: 20);
 
     if (messagesFromServer.isNotEmpty) {
+      await clear();
       final db = await database.database;
       await db.transaction((txn) async {
         for (final message in messagesFromServer) {
@@ -77,5 +78,12 @@ class DatabaseServiceImpl implements DatabaseService {
   Future<void> updateMessageStatus(
       {required String requestId, required MessageStatus newStatus}) async {
     await database.updateMessageStatus(requestId, newStatus);
+  }
+
+  // Method to clear the message table
+  @override
+  Future<void> clear() async {
+    final db = await database.database;
+    await db.delete(DatabaseProvider.messageTable);
   }
 }
