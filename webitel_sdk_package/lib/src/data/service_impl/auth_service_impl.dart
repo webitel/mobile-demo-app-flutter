@@ -27,6 +27,7 @@ class AuthServiceImpl implements AuthService {
     required String osName,
     required String osVersion,
     required String deviceModel,
+    required String appToken,
     String? deviceId,
   }) async {
     final uuid = Uuid();
@@ -52,8 +53,7 @@ class AuthServiceImpl implements AuthService {
     final request = TokenRequestBuilder()
         .setGrantType('identity')
         .setResponseType(['user', 'token', 'chat'])
-        .setAppToken(
-            '49sFBWUGEtlHz7iTWjIXIgRGnZXQ4dQZOy7fdM8AyffZ3oEQzNC5Noa6Aeem6BAw')
+        .setAppToken(appToken)
         .setIdentity(Identity(
           name: 'Volodia',
           sub: 'Test',

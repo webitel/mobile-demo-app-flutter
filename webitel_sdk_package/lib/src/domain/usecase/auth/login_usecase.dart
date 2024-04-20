@@ -10,6 +10,7 @@ abstract interface class LoginUseCase {
     required String osName,
     required String osVersion,
     required String deviceModel,
+    required String appToken,
     String? deviceId,
   });
 }
@@ -28,9 +29,11 @@ class LoginImplUseCase implements LoginUseCase {
     required String osName,
     required String osVersion,
     required String deviceModel,
+    required String appToken,
     String? deviceId,
   }) =>
       _authService.login(
+        appToken: appToken,
         baseUrl: baseUrl,
         clientToken: clientToken,
         deviceId: deviceId,

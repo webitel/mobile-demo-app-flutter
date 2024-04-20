@@ -13,6 +13,7 @@ abstract interface class AuthService {
     required String osName,
     required String osVersion,
     required String deviceModel,
+    required String appToken,
     String? deviceId,
   });
 }

@@ -5,6 +5,7 @@ import 'package:webitel_sdk_package/src/data/gateway/grpc_gateway.dart';
 import 'package:webitel_sdk_package/src/domain/entities/connect_status.dart';
 import 'package:webitel_sdk_package/src/generated/portal/connect.pb.dart'
     as portal;
+import 'package:webitel_sdk_package/src/generated/portal/connect.pb.dart';
 import 'package:webitel_sdk_package/src/generated/portal/messages.pb.dart';
 
 class ConnectListenerGateway {
@@ -15,6 +16,7 @@ class ConnectListenerGateway {
   late final StreamController<portal.Request> _requestStreamController;
   bool connectClosed = true;
   final Lock _lock = Lock();
+  StreamSubscription<Update>? stream;
 
   ConnectListenerGateway(this._grpcGateway) {
     _responseStreamController = StreamController<portal.Response>.broadcast();
@@ -24,56 +26,55 @@ class ConnectListenerGateway {
   }
 
   Future<void> _connect() async {
-    await _lock.synchronized(() async {
-      if (!connectClosed) {
-        return;
-      }
-      connectClosed = false;
-      _grpcGateway.stub.connect(_requestStreamController.stream).listen(
-        (update) {
-          _connectController
-              .add(ConnectStreamStatus(status: ConnectStatus.opened));
-          final canUnpackIntoResponse =
-              update.data.canUnpackInto(portal.Response());
-          final canUnpackIntoUpdateNewMessage =
-              update.data.canUnpackInto(UpdateNewMessage());
-          if (canUnpackIntoResponse == true) {
-            final decodedResponse = update.data.unpackInto(portal.Response());
-            _responseStreamController.add(decodedResponse);
-          } else if (canUnpackIntoUpdateNewMessage == true) {
-            final decodedResponse = update.data.unpackInto(UpdateNewMessage());
-            _updateStreamController.add(decodedResponse);
-          }
-        },
-        onError: (error) {
-          connectClosed = true;
-          _connectController.add(ConnectStreamStatus(
-            status: ConnectStatus.closed,
-            errorMessage: error.toString(),
-          ));
-        },
-        onDone: () {
-          connectClosed = true;
-          _connectController.add(ConnectStreamStatus(
-            status: ConnectStatus.closed,
-            errorMessage: 'Stream was closed',
-          ));
-        },
-        cancelOnError: true,
-      );
-    });
+    connectClosed = false;
+
+    _grpcGateway.stub.connect(_requestStreamController.stream).listen(
+      (update) {
+        _connectController
+            .add(ConnectStreamStatus(status: ConnectStatus.opened));
+        final canUnpackIntoResponse =
+            update.data.canUnpackInto(portal.Response());
+        final canUnpackIntoUpdateNewMessage =
+            update.data.canUnpackInto(UpdateNewMessage());
+        if (canUnpackIntoResponse == true) {
+          final decodedResponse = update.data.unpackInto(portal.Response());
+          _responseStreamController.add(decodedResponse);
+        } else if (canUnpackIntoUpdateNewMessage == true) {
+          final decodedResponse = update.data.unpackInto(UpdateNewMessage());
+          _updateStreamController.add(decodedResponse);
+        }
+      },
+      onError: (error) {
+        connectClosed = true;
+        _connectController.add(ConnectStreamStatus(
+          status: ConnectStatus.closed,
+          errorMessage: error.toString(),
+        ));
+      },
+      onDone: () {
+        connectClosed = true;
+        _connectController.add(ConnectStreamStatus(
+          status: ConnectStatus.closed,
+          errorMessage: 'Stream was closed',
+        ));
+      },
+      cancelOnError: true,
+    );
   }
 
   Future<void> sendRequest(portal.Request request) async {
     await reconnect();
-
     _requestStreamController.add(request);
   }
 
   Future<void> reconnect() async {
-    if (connectClosed == true) {
-      await _connect();
-    }
+    await _lock.synchronized(() async {
+      if (connectClosed == true) {
+        await _connect();
+        await Future.delayed(Duration(seconds: 2));
+        print('connect');
+      }
+    });
   }
 
   Stream<portal.Response> get responseStream =>

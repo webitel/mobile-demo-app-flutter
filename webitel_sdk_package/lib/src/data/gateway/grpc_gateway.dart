@@ -1,10 +1,12 @@
 import 'package:grpc/grpc.dart';
 import 'package:webitel_sdk_package/src/backbone/builder/call_options_builder.dart';
 import 'package:webitel_sdk_package/src/backbone/builder/user_agent_builder.dart';
+import 'package:webitel_sdk_package/src/data/interceptor/interceptor.dart';
 import 'package:webitel_sdk_package/src/generated/portal/customer.pbgrpc.dart';
 
 class GrpcGateway {
   late CustomerClient _stub;
+  late ClientChannel _channel;
   late String _accessToken = '';
   late String _baseUrl;
   late String _deviceId;
@@ -44,13 +46,15 @@ class GrpcGateway {
     return _stub;
   }
 
+  ClientChannel get channel => _channel;
+
   Future<void> _createChannel({
     required String baseUrl,
     required String deviceId,
     required String clientToken,
     required String userAgent,
   }) async {
-    final channel = ClientChannel(
+    _channel = ClientChannel(
       baseUrl,
       port: 443,
       options: ChannelOptions(
@@ -64,6 +68,7 @@ class GrpcGateway {
 
     _stub = CustomerClient(
       channel,
+      interceptors: [GRPCInterceptor()],
       options: CallOptionsBuilder()
           .setDeviceId(deviceId)
           .setClientToken(clientToken)

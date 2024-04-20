@@ -1,18 +1,15 @@
 import 'dart:async';
-import 'dart:io' show Platform;
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:uuid/uuid.dart';
 import 'package:webitel_sdk/backbone/dependency_injection.dart' as di;
 import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 import 'package:webitel_sdk/presentation/bloc/chat/chat_bloc.dart';
 import 'package:webitel_sdk/presentation/bloc/device_info/device_info_bloc.dart';
 import 'package:webitel_sdk/presentation/widget/message_item.dart';
-import 'package:webitel_sdk_package/webitel_sdk_package.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({
@@ -35,51 +32,13 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     chatBloc = di.locator.get<ChatBloc>();
-    initClient(
-      deviceId: '8b98475e-21f9-47bf-b10a-125a83731a33',
-      clientToken:
-          '49sFBWUGEtlHz7iTWjIXIgRGnZXQ4dQZOy7fdM8AyffZ3oEQzNC5Noa6Aeem6BAw',
-      baseUrl: 'dev.webitel.com',
-    );
+    chatBloc.add(LoginToChannelEvent(
+        baseUrl: 'dev.webitel.com',
+        clientToken:
+            '49sFBWUGEtlHz7iTWjIXIgRGnZXQ4dQZOy7fdM8AyffZ3oEQzNC5Noa6Aeem6BAw',
+        deviceId: '8b98475e-21f9-47bf-b10a-125a83731a33'));
 
     super.initState();
-  }
-
-  Future<void> initClient({
-    String? deviceId,
-    required String baseUrl,
-    required String clientToken,
-  }) async {
-    PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    if (Platform.isAndroid) {
-      AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-
-      await WebitelSdkPackage.instance.authHandler.login(
-        baseUrl: baseUrl,
-        clientToken: clientToken,
-        deviceId: deviceId,
-        appName: packageInfo.appName,
-        appVersion: packageInfo.version,
-        osName: 'Android',
-        osVersion: androidInfo.version.release,
-        deviceModel: androidInfo.model,
-      );
-    } else if (Platform.isIOS) {
-      IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
-      await WebitelSdkPackage.instance.authHandler.login(
-        baseUrl: baseUrl,
-        clientToken: clientToken,
-        deviceId: deviceId,
-        appName: packageInfo.appName,
-        appVersion: packageInfo.version,
-        osName: iosInfo.systemName,
-        osVersion: iosInfo.systemVersion,
-        deviceModel: iosInfo.model,
-      );
-    }
-    chatBloc.add(ListenIncomingOperatorMessagesEvent());
-    chatBloc.add(ListenConnectStatusEvent());
-    chatBloc.add(FetchUpdatesEvent());
   }
 
   @override

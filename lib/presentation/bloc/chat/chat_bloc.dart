@@ -41,7 +41,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         final messagesStreamController =
             await WebitelSdkPackage.instance.eventHandler.listenToMessages();
 
-        await emit.forEach(messagesStreamController.stream, onData: (message) {
+        await emit.onEach(messagesStreamController.stream, onData: (message) {
           final List<DialogMessageEntity> currentMessages = [
             DialogMessageEntity(
               requestId: message.requestId,
@@ -55,10 +55,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             ),
             ...state.dialogMessages
           ];
-
-          return ChatState(
-            dialogMessages: currentMessages,
-          );
+          emit(state.copyWith(dialogMessages: currentMessages));
         });
       },
     );
@@ -81,7 +78,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         if (Platform.isAndroid) {
           AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
 
-          await WebitelSdkPackage.instance.authHandler.login(
+          final res = await WebitelSdkPackage.instance.authHandler.login(
+            appToken:
+                '49sFBWUGEtlHz7iTWjIXIgRGnZXQ4dQZOy7fdM8AyffZ3oEQzNC5Noa6Aeem6BAw',
             baseUrl: event.baseUrl,
             clientToken: event.clientToken,
             deviceId: event.deviceId,
@@ -93,7 +92,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           );
         } else if (Platform.isIOS) {
           IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
-          await WebitelSdkPackage.instance.authHandler.login(
+          final res = await WebitelSdkPackage.instance.authHandler.login(
+            appToken:
+                '49sFBWUGEtlHz7iTWjIXIgRGnZXQ4dQZOy7fdM8AyffZ3oEQzNC5Noa6Aeem6BAw',
             baseUrl: event.baseUrl,
             clientToken: event.clientToken,
             deviceId: event.deviceId,
@@ -103,6 +104,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             osVersion: iosInfo.systemVersion,
             deviceModel: iosInfo.model,
           );
+
+          if (res.status.name == 'success') {
+            add(ListenIncomingOperatorMessagesEvent());
+            add(ListenConnectStatusEvent());
+            add(FetchUpdatesEvent());
+          }
         }
       },
     );

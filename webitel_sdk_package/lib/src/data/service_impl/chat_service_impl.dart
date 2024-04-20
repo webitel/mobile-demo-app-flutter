@@ -4,6 +4,8 @@ import 'package:grpc/grpc.dart';
 import 'package:grpc/grpc_or_grpcweb.dart';
 import 'package:uuid/uuid.dart';
 import 'package:webitel_sdk_package/src/backbone/builder/dialog_message_builder.dart';
+import 'package:webitel_sdk_package/src/backbone/builder/error_dialog_message_builder.dart';
+import 'package:webitel_sdk_package/src/backbone/builder/messages_list_message_builder.dart';
 import 'package:webitel_sdk_package/src/data/gateway/connect_listener_gateway.dart';
 import 'package:webitel_sdk_package/src/data/gateway/shared_preferences_gateway.dart';
 import 'package:webitel_sdk_package/src/domain/entities/dialog_message.dart';
@@ -61,37 +63,24 @@ class ChatServiceImpl implements ChatService {
       if (response.data.canUnpackInto(UpdateNewMessage())) {
         final unpackedMessage = response.data.unpackInto(UpdateNewMessage());
         completer.complete(
-          DialogMessageEntity(
-            dialogMessageContent: unpackedMessage.message.text,
-            type: unpackedMessage.message.from.id == userId
-                ? MessageType.user
-                : MessageType.operator,
-            requestId: unpackedMessage.id,
-            chatId: unpackedMessage.message.chat.id,
-            peer: PeerInfo(
-              id: unpackedMessage.message.from.id,
-              name: unpackedMessage.message.from.name,
-              type: unpackedMessage.message.from.type,
-            ),
-          ),
+          DialogMessageBuilder()
+              .setDialogMessageContent(unpackedMessage.message.text)
+              .setRequestId(unpackedMessage.id)
+              .setMessageId(unpackedMessage.id)
+              .setUserId(userId ?? '')
+              .setChatId(unpackedMessage.message.chat.id)
+              .setUpdate(unpackedMessage)
+              .build(),
         );
-
         subscription?.cancel();
       }
     }, onError: (Object error) {
       if (error is GrpcError) {
         completer.complete(
-          DialogMessageEntity(
-            type: MessageType.error,
-            dialogMessageContent: error.toString(),
-            requestId: message.requestId,
-            chatId: '',
-            peer: PeerInfo(
-              name: 'ERROR',
-              type: 'Unknown',
-              id: '',
-            ),
-          ),
+          ErrorDialogMessageBuilder()
+              .setDialogMessageContent(error.toString())
+              .setRequestId(message.requestId)
+              .build(),
         );
 
         subscription?.cancel();
@@ -117,17 +106,10 @@ class ChatServiceImpl implements ChatService {
     } catch (error) {
       if (error is GrpcError) {
         completer.complete(
-          DialogMessageEntity(
-            type: MessageType.error,
-            dialogMessageContent: error.toString(),
-            requestId: message.requestId,
-            chatId: '',
-            peer: PeerInfo(
-              name: 'ERROR',
-              type: 'Unknown',
-              id: '',
-            ),
-          ),
+          ErrorDialogMessageBuilder()
+              .setDialogMessageContent(error.toString())
+              .setRequestId(message.requestId)
+              .build(),
         );
       }
     }
@@ -135,17 +117,10 @@ class ChatServiceImpl implements ChatService {
     return completer.future.timeout(Duration(seconds: 5), onTimeout: () {
       if (!completer.isCompleted) {
         completer.complete(
-          DialogMessageEntity(
-            type: MessageType.error,
-            dialogMessageContent: 'Unknown error',
-            requestId: message.requestId,
-            chatId: '',
-            peer: PeerInfo(
-              name: 'ERROR',
-              type: 'Unknown',
-              id: '',
-            ),
-          ),
+          ErrorDialogMessageBuilder()
+              .setDialogMessageContent('Messages was not sent by timeout')
+              .setRequestId(message.requestId)
+              .build(),
         );
       }
       return completer.future;
@@ -178,23 +153,14 @@ class ChatServiceImpl implements ChatService {
       if (canUnpackIntoDialogMessages == true) {
         final unpackedDialogMessages = response.data.unpackInto(ChatMessages());
         final peers = unpackedDialogMessages.peers;
-        final messages = unpackedDialogMessages.messages.map((unpackedMessage) {
-          final peerIndex = int.parse(unpackedMessage.from.id) - 1;
-          return DialogMessageEntity(
-            requestId: '',
-            chatId: chatId ?? '',
-            type: peers[peerIndex].id == userId
-                ? MessageType.user
-                : MessageType.operator,
-            dialogMessageContent: unpackedMessage.text,
-            peer: PeerInfo(
-              name: '',
-              type: '',
-              id: '',
-            ),
-          );
-        }).toList();
+        final messagesBuilder = MessagesListMessageBuilder()
+            .setRequestId('')
+            .setChatId(chatId ?? '')
+            .setUserId(userId ?? '')
+            .setMessages(unpackedDialogMessages.messages)
+            .setPeers(peers);
 
+        final messages = messagesBuilder.build();
         return messages;
       }
     } catch (error) {
@@ -230,23 +196,14 @@ class ChatServiceImpl implements ChatService {
       if (canUnpackIntoDialogMessages == true) {
         final unpackedDialogMessages = response.data.unpackInto(ChatMessages());
         final peers = unpackedDialogMessages.peers;
-        final messages = unpackedDialogMessages.messages.map((unpackedMessage) {
-          final peerIndex = int.parse(unpackedMessage.from.id) - 1;
-          return DialogMessageEntity(
-            requestId: '',
-            chatId: chatId,
-            type: peers[peerIndex].id == userId
-                ? MessageType.user
-                : MessageType.operator,
-            dialogMessageContent: unpackedMessage.text,
-            peer: PeerInfo(
-              name: unpackedMessage.chat.peer.name,
-              type: unpackedMessage.chat.peer.type,
-              id: unpackedMessage.chat.peer.id,
-            ),
-          );
-        }).toList();
+        final messagesBuilder = MessagesListMessageBuilder()
+            .setRequestId('')
+            .setChatId(chatId ?? '')
+            .setUserId(userId ?? '')
+            .setMessages(unpackedDialogMessages.messages)
+            .setPeers(peers);
 
+        final messages = messagesBuilder.build();
         return messages;
       }
     } catch (error) {
