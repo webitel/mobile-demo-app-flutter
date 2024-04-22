@@ -1,10 +1,10 @@
 import 'dart:io';
 
 import 'package:bloc/bloc.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:ua_client_hints/ua_client_hints.dart';
 import 'package:webitel_sdk/backbone/message_type_helper.dart';
 import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 import 'package:webitel_sdk/domain/usecase/database/clear_usecase.dart';
@@ -74,9 +74,21 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<LoginToChannelEvent>(
       (event, emit) async {
         PackageInfo packageInfo = await PackageInfo.fromPlatform();
-        DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+
         if (Platform.isAndroid) {
-          AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+          final userAgentString = await userAgent();
+          final res = await WebitelSdkPackage.instance.authHandler.login(
+            appToken:
+                '49sFBWUGEtlHz7iTWjIXIgRGnZXQ4dQZOy7fdM8AyffZ3oEQzNC5Noa6Aeem6BAw',
+            baseUrl: event.baseUrl,
+            clientToken: event.clientToken,
+            deviceId: event.deviceId,
+            appName: packageInfo.appName,
+            appVersion: packageInfo.version,
+            userAgent: userAgentString,
+          );
+        } else if (Platform.isIOS) {
+          final userAgentString = await userAgent();
 
           final res = await WebitelSdkPackage.instance.authHandler.login(
             appToken:
@@ -86,29 +98,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             deviceId: event.deviceId,
             appName: packageInfo.appName,
             appVersion: packageInfo.version,
-            osName: 'Android',
-            osVersion: androidInfo.version.release,
-            deviceModel: androidInfo.model,
-          );
-        } else if (Platform.isIOS) {
-          IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
-          final res = await WebitelSdkPackage.instance.authHandler.login(
-            appToken:
-                '49sFBWUGEtlHz7iTWjIXIgRGnZXQ4dQZOy7fdM8AyffZ3oEQzNC5Noa6Aeem6BAw',
-            baseUrl: event.baseUrl,
-            clientToken: event.clientToken,
-            deviceId: event.deviceId,
-            appName: packageInfo.appName,
-            appVersion: packageInfo.version,
-            osName: iosInfo.systemName,
-            osVersion: iosInfo.systemVersion,
-            deviceModel: iosInfo.model,
+            userAgent: userAgentString,
           );
 
           if (res.status.name == 'success') {
-            add(ListenIncomingOperatorMessagesEvent());
-            add(ListenConnectStatusEvent());
             add(FetchUpdatesEvent());
+            add(ListenIncomingOperatorMessagesEvent());
           }
         }
       },

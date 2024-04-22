@@ -15,12 +15,12 @@ class AuthHandler {
     _loginUseCase = getIt.get<LoginUseCase>();
   }
 
-  Future<void> logout() async {
-    await _logoutUseCase();
+  Future<RequestStatusResponse> logout() async {
+    return await _logoutUseCase();
   }
 
-  Future<void> registerDevice() async {
-    await _registerDeviceUseCase();
+  Future<RequestStatusResponse> registerDevice() async {
+    return await _registerDeviceUseCase();
   }
 
   Future<RequestStatusResponse> login({
@@ -28,9 +28,7 @@ class AuthHandler {
     required String clientToken,
     required String appName,
     required String appVersion,
-    required String osName,
-    required String osVersion,
-    required String deviceModel,
+    required String userAgent,
     required String appToken,
     String? deviceId,
   }) async {
@@ -41,9 +39,7 @@ class AuthHandler {
       deviceId: deviceId,
       appName: appName,
       appVersion: appVersion,
-      osName: osName,
-      osVersion: osVersion,
-      deviceModel: deviceModel,
+      userAgent: userAgent,
     );
   }
 }

@@ -1,6 +1,6 @@
 name: webitel_sdk_package
-description: Webitel SDK.
-version: 1.0.0
+description: Webitel Portal SDK.
+version: 1.0.1
 
 environment:
   sdk: ^3.3.3
@@ -10,7 +10,9 @@ dependencies:
   get_it: ^7.7.0
   shared_preferences: ^2.2.3
   synchronized: ^3.1.0+1
+  logger: ^2.2.0
   injectable: ^2.4.1
+  package_info_plus: ^7.0.0
   grpc: ^3.2.4
   flutter_dotenv: ^5.1.0
   protobuf: ^3.1.0

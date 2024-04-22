@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:grpc/grpc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:webitel_sdk_package/src/builder/call_options_builder.dart';
@@ -14,6 +16,7 @@ class GrpcGateway {
   late String _deviceId;
   late String _clientToken;
   late String _userAgent;
+  final streamControllerState = StreamController<ConnectionState>();
 
   Future<void> init({
     required String baseUrl,
@@ -50,12 +53,15 @@ class GrpcGateway {
 
   ClientChannel get channel => _channel;
 
+  StreamController<ConnectionState> get stateStream => streamControllerState;
+
   Future<void> _createChannel({
     required String baseUrl,
     required String deviceId,
     required String clientToken,
     required String userAgent,
   }) async {
+    final completer = Completer<void>();
     _channel = ClientChannel(
       baseUrl,
       port: 443,
@@ -67,7 +73,9 @@ class GrpcGateway {
         ),
       ),
     );
-
+    channel.onConnectionStateChanged.listen((state) {
+      streamControllerState.add(state);
+    });
     _stub = CustomerClient(
       channel,
       interceptors: [GRPCInterceptor()],
@@ -77,5 +85,7 @@ class GrpcGateway {
           .setAccessToken(_accessToken)
           .build(),
     );
+    completer.complete();
+    await completer.future;
   }
 }

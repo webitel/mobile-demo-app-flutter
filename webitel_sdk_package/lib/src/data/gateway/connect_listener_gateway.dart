@@ -1,20 +1,22 @@
 import 'dart:async';
 
+import 'package:grpc/grpc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:logger/logger.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:webitel_sdk_package/src/data/gateway/channel_status_listener.dart';
+import 'package:webitel_sdk_package/src/backbone/logger.dart';
 import 'package:webitel_sdk_package/src/data/gateway/grpc_gateway.dart';
 import 'package:webitel_sdk_package/src/domain/entities/connect_status.dart';
 import 'package:webitel_sdk_package/src/domain/entities/error.dart';
+import 'package:webitel_sdk_package/src/generated/google/protobuf/any.pb.dart';
 import 'package:webitel_sdk_package/src/generated/portal/connect.pb.dart'
     as portal;
-import 'package:webitel_sdk_package/src/generated/portal/connect.pb.dart';
 import 'package:webitel_sdk_package/src/generated/portal/messages.pb.dart';
 
 @LazySingleton()
 class ConnectListenerGateway {
   final GrpcGateway _grpcGateway;
-  final ChannelStatusListener _channelStatusListener;
+
   late final StreamController<portal.Response> _responseStreamController;
   late final StreamController<ConnectStreamStatus> _connectController;
   late final StreamController<UpdateNewMessage> _updateStreamController;
@@ -22,11 +24,10 @@ class ConnectListenerGateway {
   late final StreamController<ErrorEntity> _errorStreamController;
   bool connectClosed = true;
   final Lock _lock = Lock();
-  StreamSubscription<Update>? stream;
+  Logger logger = CustomLogger.getLogger();
 
   ConnectListenerGateway(
     this._grpcGateway,
-    this._channelStatusListener,
   ) {
     _responseStreamController = StreamController<portal.Response>.broadcast();
     _connectController = StreamController<ConnectStreamStatus>.broadcast();
@@ -36,58 +37,113 @@ class ConnectListenerGateway {
   }
 
   Future<void> _connect() async {
-    connectClosed = false;
-
-    _grpcGateway.stub.connect(_requestStreamController.stream).listen(
-      (update) {
-        _connectController
-            .add(ConnectStreamStatus(status: ConnectStatus.opened));
-        final canUnpackIntoResponse =
-            update.data.canUnpackInto(portal.Response());
-        final canUnpackIntoUpdateNewMessage =
-            update.data.canUnpackInto(UpdateNewMessage());
-        if (canUnpackIntoResponse == true) {
-          final decodedResponse = update.data.unpackInto(portal.Response());
-          if (decodedResponse.err.hasMessage()) {
-            _errorStreamController.add(ErrorEntity(
-                statusCode: decodedResponse.err.code.toString(),
-                errorMessage: decodedResponse.err.message));
+    try {
+      final completer = Completer<void>();
+      _grpcGateway.stub.connect(_requestStreamController.stream).listen(
+        (update) async {
+          if (!completer.isCompleted) {
+            completer.complete();
+            logger.t('Update received');
           }
-          _responseStreamController.add(decodedResponse);
-        } else if (canUnpackIntoUpdateNewMessage == true) {
-          final decodedResponse = update.data.unpackInto(UpdateNewMessage());
-          _updateStreamController.add(decodedResponse);
-        }
-      },
-      onError: (error) {
-        connectClosed = true;
-        _connectController.add(ConnectStreamStatus(
-          status: ConnectStatus.closed,
-          errorMessage: error.toString(),
-        ));
-      },
-      onDone: () {
-        connectClosed = true;
-        _connectController.add(ConnectStreamStatus(
-          status: ConnectStatus.closed,
-          errorMessage: 'Stream was closed',
-        ));
-      },
-      cancelOnError: true,
-    );
+          connectClosed = false;
+          _connectController
+              .add(ConnectStreamStatus(status: ConnectStatus.opened));
+          final canUnpackIntoResponse =
+              update.data.canUnpackInto(portal.Response());
+          final canUnpackIntoUpdateNewMessage =
+              update.data.canUnpackInto(UpdateNewMessage());
+          if (canUnpackIntoResponse == true) {
+            final decodedResponse = update.data.unpackInto(portal.Response());
+
+            if (decodedResponse.err.hasMessage()) {
+              _errorStreamController.add(ErrorEntity(
+                  statusCode: decodedResponse.err.code.toString(),
+                  errorMessage: decodedResponse.err.message));
+            }
+            _responseStreamController.add(decodedResponse);
+          } else if (canUnpackIntoUpdateNewMessage == true) {
+            final decodedResponse = update.data.unpackInto(UpdateNewMessage());
+            _updateStreamController.add(decodedResponse);
+            logger.t(decodedResponse.message.text);
+          }
+        },
+        onError: (error) {
+          logger.e(error);
+          if (!completer.isCompleted) {
+            completer.complete();
+          }
+          connectClosed = true;
+          _connectController.add(ConnectStreamStatus(
+            status: ConnectStatus.closed,
+            errorMessage: error.toString(),
+          ));
+        },
+        onDone: () {
+          logger.e('Stream is done');
+          if (!completer.isCompleted) {
+            completer.complete();
+          }
+          connectClosed = true;
+          _connectController.add(ConnectStreamStatus(
+            status: ConnectStatus.closed,
+            errorMessage: 'Stream was closed',
+          ));
+        },
+        cancelOnError: true,
+      );
+      await completer.future;
+    } catch (error) {
+      logger.e(error);
+    }
   }
 
-  Future<void> sendRequest(portal.Request request) async {
-    await reconnect();
+  Future<void> sendPingMessage() async {
+    final echoData = [1, 2, 3];
+    final echo = portal.Echo(data: echoData);
+    final request = portal.Request(
+      path: '/webitel.portal.Customer/Ping',
+      data: Any.pack(echo),
+    );
+
     _requestStreamController.add(request);
   }
 
-  Future<void> reconnect() async {
+  Future<void> sendRequest(portal.Request request) async {
+    await reconnect(request);
+    logger.t('Connected to Stream');
+    _requestStreamController.add(request);
+    logger.t('Request added: ${request.path}');
+  }
+
+  Future<void> reconnect(portal.Request request) async {
     await _lock.synchronized(() async {
       if (connectClosed == true) {
+        Completer<void> completer = Completer<void>();
+        _grpcGateway.streamControllerState.stream.listen((status) {
+          switch (status) {
+            case ConnectionState.connecting:
+            case ConnectionState.ready:
+              if (!completer.isCompleted) {
+                completer.complete();
+                logger.t('ConnectionState.ready');
+              }
+            case ConnectionState.transientFailure:
+              _grpcGateway.channel.createConnection();
+              break;
+            case ConnectionState.idle:
+            case ConnectionState.shutdown:
+              _grpcGateway.channel.createConnection();
+              break;
+          }
+        });
+        await completer.future;
+        final timer = Timer.periodic(Duration(seconds: 1), (timer) {
+          sendPingMessage();
+          logger.t('Ping sent');
+        });
         await _connect();
-        await Future.delayed(Duration(seconds: 1));
-        print('connect');
+        timer.cancel();
+        logger.t('Connected to gRPC Stream');
       }
     });
   }

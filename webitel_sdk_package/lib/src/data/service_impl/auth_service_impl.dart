@@ -1,4 +1,5 @@
 import 'package:injectable/injectable.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:uuid/uuid.dart';
 import 'package:webitel_sdk_package/src/builder/token_request_builder.dart';
 import 'package:webitel_sdk_package/src/builder/user_agent_builder.dart';
@@ -26,14 +27,13 @@ class AuthServiceImpl implements AuthService {
     required String clientToken,
     required String appName,
     required String appVersion,
-    required String osName,
-    required String osVersion,
-    required String deviceModel,
     required String appToken,
+    required String userAgent,
     String? deviceId,
   }) async {
     final uuid = Uuid();
     await _sharedPreferencesGateway.init();
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
     deviceId == null
         ? await _sharedPreferencesGateway.saveDeviceId(uuid.v4())
         : await _sharedPreferencesGateway.saveDeviceId(deviceId);
@@ -46,9 +46,9 @@ class AuthServiceImpl implements AuthService {
         userAgentBuilder: UserAgentBuilder(
           appName: appName,
           appVersion: appVersion,
-          osName: osName,
-          osVersion: osVersion,
-          deviceModel: deviceModel,
+          packageName: packageInfo.appName,
+          packageVersion: packageInfo.version,
+          userAgent: userAgent,
         ),
       );
     }
@@ -75,13 +75,25 @@ class AuthServiceImpl implements AuthService {
   }
 
   @override
-  Future<void> registerDevice() async {
-    await _grpcGateway.stub
-        .registerDevice(RegisterDeviceRequest(push: DevicePush()));
+  Future<RequestStatusResponse> registerDevice() async {
+    try {
+      await _grpcGateway.stub
+          .registerDevice(RegisterDeviceRequest(push: DevicePush()));
+      return RequestStatusResponse(status: RequestStatus.success);
+    } catch (error) {
+      return RequestStatusResponse(
+          status: RequestStatus.error, message: error.toString());
+    }
   }
 
   @override
-  Future<void> logout() async {
-    await _grpcGateway.stub.logout(LogoutRequest());
+  Future<RequestStatusResponse> logout() async {
+    try {
+      await _grpcGateway.stub.logout(LogoutRequest());
+      return RequestStatusResponse(status: RequestStatus.success);
+    } catch (error) {
+      return RequestStatusResponse(
+          status: RequestStatus.error, message: error.toString());
+    }
   }
 }

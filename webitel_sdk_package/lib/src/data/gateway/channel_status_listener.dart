@@ -10,22 +10,22 @@ class ChannelStatusListener {
   ChannelStatusListener(this._grpcGateway);
 
   Future<void> listenToChannelStatus() async {
-    if (lastState == ConnectionState.shutdown) {
-      _grpcGateway.channel.createConnection();
-    }
-    _grpcGateway.channel.onConnectionStateChanged.listen((status) {
-      switch (status) {
-        case ConnectionState.connecting:
-        case ConnectionState.ready:
-        case ConnectionState.transientFailure:
-          _grpcGateway.channel.createConnection();
-          break;
-        case ConnectionState.idle:
-        case ConnectionState.shutdown:
-          lastState = ConnectionState.shutdown;
-          _grpcGateway.channel.createConnection();
-          break;
-      }
-    });
+    // if (lastState == ConnectionState.shutdown) {
+    //   _grpcGateway.channel.createConnection();
+    // }
+    // _grpcGateway.channel.onConnectionStateChanged.listen((status) {
+    //   switch (status) {
+    //     case ConnectionState.connecting:
+    //     case ConnectionState.ready:
+    //     case ConnectionState.transientFailure:
+    //       _grpcGateway.channel.createConnection();
+    //       break;
+    //     case ConnectionState.idle:
+    //     case ConnectionState.shutdown:
+    //       lastState = ConnectionState.shutdown;
+    //       _grpcGateway.channel.createConnection();
+    //       break;
+    //   }
+    // });
   }
 }

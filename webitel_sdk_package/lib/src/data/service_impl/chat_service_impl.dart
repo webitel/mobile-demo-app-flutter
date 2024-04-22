@@ -124,7 +124,7 @@ class ChatServiceImpl implements ChatService {
       }
     }
 
-    return completer.future.timeout(Duration(seconds: 5), onTimeout: () {
+    return completer.future.timeout(Duration(seconds: 10), onTimeout: () {
       if (!completer.isCompleted) {
         completer.complete(
           ErrorDialogMessageBuilder()
@@ -155,8 +155,7 @@ class ChatServiceImpl implements ChatService {
 
     try {
       final response = await _connectListenerGateway.responseStream
-          .firstWhere((response) => response.id == id)
-          .timeout(Duration(seconds: 5));
+          .firstWhere((response) => response.id == id);
 
       final canUnpackIntoDialogMessages =
           response.data.canUnpackInto(ChatMessages());
@@ -198,8 +197,7 @@ class ChatServiceImpl implements ChatService {
 
     try {
       final response = await _connectListenerGateway.responseStream
-          .firstWhere((response) => response.id == id)
-          .timeout(Duration(seconds: 5));
+          .firstWhere((response) => response.id == id);
 
       final canUnpackIntoDialogMessages =
           response.data.canUnpackInto(ChatMessages());

@@ -1,22 +1,22 @@
 class UserAgentBuilder {
+  late String _userAgent;
   late String _appName;
   late String _appVersion;
-  late String _osName;
-  late String _osVersion;
-  late String _deviceModel;
+  late String _packageName;
+  late String _packageVersion;
 
   UserAgentBuilder({
+    required String userAgent,
     required String appName,
     required String appVersion,
-    required String osName,
-    required String osVersion,
-    required String deviceModel,
+    required String packageName,
+    required String packageVersion,
   }) {
+    _userAgent = userAgent;
     _appName = appName;
     _appVersion = appVersion;
-    _osName = osName;
-    _osVersion = osVersion;
-    _deviceModel = deviceModel;
+    _packageName = packageName;
+    _packageVersion = packageVersion;
   }
 
   UserAgentBuilder setAppName(String appName) {
@@ -29,22 +29,22 @@ class UserAgentBuilder {
     return this;
   }
 
-  UserAgentBuilder setOsName(String osName) {
-    _osName = osName;
+  UserAgentBuilder setPackageName(String packageName) {
+    _packageName = packageName;
     return this;
   }
 
-  UserAgentBuilder setOsVersion(String osVersion) {
-    _osVersion = osVersion;
+  UserAgentBuilder setPackageVersion(String packageVersion) {
+    _packageVersion = packageVersion;
     return this;
   }
 
-  UserAgentBuilder setDeviceModel(String deviceModel) {
-    _deviceModel = deviceModel;
+  UserAgentBuilder setUserAgent(String userAgent) {
+    _userAgent = userAgent;
     return this;
   }
 
   String build() {
-    return '$_appName/$_appVersion ($_osName; $_osVersion; $_deviceModel) grpc-dart';
+    return '($_appName/$_appVersion) $_userAgent grpc-dart';
   }
 }

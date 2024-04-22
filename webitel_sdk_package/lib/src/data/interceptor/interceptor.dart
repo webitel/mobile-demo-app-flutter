@@ -40,6 +40,12 @@ class GRPCInterceptor implements ClientInterceptor {
     CallOptions options,
     ClientStreamingInvoker<Q, R> invoker,
   ) {
+    final call = ClientCall(method, requests, options);
+    call.onConnectionError('');
+
+    // call.onConnectionReady(connection);
+    // call.onConnectionError(error);
+
     if (method.path == '/webitel.portal.Customer/Connect') {
       print('Handling a Connect stream ${options.metadata}');
     }

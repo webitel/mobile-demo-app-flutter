@@ -1,8 +1,9 @@
 import 'package:injectable/injectable.dart';
+import 'package:webitel_sdk_package/src/domain/entities/request_status_response.dart';
 import 'package:webitel_sdk_package/src/domain/services/auth_service.dart';
 
 abstract interface class RegisterDeviceUseCase {
-  Future<void> call();
+  Future<RequestStatusResponse> call();
 }
 
 @LazySingleton(as: RegisterDeviceUseCase)
@@ -12,5 +13,5 @@ class RegisterDeviceImplUseCase implements RegisterDeviceUseCase {
   RegisterDeviceImplUseCase(this._authService);
 
   @override
-  Future<void> call() => _authService.registerDevice();
+  Future<RequestStatusResponse> call() => _authService.registerDevice();
 }
