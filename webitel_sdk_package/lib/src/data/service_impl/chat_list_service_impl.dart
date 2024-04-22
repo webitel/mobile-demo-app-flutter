@@ -1,5 +1,7 @@
 import 'package:injectable/injectable.dart';
+import 'package:logger/logger.dart';
 import 'package:uuid/uuid.dart';
+import 'package:webitel_sdk_package/src/backbone/logger.dart';
 import 'package:webitel_sdk_package/src/data/gateway/connect_listener_gateway.dart';
 import 'package:webitel_sdk_package/src/data/gateway/shared_preferences_gateway.dart';
 import 'package:webitel_sdk_package/src/domain/services/chat_list_service.dart';
@@ -14,6 +16,7 @@ class ChatListServiceImpl implements ChatListService {
   final SharedPreferencesGateway _sharedPreferencesGateway;
   final ConnectListenerGateway _connectListenerGateway;
   final uuid = Uuid();
+  Logger logger = CustomLogger.getLogger();
 
   ChatListServiceImpl(
       this._connectListenerGateway, this._sharedPreferencesGateway);
@@ -41,8 +44,8 @@ class ChatListServiceImpl implements ChatListService {
         _sharedPreferencesGateway.saveToDisk(
             'chatId', unpackedDialogMessages.data.first.id);
       }
-    } catch (error) {
-      print(error);
+    } catch (error, stackTrace) {
+      logger.e(error: error, stackTrace: stackTrace, error);
     }
   }
 }

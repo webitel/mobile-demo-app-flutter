@@ -9,7 +9,9 @@ dependencies:
   build_runner: ^2.4.9
   get_it: ^7.7.0
   shared_preferences: ^2.2.3
+  sqflite: ^2.3.3
   synchronized: ^3.1.0+1
+  path: ^1.9.0
   logger: ^2.2.0
   injectable: ^2.4.1
   package_info_plus: ^7.0.0

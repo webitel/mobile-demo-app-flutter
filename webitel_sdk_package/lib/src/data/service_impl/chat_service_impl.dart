@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:grpc/grpc.dart';
 import 'package:grpc/grpc_or_grpcweb.dart';
 import 'package:injectable/injectable.dart';
+import 'package:logger/logger.dart';
 import 'package:uuid/uuid.dart';
+import 'package:webitel_sdk_package/src/backbone/logger.dart';
 import 'package:webitel_sdk_package/src/builder/dialog_message_builder.dart';
 import 'package:webitel_sdk_package/src/builder/error_dialog_message_builder.dart';
 import 'package:webitel_sdk_package/src/builder/messages_list_message_builder.dart';
@@ -25,6 +27,7 @@ class ChatServiceImpl implements ChatService {
 
   late final StreamController<DialogMessageEntity> _userMessagesController;
   final uuid = Uuid();
+  Logger logger = CustomLogger.getLogger();
 
   ChatServiceImpl(
     this._connectListenerGateway,
@@ -172,8 +175,8 @@ class ChatServiceImpl implements ChatService {
         final messages = messagesBuilder.build();
         return messages;
       }
-    } catch (error) {
-      print(error);
+    } catch (error, stackTrace) {
+      logger.e(error: error, stackTrace: stackTrace, error);
     }
 
     return [];

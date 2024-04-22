@@ -65,8 +65,8 @@ class ConnectListenerGateway {
             logger.t(decodedResponse.message.text);
           }
         },
-        onError: (error) {
-          logger.e(error);
+        onError: (error, stackTrace) {
+          logger.e(error: error, stackTrace);
           if (!completer.isCompleted) {
             completer.complete();
           }
@@ -90,8 +90,8 @@ class ConnectListenerGateway {
         cancelOnError: true,
       );
       await completer.future;
-    } catch (error) {
-      logger.e(error);
+    } catch (error, stackTrace) {
+      logger.e(error: error, stackTrace: stackTrace, error);
     }
   }
 
@@ -108,7 +108,7 @@ class ConnectListenerGateway {
 
   Future<void> sendRequest(portal.Request request) async {
     await reconnect(request);
-    logger.t('Connected to Stream');
+
     _requestStreamController.add(request);
     logger.t('Request added: ${request.path}');
   }
