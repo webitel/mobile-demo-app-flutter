@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:grpc/grpc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 import 'package:synchronized/synchronized.dart';
@@ -54,7 +53,6 @@ class ConnectListenerGateway {
               update.data.canUnpackInto(UpdateNewMessage());
           if (canUnpackIntoResponse == true) {
             final decodedResponse = update.data.unpackInto(portal.Response());
-
             if (decodedResponse.err.hasMessage()) {
               _errorStreamController.add(ErrorEntity(
                   statusCode: decodedResponse.err.code.toString(),
@@ -118,25 +116,6 @@ class ConnectListenerGateway {
   Future<void> reconnect(portal.Request request) async {
     await _lock.synchronized(() async {
       if (connectClosed == true) {
-        Completer<void> completer = Completer<void>();
-        _grpcGateway.streamControllerState.stream.listen((status) {
-          switch (status) {
-            case ConnectionState.connecting:
-            case ConnectionState.ready:
-              if (!completer.isCompleted) {
-                completer.complete();
-                logger.t('ConnectionState.ready');
-              }
-            case ConnectionState.transientFailure:
-              _grpcGateway.channel.createConnection();
-              break;
-            case ConnectionState.idle:
-            case ConnectionState.shutdown:
-              _grpcGateway.channel.createConnection();
-              break;
-          }
-        });
-        await completer.future;
         final timer = Timer.periodic(Duration(seconds: 1), (timer) {
           sendPingMessage();
           logger.t('Ping sent');

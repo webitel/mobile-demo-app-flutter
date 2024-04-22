@@ -16,7 +16,7 @@ class GrpcGateway {
   late String _deviceId;
   late String _clientToken;
   late String _userAgent;
-  final streamControllerState = StreamController<ConnectionState>();
+  final _streamControllerState = StreamController<ConnectionState>();
 
   Future<void> init({
     required String baseUrl,
@@ -53,7 +53,7 @@ class GrpcGateway {
 
   ClientChannel get channel => _channel;
 
-  StreamController<ConnectionState> get stateStream => streamControllerState;
+  StreamController<ConnectionState> get stateStream => _streamControllerState;
 
   Future<void> _createChannel({
     required String baseUrl,
@@ -74,7 +74,7 @@ class GrpcGateway {
       ),
     );
     channel.onConnectionStateChanged.listen((state) {
-      streamControllerState.add(state);
+      _streamControllerState.add(state);
     });
     _stub = CustomerClient(
       channel,
