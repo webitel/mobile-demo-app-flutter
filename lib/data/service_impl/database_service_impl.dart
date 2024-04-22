@@ -1,8 +1,8 @@
 import 'package:sqflite/sqflite.dart';
+import 'package:webitel_portal_sdk/webitel_portal_sdk.dart';
 import 'package:webitel_sdk/database/database_provider.dart';
 import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 import 'package:webitel_sdk/domain/service/data_base_service.dart';
-import 'package:webitel_sdk_package/webitel_sdk_package.dart';
 
 class DatabaseServiceImpl implements DatabaseService {
   final DatabaseProvider database;
@@ -43,8 +43,8 @@ class DatabaseServiceImpl implements DatabaseService {
 
   @override
   Future<void> writeMessages() async {
-    final messagesFromServer = await WebitelSdkPackage.instance.messageHandler
-        .fetchMessages(limit: 20);
+    final messagesFromServer =
+        await WebitelPortalSdk.instance.messageHandler.fetchMessages(limit: 20);
 
     if (messagesFromServer.isNotEmpty) {
       await clear();

@@ -5,13 +5,13 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:ua_client_hints/ua_client_hints.dart';
+import 'package:webitel_portal_sdk/webitel_portal_sdk.dart';
 import 'package:webitel_sdk/backbone/message_type_helper.dart';
 import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 import 'package:webitel_sdk/domain/usecase/database/clear_usecase.dart';
 import 'package:webitel_sdk/domain/usecase/database/fetch_messages_by_chat_id.dart';
 import 'package:webitel_sdk/domain/usecase/database/write_messages_to_database_usecase.dart';
 import 'package:webitel_sdk/domain/usecase/send_dialog_message_usecase.dart';
-import 'package:webitel_sdk_package/webitel_sdk_package.dart';
 
 part 'chat_event.dart';
 part 'chat_state.dart';
@@ -39,7 +39,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ListenIncomingOperatorMessagesEvent>(
       (event, emit) async {
         final messagesStreamController =
-            await WebitelSdkPackage.instance.eventHandler.listenToMessages();
+            await WebitelPortalSdk.instance.eventHandler.listenToMessages();
 
         await emit.onEach(messagesStreamController.stream, onData: (message) {
           final List<DialogMessageEntity> currentMessages = [
@@ -61,8 +61,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     );
     on<ListenConnectStatusEvent>((event, emit) async {
       final connectStatusStreamController =
-          await WebitelSdkPackage.instance.eventHandler.listenConnectStatus();
-      await WebitelSdkPackage.instance.chatListHandler.fetchDialogs();
+          await WebitelPortalSdk.instance.eventHandler.listenConnectStatus();
+      await WebitelPortalSdk.instance.chatListHandler.fetchDialogs();
       await emit.onEach(connectStatusStreamController.stream, onData: (status) {
         if (kDebugMode) {
           print(status.status.name);
@@ -77,7 +77,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
         if (Platform.isAndroid) {
           final userAgentString = await userAgent();
-          final res = await WebitelSdkPackage.instance.authHandler.login(
+          final res = await WebitelPortalSdk.instance.authHandler.login(
             appToken:
                 '49sFBWUGEtlHz7iTWjIXIgRGnZXQ4dQZOy7fdM8AyffZ3oEQzNC5Noa6Aeem6BAw',
             baseUrl: event.baseUrl,
@@ -90,7 +90,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         } else if (Platform.isIOS) {
           final userAgentString = await userAgent();
 
-          final res = await WebitelSdkPackage.instance.authHandler.login(
+          final res = await WebitelPortalSdk.instance.authHandler.login(
             appToken:
                 '49sFBWUGEtlHz7iTWjIXIgRGnZXQ4dQZOy7fdM8AyffZ3oEQzNC5Noa6Aeem6BAw',
             baseUrl: event.baseUrl,

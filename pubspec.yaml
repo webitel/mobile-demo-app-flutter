@@ -27,8 +27,8 @@ dependencies:
   path: ^1.9.0
   get_it: ^7.7.0
   package_info_plus: ^7.0.0
-  webitel_sdk_package:
-    path: webitel_sdk_package/
+  webitel_portal_sdk:
+    path: webitel_portal_sdk/
 
 dev_dependencies:
   flutter_test:

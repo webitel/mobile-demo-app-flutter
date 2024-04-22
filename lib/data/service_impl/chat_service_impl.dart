@@ -1,6 +1,6 @@
+import 'package:webitel_portal_sdk/webitel_portal_sdk.dart';
 import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 import 'package:webitel_sdk/domain/service/chat_service.dart';
-import 'package:webitel_sdk_package/webitel_sdk_package.dart';
 
 class ChatServiceImpl implements ChatService {
   @override
@@ -8,7 +8,7 @@ class ChatServiceImpl implements ChatService {
     required DialogMessageEntity dialogMessageEntity,
   }) async {
     final message =
-        await WebitelSdkPackage.instance.messageHandler.sendDialogMessage(
+        await WebitelPortalSdk.instance.messageHandler.sendDialogMessage(
       dialogMessageContent: dialogMessageEntity.dialogMessageContent,
       requestId: dialogMessageEntity.requestId,
       peerType: dialogMessageEntity.peer.type,
