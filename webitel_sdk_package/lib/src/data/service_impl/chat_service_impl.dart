@@ -11,6 +11,7 @@ import 'package:webitel_sdk_package/src/builder/error_dialog_message_builder.dar
 import 'package:webitel_sdk_package/src/builder/messages_list_message_builder.dart';
 import 'package:webitel_sdk_package/src/data/gateway/connect_listener_gateway.dart';
 import 'package:webitel_sdk_package/src/data/gateway/shared_preferences_gateway.dart';
+import 'package:webitel_sdk_package/src/database/request_database.dart';
 import 'package:webitel_sdk_package/src/domain/entities/dialog_message.dart';
 import 'package:webitel_sdk_package/src/domain/services/grpc_chat_service.dart';
 import 'package:webitel_sdk_package/src/generated/chat/messages/history.pb.dart';
@@ -24,12 +25,14 @@ import 'package:webitel_sdk_package/src/generated/portal/messages.pb.dart';
 class ChatServiceImpl implements ChatService {
   final ConnectListenerGateway _connectListenerGateway;
   final SharedPreferencesGateway _sharedPreferencesGateway;
+  final DatabaseProvider _databaseProvider;
 
   late final StreamController<DialogMessageEntity> _userMessagesController;
   final uuid = Uuid();
   Logger logger = CustomLogger.getLogger();
 
   ChatServiceImpl(
+    this._databaseProvider,
     this._connectListenerGateway,
     this._sharedPreferencesGateway,
   ) {
@@ -59,6 +62,7 @@ class ChatServiceImpl implements ChatService {
   Future<DialogMessageEntity> sendDialogMessage(
       {required DialogMessageEntity message}) async {
     final userId = await _sharedPreferencesGateway.getFromDisk('userId');
+    final chatId = await _sharedPreferencesGateway.getFromDisk('chatId');
     final completer = Completer<DialogMessageEntity>();
 
     StreamSubscription? subscription;
@@ -114,7 +118,12 @@ class ChatServiceImpl implements ChatService {
         data: Any.pack(newMessageRequest),
         id: message.requestId,
       );
-
+      await _databaseProvider.insertRequest(
+        chatID: chatId ?? '',
+        id: message.requestId,
+        path: '/webitel.portal.ChatMessages/SendMessage',
+        text: message.dialogMessageContent,
+      );
       _connectListenerGateway.sendRequest(request);
     } catch (error) {
       if (error is GrpcError) {
@@ -153,7 +162,12 @@ class ChatServiceImpl implements ChatService {
       data: Any.pack(fetchMessagesRequest),
       id: id,
     );
-
+    await _databaseProvider.insertRequest(
+      id: id,
+      chatID: chatId ?? '',
+      path: '/webitel.portal.ChatMessages/ChatHistory',
+      text: '',
+    );
     await _connectListenerGateway.sendRequest(request);
 
     try {
@@ -195,7 +209,12 @@ class ChatServiceImpl implements ChatService {
       data: Any.pack(fetchMessageUpdatesRequest),
       id: id,
     );
-
+    await _databaseProvider.insertRequest(
+      chatID: chatId ?? '',
+      id: id,
+      path: '/webitel.portal.ChatMessages/ChatUpdates',
+      text: '',
+    );
     _connectListenerGateway.sendRequest(request);
 
     try {

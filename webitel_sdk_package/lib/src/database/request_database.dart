@@ -20,13 +20,14 @@ class DatabaseProvider {
     return _database!;
   }
 
-  static const requestTable = 'requestTable';
+  static const requestQueueTable = 'requestQueueTable';
 
   Future<void> _createDb(Database db, int version) async {
     await db.transaction(
       (txn) async {
-        await txn.execute('''CREATE TABLE $requestTable(
+        await txn.execute('''CREATE TABLE $requestQueueTable(
         id TEXT PRIMARY KEY,
+        chatId TEXT,
         path TEXT,
         text TEXT,
         timestamp TEXT
@@ -35,12 +36,18 @@ class DatabaseProvider {
     );
   }
 
-  Future<void> insertRequest(String id, String path, String text) async {
+  Future<void> insertRequest({
+    required String id,
+    required String chatID,
+    required String path,
+    required String text,
+  }) async {
     final db = await database;
     await db.insert(
-      requestTable,
+      requestQueueTable,
       {
         'id': id,
+        'chatId': chatID,
         'path': path,
         'text': text,
         'timestamp': DateTime.now().toIso8601String(),
@@ -49,26 +56,56 @@ class DatabaseProvider {
     );
   }
 
-  Future<void> deleteRequest(String requestId) async {
+  Future<void> deleteRequest({required String requestId}) async {
     final db = await database;
     await db.delete(
-      requestTable,
+      requestQueueTable,
       where: 'id = ?',
       whereArgs: [requestId],
     );
   }
 
-  Future<List<RequestEntity>> getAllRequests() async {
+  Future<List<RequestEntity>> getAllRequests({String? chatID}) async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(requestTable);
 
-    return List.generate(maps.length, (i) {
-      return RequestEntity(
-        id: maps[i]['id'],
-        path: maps[i]['path'],
-        text: maps[i]['text'],
-        timestamp: DateTime.parse(maps[i]['timestamp']),
-      );
-    });
+    String whereClause = '';
+    List<dynamic> whereArgs = [];
+    if (chatID != null) {
+      whereClause = 'WHERE chatId = ?';
+      whereArgs = [chatID];
+    }
+
+    String sqlQuery =
+        'SELECT * FROM $requestQueueTable $whereClause ORDER BY timestamp ASC';
+    final List<Map<String, dynamic>> maps =
+        await db.rawQuery(sqlQuery, whereArgs);
+
+    return List.generate(
+      maps.length,
+      (i) {
+        return RequestEntity(
+          id: maps[i]['id'] ?? '',
+          chatId: maps[i]['chatId'] ?? '',
+          path: maps[i]['path'] ?? '',
+          text: maps[i]['text'] ?? '',
+          timestamp: DateTime.parse(
+              maps[i]['timestamp'] ?? DateTime.now().toIso8601String()),
+        );
+      },
+    );
+  }
+
+  Future<void> clearRequests({String? chatID}) async {
+    final db = await database;
+
+    String sqlQuery = 'DELETE FROM $requestQueueTable';
+    List<dynamic> whereArgs = [];
+
+    if (chatID != null) {
+      sqlQuery += ' WHERE chatId = ?';
+      whereArgs = [chatID];
+    }
+
+    await db.rawDelete(sqlQuery, whereArgs);
   }
 }

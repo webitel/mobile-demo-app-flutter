@@ -5,8 +5,10 @@ import 'package:logger/logger.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:webitel_sdk_package/src/backbone/logger.dart';
 import 'package:webitel_sdk_package/src/data/gateway/grpc_gateway.dart';
+import 'package:webitel_sdk_package/src/database/request_database.dart';
 import 'package:webitel_sdk_package/src/domain/entities/connect_status.dart';
 import 'package:webitel_sdk_package/src/domain/entities/error.dart';
+import 'package:webitel_sdk_package/src/domain/entities/reqeust_entity.dart';
 import 'package:webitel_sdk_package/src/generated/google/protobuf/any.pb.dart';
 import 'package:webitel_sdk_package/src/generated/portal/connect.pb.dart'
     as portal;
@@ -15,6 +17,7 @@ import 'package:webitel_sdk_package/src/generated/portal/messages.pb.dart';
 @LazySingleton()
 class ConnectListenerGateway {
   final GrpcGateway _grpcGateway;
+  final DatabaseProvider _databaseProvider;
 
   late final StreamController<portal.Response> _responseStreamController;
   late final StreamController<ConnectStreamStatus> _connectController;
@@ -26,6 +29,7 @@ class ConnectListenerGateway {
   Logger logger = CustomLogger.getLogger();
 
   ConnectListenerGateway(
+    this._databaseProvider,
     this._grpcGateway,
   ) {
     _responseStreamController = StreamController<portal.Response>.broadcast();
@@ -53,6 +57,7 @@ class ConnectListenerGateway {
               update.data.canUnpackInto(UpdateNewMessage());
           if (canUnpackIntoResponse == true) {
             final decodedResponse = update.data.unpackInto(portal.Response());
+            _databaseProvider.deleteRequest(requestId: decodedResponse.id);
             if (decodedResponse.err.hasMessage()) {
               _errorStreamController.add(ErrorEntity(
                   statusCode: decodedResponse.err.code.toString(),
@@ -60,9 +65,10 @@ class ConnectListenerGateway {
             }
             _responseStreamController.add(decodedResponse);
           } else if (canUnpackIntoUpdateNewMessage == true) {
-            final decodedResponse = update.data.unpackInto(UpdateNewMessage());
-            _updateStreamController.add(decodedResponse);
-            logger.t(decodedResponse.message.text);
+            final decodedUpdate = update.data.unpackInto(UpdateNewMessage());
+            _databaseProvider.deleteRequest(requestId: decodedUpdate.id);
+            _updateStreamController.add(decodedUpdate);
+            logger.t(decodedUpdate.message.text);
           }
         },
         onError: (error, stackTrace) {
@@ -108,6 +114,8 @@ class ConnectListenerGateway {
 
   Future<void> sendRequest(portal.Request request) async {
     await reconnect(request);
+    List<RequestEntity> storedRequests =
+        await _databaseProvider.getAllRequests();
 
     _requestStreamController.add(request);
     logger.t('Request added: ${request.path}');
