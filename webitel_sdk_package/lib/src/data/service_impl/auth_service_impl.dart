@@ -1,14 +1,16 @@
+import 'package:injectable/injectable.dart';
 import 'package:uuid/uuid.dart';
-import 'package:webitel_sdk_package/src/backbone/builder/token_request_builder.dart';
-import 'package:webitel_sdk_package/src/backbone/builder/user_agent_builder.dart';
+import 'package:webitel_sdk_package/src/builder/token_request_builder.dart';
+import 'package:webitel_sdk_package/src/builder/user_agent_builder.dart';
 import 'package:webitel_sdk_package/src/data/gateway/grpc_gateway.dart';
 import 'package:webitel_sdk_package/src/data/gateway/shared_preferences_gateway.dart';
 import 'package:webitel_sdk_package/src/domain/entities/request_status_response.dart';
-import 'package:webitel_sdk_package/src/domain/services/auth/auth_service.dart';
+import 'package:webitel_sdk_package/src/domain/services/auth_service.dart';
 import 'package:webitel_sdk_package/src/generated/portal/account.pb.dart';
 import 'package:webitel_sdk_package/src/generated/portal/customer.pb.dart';
 import 'package:webitel_sdk_package/src/generated/portal/push.pb.dart';
 
+@LazySingleton(as: AuthService)
 class AuthServiceImpl implements AuthService {
   final SharedPreferencesGateway _sharedPreferencesGateway;
   final GrpcGateway _grpcGateway;

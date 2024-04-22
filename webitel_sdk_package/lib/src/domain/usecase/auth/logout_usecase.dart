@@ -1,9 +1,11 @@
-import 'package:webitel_sdk_package/src/domain/services/auth/auth_service.dart';
+import 'package:injectable/injectable.dart';
+import 'package:webitel_sdk_package/src/domain/services/auth_service.dart';
 
 abstract interface class LogoutUseCase {
   Future<void> call();
 }
 
+@LazySingleton(as: LogoutUseCase)
 class LogoutImplUseCase implements LogoutUseCase {
   final AuthService _authService;
 

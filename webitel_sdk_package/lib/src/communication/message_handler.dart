@@ -1,8 +1,8 @@
-import 'package:webitel_sdk_package/src/backbone/injection/dependency_injection.dart';
 import 'package:webitel_sdk_package/src/domain/entities/dialog_message.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/chat/fetch_message_updates.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/chat/fetch_messages.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/chat/send_message_usecase.dart';
+import 'package:webitel_sdk_package/src/injection/injection.dart';
 
 class MessageHandler {
   late SendDialogMessageUseCase _sendDialogMessageUseCase;
@@ -10,22 +10,19 @@ class MessageHandler {
   late FetchMessageUpdatesUseCase _fetchMessageUpdatesUseCase;
 
   MessageHandler() {
-    _fetchMessagesUseCase =
-        locator.get<FetchMessagesUseCase>(instanceName: "FetchMessagesUseCase");
-    _fetchMessageUpdatesUseCase = locator.get<FetchMessageUpdatesUseCase>(
-        instanceName: "FetchMessageUpdatesUseCase");
-    _sendDialogMessageUseCase = locator.get<SendDialogMessageUseCase>(
-        instanceName: "SendDialogMessageUseCase");
+    _fetchMessagesUseCase = getIt.get<FetchMessagesUseCase>();
+    _fetchMessageUpdatesUseCase = getIt.get<FetchMessageUpdatesUseCase>();
+    _sendDialogMessageUseCase = getIt.get<SendDialogMessageUseCase>();
   }
 
-  Future<void> sendDialogMessage({
+  Future<DialogMessageEntity> sendDialogMessage({
     required String dialogMessageContent,
     required String peerType,
     required String peerName,
     required String peerId,
     required String requestId,
   }) async {
-    await _sendDialogMessageUseCase(
+    return await _sendDialogMessageUseCase(
       message: DialogMessageEntity(
         dialogMessageContent: dialogMessageContent,
         requestId: requestId,

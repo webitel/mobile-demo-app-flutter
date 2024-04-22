@@ -1,5 +1,6 @@
+import 'package:injectable/injectable.dart';
 import 'package:webitel_sdk_package/src/domain/entities/request_status_response.dart';
-import 'package:webitel_sdk_package/src/domain/services/auth/auth_service.dart';
+import 'package:webitel_sdk_package/src/domain/services/auth_service.dart';
 
 abstract interface class LoginUseCase {
   Future<RequestStatusResponse> call({
@@ -15,6 +16,7 @@ abstract interface class LoginUseCase {
   });
 }
 
+@LazySingleton(as: LoginUseCase)
 class LoginImplUseCase implements LoginUseCase {
   final AuthService _authService;
 

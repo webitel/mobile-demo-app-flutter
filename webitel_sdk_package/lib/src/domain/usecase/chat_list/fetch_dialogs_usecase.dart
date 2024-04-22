@@ -1,9 +1,11 @@
-import 'package:webitel_sdk_package/src/domain/services/chat_list/chat_list_service.dart';
+import 'package:injectable/injectable.dart';
+import 'package:webitel_sdk_package/src/domain/services/chat_list_service.dart';
 
 abstract interface class FetchDialogsUseCase {
   Future<void> call();
 }
 
+@LazySingleton(as: FetchDialogsUseCase)
 class FetchDialogsImplUseCase implements FetchDialogsUseCase {
   final ChatListService _chatListServiceService;
 

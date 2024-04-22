@@ -1,8 +1,8 @@
-import 'package:webitel_sdk_package/src/backbone/injection/dependency_injection.dart';
 import 'package:webitel_sdk_package/src/domain/entities/request_status_response.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/auth/login_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/auth/logout_usecase.dart';
 import 'package:webitel_sdk_package/src/domain/usecase/auth/register_device_usecase.dart';
+import 'package:webitel_sdk_package/src/injection/injection.dart';
 
 class AuthHandler {
   late RegisterDeviceUseCase _registerDeviceUseCase;
@@ -10,12 +10,9 @@ class AuthHandler {
   late LoginUseCase _loginUseCase;
 
   AuthHandler() {
-    _registerDeviceUseCase = locator.get<RegisterDeviceUseCase>(
-        instanceName: "RegisterDeviceUseCase");
-    _logoutUseCase = locator.get<LogoutUseCase>(instanceName: "LogoutUseCase");
-    _loginUseCase = locator.get<LoginUseCase>(
-      instanceName: "LoginUseCase",
-    );
+    _registerDeviceUseCase = getIt.get<RegisterDeviceUseCase>();
+    _logoutUseCase = getIt.get<LogoutUseCase>();
+    _loginUseCase = getIt.get<LoginUseCase>();
   }
 
   Future<void> logout() async {

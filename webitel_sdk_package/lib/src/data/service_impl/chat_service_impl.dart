@@ -2,14 +2,15 @@ import 'dart:async';
 
 import 'package:grpc/grpc.dart';
 import 'package:grpc/grpc_or_grpcweb.dart';
+import 'package:injectable/injectable.dart';
 import 'package:uuid/uuid.dart';
-import 'package:webitel_sdk_package/src/backbone/builder/dialog_message_builder.dart';
-import 'package:webitel_sdk_package/src/backbone/builder/error_dialog_message_builder.dart';
-import 'package:webitel_sdk_package/src/backbone/builder/messages_list_message_builder.dart';
+import 'package:webitel_sdk_package/src/builder/dialog_message_builder.dart';
+import 'package:webitel_sdk_package/src/builder/error_dialog_message_builder.dart';
+import 'package:webitel_sdk_package/src/builder/messages_list_message_builder.dart';
 import 'package:webitel_sdk_package/src/data/gateway/connect_listener_gateway.dart';
 import 'package:webitel_sdk_package/src/data/gateway/shared_preferences_gateway.dart';
 import 'package:webitel_sdk_package/src/domain/entities/dialog_message.dart';
-import 'package:webitel_sdk_package/src/domain/services/chat/grpc_chat_service.dart';
+import 'package:webitel_sdk_package/src/domain/services/grpc_chat_service.dart';
 import 'package:webitel_sdk_package/src/generated/chat/messages/history.pb.dart';
 import 'package:webitel_sdk_package/src/generated/chat/messages/peer.pb.dart';
 import 'package:webitel_sdk_package/src/generated/google/protobuf/any.pb.dart';
@@ -17,6 +18,7 @@ import 'package:webitel_sdk_package/src/generated/portal/connect.pb.dart'
     as portal;
 import 'package:webitel_sdk_package/src/generated/portal/messages.pb.dart';
 
+@LazySingleton(as: ChatService)
 class ChatServiceImpl implements ChatService {
   final ConnectListenerGateway _connectListenerGateway;
   final SharedPreferencesGateway _sharedPreferencesGateway;
@@ -73,6 +75,14 @@ class ChatServiceImpl implements ChatService {
               .build(),
         );
         subscription?.cancel();
+      } else if (response.err.hasMessage()) {
+        final error = response;
+        completer.complete(
+          ErrorDialogMessageBuilder()
+              .setDialogMessageContent(error.err.message)
+              .setRequestId(error.id)
+              .build(),
+        );
       }
     }, onError: (Object error) {
       if (error is GrpcError) {
