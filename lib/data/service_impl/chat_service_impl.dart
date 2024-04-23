@@ -30,11 +30,19 @@ class ChatServiceImpl implements ChatService {
 
   @override
   Future<List<DialogMessageEntity>> fetchMessages() async {
+    //Checking if messages from server is not empty, if empty - load last cached messages in database
+
     final messagesFromServer =
         await WebitelPortalSdk.instance.messageHandler.fetchMessages(limit: 20);
     if (messagesFromServer.isNotEmpty) {
+      // if is not empty, clear last cached messages and write new ones
+
       await _databaseProvider.clear();
       await _databaseProvider.writeMessages();
+      // fetch messages by chatId(for now have only one chat)
+
+      return await _databaseProvider.fetchMessagesByChatId(chatId: '');
+    } else if (messagesFromServer.isEmpty) {
       return await _databaseProvider.fetchMessagesByChatId(chatId: '');
     }
     return [];
@@ -42,6 +50,7 @@ class ChatServiceImpl implements ChatService {
 
   @override
   Future<Stream<DialogMessageEntity>> listenToMessages() async {
+    // this is messages stream for all user/operator messages
     final messagesStream =
         await WebitelPortalSdk.instance.eventHandler.listenToMessages();
 

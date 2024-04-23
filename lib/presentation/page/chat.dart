@@ -47,6 +47,8 @@ class _ChatPageState extends State<ChatPage> {
                 if (state.authStatus == AuthStatus.success) {
                   chatBloc.add(FetchMessages());
                   chatBloc.add(ListenToMessages());
+                } else if (state.authStatus == AuthStatus.error) {
+                  chatBloc.add(FetchMessages());
                 }
               },
               child: ListView(

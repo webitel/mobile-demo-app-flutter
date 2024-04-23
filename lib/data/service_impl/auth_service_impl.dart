@@ -20,6 +20,9 @@ class AuthServiceImpl implements AuthService {
       required String clientToken}) async {
     const uuid = Uuid();
     await _sharedPreferencesGateway.init();
+
+    //Checking whether deviceId is not null, if null - generating a new one
+
     String? deviceId = await _sharedPreferencesGateway.getFromDisk('deviceId');
     if (deviceId == null) {
       deviceId = uuid.v4();
