@@ -1,8 +1,10 @@
 import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
+import 'package:webitel_sdk/domain/entity/response_entity.dart';
 import 'package:webitel_sdk/domain/service/chat_service.dart';
 
 abstract interface class SendDialogMessageUseCase {
-  Future<void> call({required DialogMessageEntity dialogMessageEntity});
+  Future<ResponseEntity> call(
+      {required DialogMessageEntity dialogMessageEntity});
 }
 
 class SendDialogMessageImplUseCase implements SendDialogMessageUseCase {
@@ -11,6 +13,7 @@ class SendDialogMessageImplUseCase implements SendDialogMessageUseCase {
   SendDialogMessageImplUseCase(this._chatService);
 
   @override
-  Future<void> call({required DialogMessageEntity dialogMessageEntity}) =>
+  Future<ResponseEntity> call(
+          {required DialogMessageEntity dialogMessageEntity}) =>
       _chatService.sendDialogMessage(dialogMessageEntity: dialogMessageEntity);
 }

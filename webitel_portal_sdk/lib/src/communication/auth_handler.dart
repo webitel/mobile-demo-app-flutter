@@ -1,4 +1,4 @@
-import 'package:webitel_portal_sdk/src/domain/entities/request_status_response.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/response_entity.dart';
 import 'package:webitel_portal_sdk/src/domain/usecase/auth/login_usecase.dart';
 import 'package:webitel_portal_sdk/src/domain/usecase/auth/logout_usecase.dart';
 import 'package:webitel_portal_sdk/src/domain/usecase/auth/register_device_usecase.dart';
@@ -15,15 +15,15 @@ class AuthHandler {
     _loginUseCase = getIt.get<LoginUseCase>();
   }
 
-  Future<RequestStatusResponse> logout() async {
+  Future<ResponseEntity> logout() async {
     return await _logoutUseCase();
   }
 
-  Future<RequestStatusResponse> registerDevice() async {
+  Future<ResponseEntity> registerDevice() async {
     return await _registerDeviceUseCase();
   }
 
-  Future<RequestStatusResponse> login({
+  Future<ResponseEntity> login({
     required String baseUrl,
     required String clientToken,
     required String appName,

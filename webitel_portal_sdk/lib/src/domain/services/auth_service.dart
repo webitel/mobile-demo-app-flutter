@@ -1,11 +1,11 @@
-import 'package:webitel_portal_sdk/src/domain/entities/request_status_response.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/response_entity.dart';
 
 abstract interface class AuthService {
-  Future<RequestStatusResponse> logout();
+  Future<ResponseEntity> logout();
 
-  Future<RequestStatusResponse> registerDevice();
+  Future<ResponseEntity> registerDevice();
 
-  Future<RequestStatusResponse> login({
+  Future<ResponseEntity> login({
     required String baseUrl,
     required String userAgent,
     required String clientToken,

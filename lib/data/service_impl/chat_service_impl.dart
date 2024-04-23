@@ -1,10 +1,19 @@
+import 'dart:async';
+
 import 'package:webitel_portal_sdk/webitel_portal_sdk.dart';
+import 'package:webitel_sdk/database/database_provider.dart';
 import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
+import 'package:webitel_sdk/domain/entity/response_entity.dart';
 import 'package:webitel_sdk/domain/service/chat_service.dart';
 
 class ChatServiceImpl implements ChatService {
+  final DatabaseProvider _databaseProvider;
+  late final StreamController<DialogMessageEntity> messagesStreamController;
+
+  ChatServiceImpl(this._databaseProvider);
+
   @override
-  Future<void> sendDialogMessage({
+  Future<ResponseEntity> sendDialogMessage({
     required DialogMessageEntity dialogMessageEntity,
   }) async {
     final message =
@@ -15,7 +24,42 @@ class ChatServiceImpl implements ChatService {
       peerName: dialogMessageEntity.peer.name,
       peerId: dialogMessageEntity.peer.id,
     );
-    print(message.chatId);
-    print(message.dialogMessageContent);
+    return ResponseEntity(
+        status: ResponseStatus.success, message: message.dialogMessageContent);
+  }
+
+  @override
+  Future<List<DialogMessageEntity>> fetchMessages() async {
+    final messagesFromServer =
+        await WebitelPortalSdk.instance.messageHandler.fetchMessages(limit: 20);
+    if (messagesFromServer.isNotEmpty) {
+      await _databaseProvider.clear();
+      await _databaseProvider.writeMessages();
+      return await _databaseProvider.fetchMessagesByChatId(chatId: '');
+    }
+    return [];
+  }
+
+  @override
+  Future<Stream<DialogMessageEntity>> listenToMessages() async {
+    final messagesStream =
+        await WebitelPortalSdk.instance.eventHandler.listenToMessages();
+
+    final messagesStreamController = StreamController<DialogMessageEntity>();
+
+    messagesStream.stream.listen((message) {
+      messagesStreamController.add(
+        DialogMessageEntity(
+          dialogMessageContent: message.dialogMessageContent,
+          peer: Peer(id: '', type: '', name: ''),
+          requestId: message.requestId,
+          messageType: message.type!.name == 'user'
+              ? MessageType.user
+              : MessageType.operator,
+        ),
+      );
+    });
+
+    return messagesStreamController.stream;
   }
 }

@@ -65,6 +65,8 @@ class ConnectListenerGateway {
             _responseStreamController.add(decodedResponse);
           } else if (canUnpackIntoUpdateNewMessage == true) {
             final decodedUpdate = update.data.unpackInto(UpdateNewMessage());
+            logger.t(
+                'Received update message in stream: ${decodedUpdate.message}');
             _databaseProvider.deleteRequest(requestId: decodedUpdate.id);
             _updateStreamController.add(decodedUpdate);
             logger.t(decodedUpdate.message.text);

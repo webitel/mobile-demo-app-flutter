@@ -1,5 +1,6 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:webitel_portal_sdk/webitel_portal_sdk.dart';
 import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 
 class DatabaseProvider {
@@ -35,8 +36,32 @@ class DatabaseProvider {
       )''');
   }
 
-  Future<void> writeMessage(DialogMessageEntity message) async {
-    final Database db = await database;
+  Future<List<DialogMessageEntity>> fetchMessagesByChatId(
+      {required String chatId}) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      messageTable,
+      where: 'chatId = ?',
+      whereArgs: ['AxUSFAMCDxQ'],
+    );
+    final messages = maps
+        .map((message) => DialogMessageEntity(
+              messageStatus: MessageStatus.sent,
+              messageType: message['messageType'] == 'operator'
+                  ? MessageType.operator
+                  : MessageType.user,
+              dialogMessageContent: message['dialogMessageContent'],
+              peer: Peer(id: '', type: '', name: ''),
+              requestId: '',
+            ))
+        .toList();
+
+    return messages;
+  }
+
+  Future<void> writeMessageToDatabase(
+      {required DialogMessageEntity message}) async {
+    final db = await database;
     await db.insert(
       messageTable,
       message.toMap(),
@@ -44,14 +69,40 @@ class DatabaseProvider {
     );
   }
 
-  Future<void> updateMessageStatus(
-      String requestId, MessageStatus newStatus) async {
-    final Database db = await database;
-    await db.update(
-      messageTable,
-      {'messageStatus': newStatus.toString()},
-      where: 'requestId = ?',
-      whereArgs: [requestId],
-    );
+  Future<void> writeMessages() async {
+    final messagesFromServer =
+        await WebitelPortalSdk.instance.messageHandler.fetchMessages(limit: 20);
+
+    if (messagesFromServer.isNotEmpty) {
+      await clear();
+      final db = await database;
+      await db.transaction((txn) async {
+        for (final message in messagesFromServer) {
+          await txn.insert(
+            messageTable,
+            {
+              'chatId': message.chatId,
+              'messageId': message.messageId,
+              'messageType': message.type!.name,
+              'dialogMessageContent': message.dialogMessageContent,
+              'peerId': message.peer.id,
+              'peerType': message.peer.type,
+              'peerName': message.peer.name,
+              'requestId': message.requestId,
+              'messageStatus': 'Success',
+              'timestamp': DateTime.now().millisecondsSinceEpoch,
+            },
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+      });
+    } else {
+      return;
+    }
+  }
+
+  Future<void> clear() async {
+    final db = await database;
+    await db.delete(messageTable);
   }
 }
