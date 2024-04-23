@@ -48,15 +48,20 @@ class ChatServiceImpl implements ChatService {
     final messagesStreamController = StreamController<DialogMessageEntity>();
 
     messagesStream.stream.listen((message) {
+      final messageEntity = DialogMessageEntity(
+        dialogMessageContent: message.dialogMessageContent,
+        peer: Peer(id: '', type: '', name: ''),
+        requestId: message.requestId,
+        messageType: message.type!.name == 'user'
+            ? MessageType.user
+            : MessageType.operator,
+      );
+
+      _databaseProvider.writeMessageToDatabase(
+        message: messageEntity,
+      );
       messagesStreamController.add(
-        DialogMessageEntity(
-          dialogMessageContent: message.dialogMessageContent,
-          peer: Peer(id: '', type: '', name: ''),
-          requestId: message.requestId,
-          messageType: message.type!.name == 'user'
-              ? MessageType.user
-              : MessageType.operator,
-        ),
+        messageEntity,
       );
     });
 
