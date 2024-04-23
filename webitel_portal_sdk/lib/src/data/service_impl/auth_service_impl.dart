@@ -5,7 +5,9 @@ import 'package:webitel_portal_sdk/src/builder/token_request_builder.dart';
 import 'package:webitel_portal_sdk/src/builder/user_agent_builder.dart';
 import 'package:webitel_portal_sdk/src/data/gateway/grpc_gateway.dart';
 import 'package:webitel_portal_sdk/src/data/gateway/shared_preferences_gateway.dart';
+import 'package:webitel_portal_sdk/src/database/database.dart';
 import 'package:webitel_portal_sdk/src/domain/entities/response_entity.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/user.dart';
 import 'package:webitel_portal_sdk/src/domain/services/auth_service.dart';
 import 'package:webitel_portal_sdk/src/generated/portal/account.pb.dart';
 import 'package:webitel_portal_sdk/src/generated/portal/customer.pb.dart';
@@ -13,10 +15,12 @@ import 'package:webitel_portal_sdk/src/generated/portal/push.pb.dart';
 
 @LazySingleton(as: AuthService)
 class AuthServiceImpl implements AuthService {
+  final DatabaseProvider _databaseProvider;
   final SharedPreferencesGateway _sharedPreferencesGateway;
   final GrpcGateway _grpcGateway;
 
   AuthServiceImpl(
+    this._databaseProvider,
     this._grpcGateway,
     this._sharedPreferencesGateway,
   );
@@ -66,6 +70,24 @@ class AuthServiceImpl implements AuthService {
     try {
       final response = await _grpcGateway.stub.token(request);
       await _sharedPreferencesGateway.saveUserId(response.chat.user.id);
+      if (savedDeviceId != null) {
+        _databaseProvider.writeUser(
+          UserEntity(
+            accessToken: response.accessToken,
+            id: response.chat.user.id,
+            name: response.user.username,
+            baseUrl: baseUrl,
+            clientToken: clientToken,
+            deviceId: deviceId ?? savedDeviceId,
+            appName: appName,
+            appVersion: appVersion,
+            packageName: packageInfo.appName,
+            packageVersion: packageInfo.version,
+            userAgent: userAgent,
+          ),
+        );
+      }
+
       _grpcGateway.setAccessToken(response.accessToken);
       return ResponseEntity(status: ResponseStatus.success);
     } catch (error) {

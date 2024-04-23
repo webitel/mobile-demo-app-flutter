@@ -1,6 +1,5 @@
 part of 'chat_bloc.dart';
 
-@immutable
 class ChatState extends Equatable {
   final List<DialogMessageEntity> dialogMessages;
 

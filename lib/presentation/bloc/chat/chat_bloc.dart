@@ -1,6 +1,5 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart';
 import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 import 'package:webitel_sdk/domain/usecase/chat/fetch_messages_usecase.dart';
 import 'package:webitel_sdk/domain/usecase/chat/listen_to_messages_usecase.dart';

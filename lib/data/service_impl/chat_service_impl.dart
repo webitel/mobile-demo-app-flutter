@@ -30,6 +30,7 @@ class ChatServiceImpl implements ChatService {
 
   @override
   Future<List<DialogMessageEntity>> fetchMessages() async {
+    await WebitelPortalSdk.instance.chatListHandler.fetchDialogs();
     //Checking if messages from server is not empty, if empty - load last cached messages in database
 
     final messagesFromServer =

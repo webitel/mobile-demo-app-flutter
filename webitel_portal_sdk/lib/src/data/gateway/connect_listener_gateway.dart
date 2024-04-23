@@ -1,13 +1,15 @@
 import 'dart:async';
 
+import 'package:grpc/grpc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:webitel_portal_sdk/src/backbone/logger.dart';
 import 'package:webitel_portal_sdk/src/data/gateway/grpc_gateway.dart';
-import 'package:webitel_portal_sdk/src/database/request_database.dart';
+import 'package:webitel_portal_sdk/src/database/database.dart';
 import 'package:webitel_portal_sdk/src/domain/entities/connect_status.dart';
 import 'package:webitel_portal_sdk/src/domain/entities/error.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/user.dart';
 import 'package:webitel_portal_sdk/src/generated/google/protobuf/any.pb.dart';
 import 'package:webitel_portal_sdk/src/generated/portal/connect.pb.dart'
     as portal;
@@ -26,6 +28,7 @@ class ConnectListenerGateway {
   bool connectClosed = true;
   final Lock _lock = Lock();
   Logger logger = CustomLogger.getLogger();
+  ConnectionState? connectionState;
 
   ConnectListenerGateway(
     this._databaseProvider,
@@ -36,6 +39,7 @@ class ConnectListenerGateway {
     _updateStreamController = StreamController<UpdateNewMessage>.broadcast();
     _requestStreamController = StreamController<portal.Request>.broadcast();
     _errorStreamController = StreamController<ErrorEntity>.broadcast();
+    listenToChannelStatus();
   }
 
   Future<void> _connect() async {
@@ -117,10 +121,17 @@ class ConnectListenerGateway {
   Future<void> sendRequest(portal.Request request) async {
     await reconnect(request);
     _requestStreamController.add(request);
+
     logger.t('Request added: ${request.path}');
   }
 
   Future<void> reconnect(portal.Request request) async {
+    if (connectionState == ConnectionState.shutdown) {
+      logger.t('ConnectionState.shutdown');
+      final user = await _databaseProvider.readUser();
+      await _grpcGateway.setAccessToken(user.accessToken);
+      logger.t('Re-init gRPC Channel');
+    }
     await _lock.synchronized(() async {
       if (connectClosed == true) {
         final timer = Timer.periodic(Duration(seconds: 1), (timer) {
@@ -130,6 +141,28 @@ class ConnectListenerGateway {
         await _connect();
         timer.cancel();
         logger.t('Connected to gRPC Stream');
+      }
+    });
+  }
+
+  Future<UserEntity> readUserFromDatabase() async {
+    final user = await _databaseProvider.readUser();
+    return user;
+  }
+
+  Future<void> listenToChannelStatus() async {
+    _grpcGateway.stateStream.stream.listen((state) {
+      switch (state) {
+        case ConnectionState.connecting:
+          connectionState = ConnectionState.connecting;
+        case ConnectionState.ready:
+          connectionState = ConnectionState.ready;
+        case ConnectionState.transientFailure:
+          connectionState = ConnectionState.transientFailure;
+        case ConnectionState.idle:
+          connectionState = ConnectionState.idle;
+        case ConnectionState.shutdown:
+          connectionState = ConnectionState.shutdown;
       }
     });
   }
