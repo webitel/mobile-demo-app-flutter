@@ -38,25 +38,29 @@ This will build the project and install it on your connected device or emulator.
 
 ## Usage
 
-1. use [await WebitelPortalSdk.instance.authHandler.login()] for sign in user in portal
+1. use **_await WebitelPortalSdk.instance.authHandler.login()_** for sign in user in portal
 
-2. use [await WebitelPortalSdk.instance.eventHandler.listenToMessages()] for listening upcoming(user)/incoming(operator)
+2. use **_await WebitelPortalSdk.instance.eventHandler.listenToMessages()_** for listening upcoming(user)/incoming(
+   operator)
    messages
 
-3. use [await WebitelPortalSdk.instance.messageHandler.sendDialogMessage()] for sending message
+3. **_use await WebitelPortalSdk.instance.messageHandler.sendDialogMessage()_** for sending message
 
-4. use [await WebitelPortalSdk.instance.chatListHandler.fetchDialogs()] for fetching dialogs(now we have only 1 dialog
+4. use _**await WebitelPortalSdk.instance.chatListHandler.fetchDialogs()_** for fetching dialogs(now we have only 1
+   dialog
    but it's important to fetch this one to allow SDK push info to this exact dialog)
 
-5. use [ await WebitelPortalSdk.instance.messageHandler.fetchMessages(limit: 20)] for fetching messages and you could
+5. use **_await WebitelPortalSdk.instance.messageHandler.fetchMessages(limit: 20)_** for fetching messages and you could
    set limit and offset for pagination(example of usage offset is still under work)
 
-6. use [ DatabaseProvider.fetchMessagesByChatId] for fetching cached messages from Database
+6. use **_DatabaseProvider.fetchMessagesByChatId_** for fetching cached messages from Database
 
-7. use [ DatabaseProvider.writeMessageToDatabase] for writing 1 message to Database(for example when receiving it from
+7. use **_DatabaseProvider.writeMessageToDatabase_** for writing 1 message to Database(for example when receiving it
+   from
    listenToMessages stream)
 
-8. use [ DatabaseProvider.writeMessages] for writing latest messages to databse(for example when you fetch last messages
+8. use **_DatabaseProvider.writeMessages_** for writing latest messages to databse(for example when you fetch last
+   messages
    from server to keep the cached)
 
 **Chat Description**
