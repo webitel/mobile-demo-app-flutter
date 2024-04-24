@@ -17,4 +17,8 @@ abstract interface class ChatService {
       {required DialogMessageEntity message});
 
   Future<StreamController<DialogMessageEntity>> listenToMessages();
+
+  Future<void> enterChat({required String chatId});
+
+  Future<void> exitChat();
 }

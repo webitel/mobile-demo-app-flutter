@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:injectable/injectable.dart';
 import 'package:webitel_portal_sdk/src/domain/entities/dialog_message.dart';
-import 'package:webitel_portal_sdk/src/domain/services/grpc_chat_service.dart';
+import 'package:webitel_portal_sdk/src/domain/services/chat_service.dart';
 
 abstract interface class ListenToMessagesUsecase {
   Future<StreamController<DialogMessageEntity>> call();

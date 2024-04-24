@@ -9,6 +9,10 @@ class SharedPreferencesGateway {
     await _preferences.clear();
   }
 
+  Future<void> delete(String key) async {
+    await _preferences.remove(key);
+  }
+
   Future<void> init() async {
     _preferences = await SharedPreferences.getInstance();
   }
@@ -56,5 +60,13 @@ class SharedPreferencesGateway {
 
   Future<String?> readUserId() async {
     return await getFromDisk('userId');
+  }
+
+  Future<void> saveChatId(String chatId) async {
+    await saveToDisk('chatId', chatId);
+  }
+
+  Future<void> deleteChatId() async {
+    await delete('chatId');
   }
 }

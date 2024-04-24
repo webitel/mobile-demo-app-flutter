@@ -14,7 +14,7 @@ import 'package:webitel_portal_sdk/src/data/gateway/shared_preferences_gateway.d
 import 'package:webitel_portal_sdk/src/database/database.dart';
 import 'package:webitel_portal_sdk/src/domain/entities/dialog_message.dart';
 import 'package:webitel_portal_sdk/src/domain/entities/request/request_entity.dart';
-import 'package:webitel_portal_sdk/src/domain/services/grpc_chat_service.dart';
+import 'package:webitel_portal_sdk/src/domain/services/chat_service.dart';
 import 'package:webitel_portal_sdk/src/generated/chat/messages/history.pb.dart';
 import 'package:webitel_portal_sdk/src/generated/chat/messages/peer.pb.dart';
 import 'package:webitel_portal_sdk/src/generated/google/protobuf/any.pb.dart';
@@ -254,5 +254,15 @@ class ChatServiceImpl implements ChatService {
 
   void dispose() {
     _userMessagesController.close();
+  }
+
+  @override
+  Future<void> enterChat({required String chatId}) async {
+    await _sharedPreferencesGateway.saveChatId(chatId);
+  }
+
+  @override
+  Future<void> exitChat() async {
+    await _sharedPreferencesGateway.deleteChatId();
   }
 }
