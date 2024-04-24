@@ -32,7 +32,7 @@ git clone https://https://github.com/webitel/mobile-demo-app-flutter.git
 
 2. To build and run the project, use the following command:
 
-[flutter clean && flutter pub get]
+**_flutter clean && flutter pub get_**
 
 This will build the project and install it on your connected device or emulator.
 
@@ -65,4 +65,4 @@ This will build the project and install it on your connected device or emulator.
 **Chat Description**
 
 When you open chat and write messages - you will automatically receive messages from bot. If you want to start messaging
-with operator write **/queue** and for stop chat write **/close**
+with operator write _**/queue**_ and for stop chat write _**/close**_
