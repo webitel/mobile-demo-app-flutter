@@ -46,9 +46,8 @@ This will build the project and install it on your connected device or emulator.
 
 3. **_use await WebitelPortalSdk.instance.messageHandler.sendDialogMessage()_** for sending message
 
-4. use _**await WebitelPortalSdk.instance.chatListHandler.fetchDialogs()_** for fetching dialogs(now we have only 1
-   dialog
-   but it's important to fetch this one to allow SDK push info to this exact dialog)
+4. use **_await WebitelPortalSdk.instance.chatListHandler.fetchDialogs(_**) for fetching dialogs(now we have only 1
+   dialog but it's important to fetch this one to allow SDK push info to this exact dialog)
 
 5. use **_await WebitelPortalSdk.instance.messageHandler.fetchMessages(limit: 20)_** for fetching messages and you could
    set limit and offset for pagination(example of usage offset is still under work)
