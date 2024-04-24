@@ -34,7 +34,11 @@ git clone https://https://github.com/webitel/mobile-demo-app-flutter.git
 
 **_flutter clean && flutter pub get_**
 
-This will build the project and install it on your connected device or emulator.
+This will update all necessary packages
+
+**_flutter run --debug_**
+
+This will run the app on the emulator
 
 ## Usage
 
