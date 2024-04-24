@@ -24,7 +24,7 @@ List the key features and functionalities of your project:
 
 2. Use the following command to clone the ProjectName repository:
 
-git clone https://https://github.com/webitel/mobile-demo-app-flutter.git
+git clone https://github.com/webitel/mobile-demo-app-flutter.git
 
 ### Build and Run
 
