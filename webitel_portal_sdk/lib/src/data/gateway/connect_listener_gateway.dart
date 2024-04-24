@@ -45,7 +45,7 @@ class ConnectListenerGateway {
   Future<void> _connect() async {
     try {
       final completer = Completer<void>();
-      _grpcGateway.stub.connect(_requestStreamController.stream).listen(
+      _grpcGateway.customerStub.connect(_requestStreamController.stream).listen(
         (update) async {
           if (!completer.isCompleted) {
             completer.complete();

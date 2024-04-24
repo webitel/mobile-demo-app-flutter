@@ -12,10 +12,11 @@ dependencies:
   sqflite: ^2.3.3
   synchronized: ^3.1.0+1
   path: ^1.9.0
+  flutter_image_compress: ^2.2.0
   json_annotation: ^4.8.1
   logger: ^2.2.0
   injectable: ^2.4.1
-  package_info_plus: ^8.0.0
+  package_info_plus: ^7.0.0
   grpc: ^3.2.4
   flutter_dotenv: ^5.1.0
   protobuf: ^3.1.0

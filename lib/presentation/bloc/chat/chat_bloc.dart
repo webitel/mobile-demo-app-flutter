@@ -27,7 +27,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<ListenToMessages>(
       (event, emit) async {
         final messagesStream = await _listenToMessagesUseCase();
-
         await emit.onEach(messagesStream, onData: (message) {
           final List<DialogMessageEntity> currentMessages = [
             DialogMessageEntity(

@@ -16,8 +16,7 @@ class ChatServiceImpl implements ChatService {
   Future<ResponseEntity> sendDialogMessage({
     required DialogMessageEntity dialogMessageEntity,
   }) async {
-    final message =
-        await WebitelPortalSdk.instance.messageHandler.sendDialogMessage(
+    final message = await WebitelPortalSdk.instance.messageHandler.sendMessage(
       dialogMessageContent: dialogMessageEntity.dialogMessageContent,
       requestId: dialogMessageEntity.requestId,
       peerType: dialogMessageEntity.peer.type,
@@ -53,7 +52,7 @@ class ChatServiceImpl implements ChatService {
   Future<Stream<DialogMessageEntity>> listenToMessages() async {
     // this is messages stream for all user/operator messages
     final messagesStream =
-        await WebitelPortalSdk.instance.eventHandler.listenToMessages();
+        await WebitelPortalSdk.instance.messageHandler.listenToMessages();
 
     final messagesStreamController = StreamController<DialogMessageEntity>();
 

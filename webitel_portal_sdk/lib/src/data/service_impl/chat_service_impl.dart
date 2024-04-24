@@ -60,7 +60,7 @@ class ChatServiceImpl implements ChatService {
   }
 
   @override
-  Future<DialogMessageEntity> sendDialogMessage(
+  Future<DialogMessageEntity> sendMessage(
       {required DialogMessageEntity message}) async {
     final userId = await _sharedPreferencesGateway.getFromDisk('userId');
     final chatId = await _sharedPreferencesGateway.getFromDisk('chatId');
@@ -203,7 +203,7 @@ class ChatServiceImpl implements ChatService {
   }
 
   @override
-  Future<List<DialogMessageEntity>> fetchMessageUpdates(
+  Future<List<DialogMessageEntity>> fetchUpdates(
       {int? limit, String? offset}) async {
     final chatId = await _sharedPreferencesGateway.getFromDisk('chatId');
     final userId = await _sharedPreferencesGateway.readUserId();
@@ -252,10 +252,6 @@ class ChatServiceImpl implements ChatService {
     return [];
   }
 
-  void dispose() {
-    _userMessagesController.close();
-  }
-
   @override
   Future<void> enterChat({required String chatId}) async {
     await _sharedPreferencesGateway.saveChatId(chatId);
@@ -264,5 +260,9 @@ class ChatServiceImpl implements ChatService {
   @override
   Future<void> exitChat() async {
     await _sharedPreferencesGateway.deleteChatId();
+  }
+
+  void dispose() {
+    _userMessagesController.close();
   }
 }

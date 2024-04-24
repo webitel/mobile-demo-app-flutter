@@ -6,10 +6,12 @@ import 'package:webitel_portal_sdk/src/builder/call_options_builder.dart';
 import 'package:webitel_portal_sdk/src/builder/user_agent_builder.dart';
 import 'package:webitel_portal_sdk/src/data/interceptor/interceptor.dart';
 import 'package:webitel_portal_sdk/src/generated/portal/customer.pbgrpc.dart';
+import 'package:webitel_portal_sdk/src/generated/portal/media.pbgrpc.dart';
 
 @LazySingleton()
 class GrpcGateway {
-  late CustomerClient _stub;
+  late CustomerClient _customerStub;
+  late MediaStorageClient _mediaStorageStub;
   late ClientChannel _channel;
   late String _accessToken = '';
   late String _baseUrl;
@@ -47,8 +49,12 @@ class GrpcGateway {
     );
   }
 
-  CustomerClient get stub {
-    return _stub;
+  CustomerClient get customerStub {
+    return _customerStub;
+  }
+
+  MediaStorageClient get mediaStorageStub {
+    return _mediaStorageStub;
   }
 
   ClientChannel get channel => _channel;
@@ -76,7 +82,16 @@ class GrpcGateway {
     channel.onConnectionStateChanged.listen((state) {
       _streamControllerState.add(state);
     });
-    _stub = CustomerClient(
+    _customerStub = CustomerClient(
+      channel,
+      interceptors: [GRPCInterceptor()],
+      options: CallOptionsBuilder()
+          .setDeviceId(deviceId)
+          .setClientToken(clientToken)
+          .setAccessToken(_accessToken)
+          .build(),
+    );
+    _mediaStorageStub = MediaStorageClient(
       channel,
       interceptors: [GRPCInterceptor()],
       options: CallOptionsBuilder()

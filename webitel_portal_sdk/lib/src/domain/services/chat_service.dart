@@ -8,12 +8,12 @@ abstract interface class ChatService {
     String? offset,
   });
 
-  Future<List<DialogMessageEntity>> fetchMessageUpdates({
+  Future<List<DialogMessageEntity>> fetchUpdates({
     int? limit,
     String? offset,
   });
 
-  Future<DialogMessageEntity> sendDialogMessage(
+  Future<DialogMessageEntity> sendMessage(
       {required DialogMessageEntity message});
 
   Future<StreamController<DialogMessageEntity>> listenToMessages();

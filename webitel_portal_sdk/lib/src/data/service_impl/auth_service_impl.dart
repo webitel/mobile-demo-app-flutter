@@ -68,7 +68,7 @@ class AuthServiceImpl implements AuthService {
         .build();
 
     try {
-      final response = await _grpcGateway.stub.token(request);
+      final response = await _grpcGateway.customerStub.token(request);
       await _sharedPreferencesGateway.saveUserId(response.chat.user.id);
       if (savedDeviceId != null) {
         _databaseProvider.writeUser(
@@ -99,7 +99,7 @@ class AuthServiceImpl implements AuthService {
   @override
   Future<ResponseEntity> registerDevice() async {
     try {
-      await _grpcGateway.stub
+      await _grpcGateway.customerStub
           .registerDevice(RegisterDeviceRequest(push: DevicePush()));
       return ResponseEntity(status: ResponseStatus.success);
     } catch (error) {
@@ -111,7 +111,7 @@ class AuthServiceImpl implements AuthService {
   @override
   Future<ResponseEntity> logout() async {
     try {
-      await _grpcGateway.stub.logout(LogoutRequest());
+      await _grpcGateway.customerStub.logout(LogoutRequest());
       return ResponseEntity(status: ResponseStatus.success);
     } catch (error) {
       return ResponseEntity(
