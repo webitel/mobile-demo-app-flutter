@@ -43,7 +43,7 @@ class MessagesListMessageBuilder {
 
       return DialogMessageEntity(
         requestId: _requestId,
-        chatId: _chatId ?? '',
+        chatId: _chatId,
         type: messageType,
         dialogMessageContent: message.text,
         peer: PeerInfo(

@@ -45,6 +45,6 @@ class UserAgentBuilder {
   }
 
   String build() {
-    return '($_appName/$_appVersion) $_userAgent grpc-dart';
+    return '$_appName/$_appVersion $_userAgent webitel_portal-sdk/1.0.1 grpc-dart';
   }
 }
