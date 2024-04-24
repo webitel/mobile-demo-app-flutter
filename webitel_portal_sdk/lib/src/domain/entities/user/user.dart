@@ -1,3 +1,8 @@
+import 'package:json_annotation/json_annotation.dart';
+
+part 'user.g.dart';
+
+@JsonSerializable()
 class UserEntity {
   final String id;
   final String name;
@@ -41,37 +46,8 @@ class UserEntity {
     );
   }
 
-  // Method to convert UserEntity to a Map
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'accessToken': accessToken,
-      'name': name,
-      'baseUrl': baseUrl,
-      'clientToken': clientToken,
-      'deviceId': deviceId,
-      'appName': appName,
-      'appVersion': appVersion,
-      'packageName': packageName,
-      'packageVersion': packageVersion,
-      'userAgent': userAgent,
-    };
-  }
+  factory UserEntity.fromJson(Map<String, dynamic> json) =>
+      _$UserEntityFromJson(json);
 
-  // Method to create UserEntity from a Map
-  factory UserEntity.fromMap(Map<String, dynamic> map) {
-    return UserEntity(
-      id: map['id'],
-      accessToken: map['accessToken'],
-      name: map['name'],
-      baseUrl: map['baseUrl'],
-      clientToken: map['clientToken'],
-      deviceId: map['deviceId'],
-      appName: map['appName'],
-      appVersion: map['appVersion'],
-      packageName: map['packageName'],
-      packageVersion: map['packageVersion'],
-      userAgent: map['userAgent'],
-    );
-  }
+  Map<String, dynamic> toJson() => _$UserEntityToJson(this);
 }

@@ -7,7 +7,7 @@ import 'package:webitel_portal_sdk/src/data/gateway/grpc_gateway.dart';
 import 'package:webitel_portal_sdk/src/data/gateway/shared_preferences_gateway.dart';
 import 'package:webitel_portal_sdk/src/database/database.dart';
 import 'package:webitel_portal_sdk/src/domain/entities/response_entity.dart';
-import 'package:webitel_portal_sdk/src/domain/entities/user.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/user/user.dart';
 import 'package:webitel_portal_sdk/src/domain/services/auth_service.dart';
 import 'package:webitel_portal_sdk/src/generated/portal/account.pb.dart';
 import 'package:webitel_portal_sdk/src/generated/portal/customer.pb.dart';

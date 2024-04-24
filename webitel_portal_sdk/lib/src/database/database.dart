@@ -1,8 +1,8 @@
 import 'package:injectable/injectable.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:webitel_portal_sdk/src/domain/entities/request_entity.dart';
-import 'package:webitel_portal_sdk/src/domain/entities/user.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/request/request_entity.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/user/user.dart';
 
 @LazySingleton()
 class DatabaseProvider {
@@ -59,7 +59,7 @@ class DatabaseProvider {
     final db = await database;
     await db.insert(
       requestQueueTable,
-      request.toMap(),
+      request.toJson(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
@@ -92,7 +92,7 @@ class DatabaseProvider {
 
     return List.generate(
       maps.length,
-      (i) => RequestEntity.fromMap(maps[i]),
+      (i) => RequestEntity.fromJson(maps[i]),
     );
   }
 
@@ -118,8 +118,8 @@ class DatabaseProvider {
     if (existingUser.id.isNotEmpty) {
       // Update only the fields that are different
       Map<String, dynamic> updatedFields = {};
-      final userMap = user.toMap();
-      final existingUserMap = existingUser.toMap();
+      final userMap = user.toJson();
+      final existingUserMap = existingUser.toJson();
 
       userMap.forEach((key, value) {
         if (existingUserMap[key] != value) {
@@ -139,7 +139,7 @@ class DatabaseProvider {
       // User does not exist, insert as new
       await db.insert(
         userTable,
-        user.toMap(),
+        user.toJson(),
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     }
@@ -154,7 +154,7 @@ class DatabaseProvider {
     );
 
     if (maps.isNotEmpty) {
-      return UserEntity.fromMap(maps[0]);
+      return UserEntity.fromJson(maps[0]);
     } else {
       return UserEntity.initial();
     }
