@@ -121,9 +121,24 @@ class _ChatPageState extends State<ChatPage> {
                                 child: SvgPicture.asset(
                                   'assets/icons/send_message.svg',
                                   colorFilter: const ColorFilter.mode(
-                                    Colors.green,
+                                    Colors.black,
                                     BlendMode.srcIn,
                                   ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            GestureDetector(
+                              onTap: () {
+                                //TODO PICK FILE
+                              },
+                              child: SizedBox(
+                                height: 40,
+                                width: 40,
+                                child: Image.asset(
+                                  width: 60,
+                                  height: 60,
+                                  'assets/images/add_file.png',
                                 ),
                               ),
                             ),

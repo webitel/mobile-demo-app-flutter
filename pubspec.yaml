@@ -27,6 +27,7 @@ dependencies:
   path: ^1.9.0
   get_it: ^7.7.0
   package_info_plus: ^7.0.0
+  image_picker: ^1.1.0
   webitel_portal_sdk:
     path: webitel_portal_sdk/
 
@@ -42,7 +43,8 @@ flutter:
   generate: true
 
   assets:
-    - assets/icons/send_message.svg
+    - assets/icons/
+    - assets/images/
 
   fonts:
     - family: Bebas
