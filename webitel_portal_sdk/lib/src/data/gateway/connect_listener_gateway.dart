@@ -9,7 +9,6 @@ import 'package:webitel_portal_sdk/src/data/gateway/grpc_gateway.dart';
 import 'package:webitel_portal_sdk/src/database/database.dart';
 import 'package:webitel_portal_sdk/src/domain/entities/connect_status.dart';
 import 'package:webitel_portal_sdk/src/domain/entities/error.dart';
-import 'package:webitel_portal_sdk/src/domain/entities/user.dart';
 import 'package:webitel_portal_sdk/src/generated/google/protobuf/any.pb.dart';
 import 'package:webitel_portal_sdk/src/generated/portal/connect.pb.dart'
     as portal;
@@ -143,11 +142,6 @@ class ConnectListenerGateway {
         logger.t('Connected to gRPC Stream');
       }
     });
-  }
-
-  Future<UserEntity> readUserFromDatabase() async {
-    final user = await _databaseProvider.readUser();
-    return user;
   }
 
   Future<void> listenToChannelStatus() async {

@@ -17,7 +17,13 @@ class MessageItem extends StatelessWidget {
       padding: const EdgeInsets.all(8),
       height: 70,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.only(
+          topRight: const Radius.circular(20),
+          topLeft: Radius.circular(messageType == MessageType.user ? 20 : 0),
+          bottomLeft: const Radius.circular(20),
+          bottomRight:
+              Radius.circular(messageType == MessageType.operator ? 20 : 0),
+        ),
         color: messageType == MessageType.user
             ? Colors.yellow.withOpacity(0.2)
             : Colors.blue.withOpacity(0.2),
@@ -26,9 +32,10 @@ class MessageItem extends StatelessWidget {
           child: Text(
         content,
         style: const TextStyle(
-          fontSize: 16,
+          fontSize: 18,
           color: Colors.black,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w500,
+          fontFamily: 'Bebas',
         ),
       )),
     );

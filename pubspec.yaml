@@ -44,5 +44,11 @@ flutter:
   assets:
     - assets/icons/send_message.svg
 
+  fonts:
+    - family: Bebas
+      fonts:
+        - asset: assets/fonts/BebasNeue-Regular.ttf
+          weight: 400
+
 
 
