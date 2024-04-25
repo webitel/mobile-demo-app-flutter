@@ -21,17 +21,16 @@ class AuthServiceImpl implements AuthService {
     const uuid = Uuid();
     await _sharedPreferencesGateway.init();
 
-    //Checking whether deviceId is not null, if null - generating a new one
-
     String? deviceId = await _sharedPreferencesGateway.getFromDisk('deviceId');
     if (deviceId == null) {
       deviceId = uuid.v4();
       await _sharedPreferencesGateway.saveToDisk('deviceId', deviceId);
     }
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
-
+    final uaData = await userAgentData();
     if (Platform.isAndroid) {
-      final userAgentString = await userAgent();
+      final userAgentString =
+          '${packageInfo.appName}/${packageInfo.version} (${uaData.platform} ${uaData.platformVersion}; ${uaData.model}; ${uaData.device}; ${uaData.architecture})';
       final res = await WebitelPortalSdk.instance.authHandler.login(
         appToken: appToken,
         baseUrl: baseUrl,
@@ -48,8 +47,8 @@ class AuthServiceImpl implements AuthService {
         message: res.message,
       );
     } else if (Platform.isIOS) {
-      final userAgentString = await userAgent();
-
+      final userAgentString =
+          '${packageInfo.appName}/${packageInfo.version} (${uaData.platform} ${uaData.platformVersion}; ${uaData.model}; ${uaData.device}; ${uaData.architecture})';
       final res = await WebitelPortalSdk.instance.authHandler.login(
         appToken: appToken,
         baseUrl: baseUrl,

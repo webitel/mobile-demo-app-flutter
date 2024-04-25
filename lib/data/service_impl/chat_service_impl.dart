@@ -23,9 +23,11 @@ class ChatServiceImpl implements ChatService {
   Future<void> uploadMedia() async {
     File? media = await _filePickerGateway.pickFile();
     if (media != null) {
-      if (kDebugMode) {
-        print(media.path);
-      }
+      WebitelPortalSdk.instance.mediaHandler.uploadMedia(
+        type: '',
+        name: '',
+        data: [],
+      );
     } else {
       if (kDebugMode) {
         print('File was not picked');
