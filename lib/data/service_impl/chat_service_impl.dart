@@ -1,6 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:webitel_portal_sdk/webitel_portal_sdk.dart';
+import 'package:webitel_sdk/data/gateway/file_picker_gateway.dart';
 import 'package:webitel_sdk/database/database_provider.dart';
 import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 import 'package:webitel_sdk/domain/entity/response_entity.dart';
@@ -8,9 +11,27 @@ import 'package:webitel_sdk/domain/service/chat_service.dart';
 
 class ChatServiceImpl implements ChatService {
   final DatabaseProvider _databaseProvider;
+  final FilePickerGateway _filePickerGateway;
   late final StreamController<DialogMessageEntity> messagesStreamController;
 
-  ChatServiceImpl(this._databaseProvider);
+  ChatServiceImpl(
+    this._databaseProvider,
+    this._filePickerGateway,
+  );
+
+  @override
+  Future<void> uploadMedia() async {
+    File? media = await _filePickerGateway.pickFile();
+    if (media != null) {
+      if (kDebugMode) {
+        print(media.path);
+      }
+    } else {
+      if (kDebugMode) {
+        print('File was not picked');
+      }
+    }
+  }
 
   @override
   Future<ResponseEntity> sendDialogMessage({

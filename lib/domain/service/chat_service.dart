@@ -8,4 +8,6 @@ abstract interface class ChatService {
   Future<Stream<DialogMessageEntity>> listenToMessages();
 
   Future<List<DialogMessageEntity>> fetchMessages();
+
+  Future<void> uploadMedia();
 }

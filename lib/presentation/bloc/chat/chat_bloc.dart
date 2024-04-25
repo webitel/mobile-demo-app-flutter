@@ -4,20 +4,28 @@ import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 import 'package:webitel_sdk/domain/usecase/chat/fetch_messages_usecase.dart';
 import 'package:webitel_sdk/domain/usecase/chat/listen_to_messages_usecase.dart';
 import 'package:webitel_sdk/domain/usecase/chat/send_dialog_message_usecase.dart';
+import 'package:webitel_sdk/domain/usecase/chat/upload_media.dart';
 
 part 'chat_event.dart';
 part 'chat_state.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
+  final UploadMediaUseCase _uploadMediaUseCase;
   final ListenToMessagesUseCase _listenToMessagesUseCase;
   final FetchMessagesUseCase _fetchMessagesUseCase;
   final SendDialogMessageUseCase _sendDialogMessageUseCase;
 
   ChatBloc(
+    this._uploadMediaUseCase,
     this._listenToMessagesUseCase,
     this._fetchMessagesUseCase,
     this._sendDialogMessageUseCase,
   ) : super(ChatState.initial()) {
+    on<UploadMediaEvent>(
+      (event, emit) async {
+        await _uploadMediaUseCase();
+      },
+    );
     on<FetchMessages>(
       (event, emit) async {
         final messages = await _fetchMessagesUseCase();

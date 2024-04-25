@@ -130,7 +130,7 @@ class _ChatPageState extends State<ChatPage> {
                             const SizedBox(width: 16),
                             GestureDetector(
                               onTap: () {
-                                //TODO PICK FILE
+                                chatBloc.add(UploadMediaEvent());
                               },
                               child: SizedBox(
                                 height: 40,

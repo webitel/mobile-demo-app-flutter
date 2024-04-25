@@ -1,7 +1,7 @@
 import 'package:webitel_portal_sdk/src/domain/entities/media_file.dart';
 
 abstract interface class MediaService {
-  Future<Stream<MediaFileEntity>> uploadFile({
+  Future<Stream<MediaFileEntity>> uploadMedia({
     required String type,
     required String name,
     required List<int> data,

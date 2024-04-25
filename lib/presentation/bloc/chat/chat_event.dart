@@ -11,3 +11,5 @@ class SendDialogMessageEvent extends ChatEvent {
 class ListenToMessages extends ChatEvent {}
 
 class FetchMessages extends ChatEvent {}
+
+class UploadMediaEvent extends ChatEvent {}

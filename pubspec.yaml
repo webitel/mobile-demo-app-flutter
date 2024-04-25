@@ -1,5 +1,5 @@
 name: webitel_sdk
-description: "Webitel SDK Test App"
+description: "Webitel Portal SDK Demo App"
 
 publish_to: 'none'
 
@@ -27,7 +27,7 @@ dependencies:
   path: ^1.9.0
   get_it: ^7.7.0
   package_info_plus: ^7.0.0
-  image_picker: ^1.1.0
+  file_picker: ^8.0.2
   webitel_portal_sdk:
     path: webitel_portal_sdk/
 

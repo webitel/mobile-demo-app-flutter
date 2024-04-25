@@ -26,7 +26,7 @@ class UploadMediaImplUseCase implements UploadMediaUseCase {
     required List<int> data,
     int? compress,
   }) =>
-      _mediaService.uploadFile(
+      _mediaService.uploadMedia(
         type: type,
         name: name,
         data: data,

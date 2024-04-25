@@ -25,7 +25,7 @@ class MediaServiceImpl implements MediaService {
   );
 
   @override
-  Future<Stream<MediaFileEntity>> uploadFile({
+  Future<Stream<MediaFileEntity>> uploadMedia({
     required String type,
     required String name,
     required List<int> data,
