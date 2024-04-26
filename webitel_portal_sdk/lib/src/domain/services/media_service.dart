@@ -7,4 +7,6 @@ abstract interface class MediaService {
     required Stream<List<int>> data,
     int? compress,
   });
+
+  Future<Stream<MediaFileEntity>> fetchMedia({required String id});
 }

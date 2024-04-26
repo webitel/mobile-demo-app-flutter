@@ -1,12 +1,19 @@
 import 'package:webitel_portal_sdk/src/domain/entities/media_file.dart';
+import 'package:webitel_portal_sdk/src/domain/usecase/media/fetch_media_usecase.dart';
 import 'package:webitel_portal_sdk/src/domain/usecase/media/upload_file_usecase.dart';
 import 'package:webitel_portal_sdk/src/injection/injection.dart';
 
 class MediaHandler {
+  late FetchMediaUseCase _fetchMediaUseCase;
   late UploadMediaUseCase _uploadMediaUseCase;
 
   MediaHandler() {
+    _fetchMediaUseCase = getIt.get<FetchMediaUseCase>();
     _uploadMediaUseCase = getIt.get<UploadMediaUseCase>();
+  }
+
+  Future<Stream<MediaFileEntity>> fetchMedia({required String id}) async {
+    return await _fetchMediaUseCase(id: id);
   }
 
   Future<MediaFileEntity> uploadMedia({

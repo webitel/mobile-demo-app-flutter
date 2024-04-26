@@ -8,6 +8,7 @@ class DialogMessageBuilder {
   late String _chatId;
   late String _messageId;
   late UpdateNewMessage _update;
+  File? _file;
 
   DialogMessageBuilder setDialogMessageContent(String dialogMessageContent) {
     _dialogMessageContent = dialogMessageContent;
@@ -39,6 +40,11 @@ class DialogMessageBuilder {
     return this;
   }
 
+  DialogMessageBuilder setFile(File? file) {
+    _file = file;
+    return this;
+  }
+
   DialogMessageEntity build() {
     final messageType = _update.message.from.id == _userId
         ? MessageType.user
@@ -57,6 +63,7 @@ class DialogMessageBuilder {
       requestId: _requestId,
       peer: peerInfo,
       messageId: _messageId,
+      file: _file,
     );
   }
 }

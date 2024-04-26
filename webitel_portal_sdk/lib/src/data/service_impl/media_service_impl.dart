@@ -66,4 +66,27 @@ class MediaServiceImpl implements MediaService {
       );
     }
   }
+
+  @override
+  Future<Stream<MediaFileEntity>> fetchMedia({required String id}) async {
+    final mediaFileStreamController = StreamController<MediaFileEntity>();
+    try {
+      _grpcGateway.mediaStorageStub
+          .getFile(GetFileRequest(fileId: id))
+          .listen((media) {
+        mediaFileStreamController.add(
+          MediaFileEntity(
+            name: media.file.name,
+            type: media.file.type,
+            id: media.file.id,
+            bytes: media.data,
+          ),
+        );
+      });
+    } catch (error, stackTrace) {
+      logger.e(error, error: error, stackTrace: stackTrace);
+    }
+
+    return mediaFileStreamController.stream;
+  }
 }

@@ -53,6 +53,14 @@ class ChatServiceImpl implements ChatService {
           .setUserId(userId ?? '')
           .setChatId(update.message.chat.id) //TODO
           .setUpdate(update)
+          .setFile(
+            File(
+              id: update.message.file.id ?? '',
+              size: 0, //TODO
+              type: update.message.file.id ?? '',
+              name: update.message.file.id ?? '',
+            ),
+          )
           .build();
       _userMessagesController.add(dialogMessage);
     });
