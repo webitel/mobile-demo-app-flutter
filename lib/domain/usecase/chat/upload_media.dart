@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:webitel_sdk/domain/entity/media_file.dart';
 import 'package:webitel_sdk/domain/service/chat_service.dart';
 
 abstract interface class UploadMediaUseCase {
-  Future<void> call();
+  Future<MediaFileEntity> call({required File file});
 }
 
 class UploadMediaImplUseCase implements UploadMediaUseCase {
@@ -12,5 +14,6 @@ class UploadMediaImplUseCase implements UploadMediaUseCase {
   UploadMediaImplUseCase(this._chatService);
 
   @override
-  Future<void> call() => _chatService.uploadMedia();
+  Future<MediaFileEntity> call({required File file}) =>
+      _chatService.uploadMedia(file: file);
 }

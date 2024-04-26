@@ -2,8 +2,13 @@ enum MessageType { error, user, operator }
 
 enum MessageStatus { loading, error, sent }
 
+enum MessageCategory { message, file }
+
 class DialogMessageEntity {
+  final String? fileName;
+  final String? path;
   final String dialogMessageContent;
+  final MessageCategory? messageCategory;
   final Peer peer;
   final MessageType? messageType;
   final MessageStatus? messageStatus;
@@ -11,9 +16,12 @@ class DialogMessageEntity {
   final String? chatId;
 
   DialogMessageEntity({
+    this.fileName,
+    this.path,
     this.chatId,
     this.messageType,
     this.messageStatus,
+    this.messageCategory,
     required this.dialogMessageContent,
     required this.peer,
     required this.requestId,
@@ -22,6 +30,12 @@ class DialogMessageEntity {
   factory DialogMessageEntity.fromMap(Map<String, dynamic> map) {
     return DialogMessageEntity(
       chatId: map['chatId'],
+      path: map['path'],
+      fileName: map['fileName'],
+      messageCategory: map['messageCategory'] != null
+          ? MessageCategory.values
+              .firstWhere((type) => type.toString() == map['messageCategory'])
+          : null,
       messageType: map['messageType'] != null
           ? MessageType.values
               .firstWhere((type) => type.toString() == map['messageType'])
@@ -43,8 +57,11 @@ class DialogMessageEntity {
   Map<String, dynamic> toMap() {
     return {
       'chatId': chatId,
+      'path': path,
+      'fileName': fileName,
       'messageType': messageType?.toString(),
       'messageStatus': messageStatus?.toString(),
+      'messageCategory': messageCategory?.toString(),
       'dialogMessageContent': dialogMessageContent,
       'peerId': peer.id,
       'peerType': peer.type,

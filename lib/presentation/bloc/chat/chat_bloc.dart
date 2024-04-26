@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 import 'package:webitel_sdk/domain/usecase/chat/fetch_messages_usecase.dart';
 import 'package:webitel_sdk/domain/usecase/chat/listen_to_messages_usecase.dart';
+import 'package:webitel_sdk/domain/usecase/chat/pick_file_usecase.dart';
 import 'package:webitel_sdk/domain/usecase/chat/send_dialog_message_usecase.dart';
 import 'package:webitel_sdk/domain/usecase/chat/upload_media.dart';
 
@@ -10,12 +11,14 @@ part 'chat_event.dart';
 part 'chat_state.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
+  final PickFileUseCase _pickFileUseCase;
   final UploadMediaUseCase _uploadMediaUseCase;
   final ListenToMessagesUseCase _listenToMessagesUseCase;
   final FetchMessagesUseCase _fetchMessagesUseCase;
   final SendDialogMessageUseCase _sendDialogMessageUseCase;
 
   ChatBloc(
+    this._pickFileUseCase,
     this._uploadMediaUseCase,
     this._listenToMessagesUseCase,
     this._fetchMessagesUseCase,
@@ -23,7 +26,27 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   ) : super(ChatState.initial()) {
     on<UploadMediaEvent>(
       (event, emit) async {
-        await _uploadMediaUseCase();
+        final file = await _pickFileUseCase();
+
+        if (file != null) {
+          final List<DialogMessageEntity> currentMessages = [
+            DialogMessageEntity(
+              path: file.path,
+              messageType: MessageType.user,
+              messageCategory: MessageCategory.file,
+              requestId: '',
+              dialogMessageContent: '',
+              peer: Peer(
+                id: '',
+                type: '',
+                name: '',
+              ),
+            ),
+            ...state.dialogMessages
+          ];
+          emit(state.copyWith(dialogMessages: currentMessages));
+          await _uploadMediaUseCase(file: file);
+        }
       },
     );
     on<FetchMessages>(
@@ -38,6 +61,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         await emit.onEach(messagesStream, onData: (message) {
           final List<DialogMessageEntity> currentMessages = [
             DialogMessageEntity(
+              messageCategory: MessageCategory.message,
               requestId: message.requestId,
               messageType: message.messageType,
               dialogMessageContent: message.dialogMessageContent,

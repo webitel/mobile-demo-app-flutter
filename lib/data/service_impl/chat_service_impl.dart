@@ -7,6 +7,7 @@ import 'package:webitel_portal_sdk/webitel_portal_sdk.dart';
 import 'package:webitel_sdk/data/gateway/file_picker_gateway.dart';
 import 'package:webitel_sdk/database/database_provider.dart';
 import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
+import 'package:webitel_sdk/domain/entity/media_file.dart';
 import 'package:webitel_sdk/domain/entity/response_entity.dart';
 import 'package:webitel_sdk/domain/service/chat_service.dart';
 
@@ -21,49 +22,50 @@ class ChatServiceImpl implements ChatService {
   );
 
   @override
-  Future<void> uploadMedia() async {
+  Future<File?> pickFile() async {
     File? media = await _filePickerGateway.pickFile();
-
     if (media != null) {
-      try {
-        // int totalBytes = await media.length();
-        // int bytesUploaded = 0;
-        //
-        // media.openRead().listen((List<int> chunk) {
-        //   bytesUploaded += chunk.length;
-        //
-        //   double percentage = (bytesUploaded / totalBytes) * 100;
-        //   print(chunk.length);
-        // });
-
-        // List<int> fileBytes = await File(media.path).readAsBytes();
-        // Stream<List<int>> byteStream = Stream.value(fileBytes);
-        //
-        // final response =
-        // await WebitelPortalSdk.instance.mediaHandler.uploadMedia(
-        //   type: mimeType,
-        //   name: fileName,
-        //   data: byteStream,
-        // );
-
-        String mimeType =
-            lookupMimeType(media.path) ?? 'application/octet-stream';
-        String fileName = media.path.split('/').last;
-
-        final res = await WebitelPortalSdk.instance.mediaHandler.uploadMedia(
-          type: mimeType,
-          name: fileName,
-          data: media.openRead(),
-        );
-      } catch (error) {
-        if (kDebugMode) {
-          print('Error uploading file: $error');
-        }
-      }
+      return media;
     } else {
+      return null;
+    }
+  }
+
+  @override
+  Future<MediaFileEntity> uploadMedia({required File file}) async {
+    try {
+      // int totalBytes = await media.length();
+      // int bytesUploaded = 0;
+      //
+      // media.openRead().listen((List<int> chunk) {
+      //   bytesUploaded += chunk.length;
+      //
+      //   double percentage = (bytesUploaded / totalBytes) * 100;
+      //   print(chunk.length);
+      // });
+
+      String mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
+      String fileName = file.path.split('/').last;
+
+      final res = await WebitelPortalSdk.instance.mediaHandler.uploadMedia(
+        type: mimeType,
+        name: fileName,
+        data: file.openRead(),
+      );
+      return MediaFileEntity(
+        name: res.name,
+        type: res.type,
+        id: res.id,
+      );
+    } catch (error) {
       if (kDebugMode) {
-        print('File was not picked');
+        print('Error uploading file: $error');
       }
+      return MediaFileEntity(
+        name: error.toString(),
+        type: '',
+        id: '',
+      );
     }
   }
 
