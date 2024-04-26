@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:webitel_sdk/domain/service/chat_service.dart';
 
 abstract interface class UploadMediaUseCase {

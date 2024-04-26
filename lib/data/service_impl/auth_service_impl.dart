@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:ua_client_hints/ua_client_hints.dart';
-import 'package:uuid/uuid.dart';
 import 'package:webitel_portal_sdk/webitel_portal_sdk.dart';
 import 'package:webitel_sdk/data/gateway/shared_preferences_gateway.dart';
 import 'package:webitel_sdk/domain/entity/response_entity.dart';
@@ -14,18 +13,12 @@ class AuthServiceImpl implements AuthService {
   AuthServiceImpl(this._sharedPreferencesGateway);
 
   @override
-  Future<ResponseEntity> login(
-      {required String appToken,
-      required String baseUrl,
-      required String clientToken}) async {
-    const uuid = Uuid();
+  Future<ResponseEntity> login({
+    required String appToken,
+    required String baseUrl,
+    required String clientToken,
+  }) async {
     await _sharedPreferencesGateway.init();
-
-    String? deviceId = await _sharedPreferencesGateway.getFromDisk('deviceId');
-    if (deviceId == null) {
-      deviceId = uuid.v4();
-      await _sharedPreferencesGateway.saveToDisk('deviceId', deviceId);
-    }
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     final uaData = await userAgentData();
     if (Platform.isAndroid) {
@@ -35,7 +28,6 @@ class AuthServiceImpl implements AuthService {
         appToken: appToken,
         baseUrl: baseUrl,
         clientToken: clientToken,
-        deviceId: deviceId,
         appName: packageInfo.appName,
         appVersion: packageInfo.version,
         userAgent: userAgentString,
@@ -53,7 +45,6 @@ class AuthServiceImpl implements AuthService {
         appToken: appToken,
         baseUrl: baseUrl,
         clientToken: clientToken,
-        deviceId: deviceId,
         appName: packageInfo.appName,
         appVersion: packageInfo.version,
         userAgent: userAgentString,

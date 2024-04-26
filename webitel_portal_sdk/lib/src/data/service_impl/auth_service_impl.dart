@@ -33,29 +33,29 @@ class AuthServiceImpl implements AuthService {
     required String appVersion,
     required String appToken,
     required String userAgent,
-    String? deviceId,
   }) async {
     final uuid = Uuid();
     await _sharedPreferencesGateway.init();
+    final deviceIdGenerated = uuid.v4();
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    deviceId == null
-        ? await _sharedPreferencesGateway.saveDeviceId(uuid.v4())
-        : await _sharedPreferencesGateway.saveDeviceId(deviceId);
     final savedDeviceId = await _sharedPreferencesGateway.readDeviceId();
-    if (savedDeviceId != null) {
-      await _grpcGateway.init(
-        baseUrl: baseUrl,
-        clientToken: clientToken,
-        deviceId: deviceId ?? savedDeviceId,
-        userAgentBuilder: UserAgentBuilder(
-          appName: appName,
-          appVersion: appVersion,
-          packageName: packageInfo.appName,
-          packageVersion: packageInfo.version,
-          userAgent: userAgent,
-        ),
-      );
+    if (savedDeviceId == 'null') {
+      await _sharedPreferencesGateway.saveDeviceId(deviceIdGenerated);
     }
+    final renewedDeviceId = await _sharedPreferencesGateway.readDeviceId();
+    await _grpcGateway.init(
+      baseUrl: baseUrl,
+      clientToken: clientToken,
+      deviceId: renewedDeviceId!,
+      userAgentBuilder: UserAgentBuilder(
+        appName: appName,
+        appVersion: appVersion,
+        packageName: packageInfo.appName,
+        packageVersion: packageInfo.version,
+        userAgent: userAgent,
+      ),
+    );
+
     final request = TokenRequestBuilder()
         .setGrantType('identity')
         .setResponseType(['user', 'token', 'chat'])
@@ -78,7 +78,7 @@ class AuthServiceImpl implements AuthService {
             name: response.user.username,
             baseUrl: baseUrl,
             clientToken: clientToken,
-            deviceId: deviceId ?? savedDeviceId,
+            deviceId: renewedDeviceId,
             appName: appName,
             appVersion: appVersion,
             packageName: packageInfo.appName,

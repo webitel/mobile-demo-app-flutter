@@ -9,10 +9,10 @@ class MediaHandler {
     _uploadMediaUseCase = getIt.get<UploadMediaUseCase>();
   }
 
-  Future<Stream<MediaFileEntity>> uploadMedia({
+  Future<MediaFileEntity> uploadMedia({
     required String type,
     required String name,
-    required List<int> data,
+    required Stream<List<int>> data,
     int? compress,
   }) async {
     return await _uploadMediaUseCase(

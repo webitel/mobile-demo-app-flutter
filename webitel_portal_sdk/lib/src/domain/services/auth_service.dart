@@ -12,6 +12,5 @@ abstract interface class AuthService {
     required String appName,
     required String appVersion,
     required String appToken,
-    String? deviceId,
   });
 }

@@ -30,13 +30,11 @@ class AuthHandler {
     required String appVersion,
     required String userAgent,
     required String appToken,
-    String? deviceId,
   }) async {
     return await _loginUseCase(
       appToken: appToken,
       baseUrl: baseUrl,
       clientToken: clientToken,
-      deviceId: deviceId,
       appName: appName,
       appVersion: appVersion,
       userAgent: userAgent,

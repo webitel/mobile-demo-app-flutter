@@ -6,7 +6,8 @@ import 'package:flutter/foundation.dart';
 class FilePickerGateway {
   Future<File?> pickFile() async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles();
+      FilePickerResult? result =
+          await FilePicker.platform.pickFiles(withReadStream: true);
       if (result != null) {
         return File(result.files.single.path!);
       } else {

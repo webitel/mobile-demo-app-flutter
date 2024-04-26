@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:mime/mime.dart';
 import 'package:webitel_portal_sdk/webitel_portal_sdk.dart';
 import 'package:webitel_sdk/data/gateway/file_picker_gateway.dart';
 import 'package:webitel_sdk/database/database_provider.dart';
@@ -22,12 +23,43 @@ class ChatServiceImpl implements ChatService {
   @override
   Future<void> uploadMedia() async {
     File? media = await _filePickerGateway.pickFile();
+
     if (media != null) {
-      WebitelPortalSdk.instance.mediaHandler.uploadMedia(
-        type: '',
-        name: '',
-        data: [],
-      );
+      try {
+        // int totalBytes = await media.length();
+        // int bytesUploaded = 0;
+        //
+        // media.openRead().listen((List<int> chunk) {
+        //   bytesUploaded += chunk.length;
+        //
+        //   double percentage = (bytesUploaded / totalBytes) * 100;
+        //   print(chunk.length);
+        // });
+
+        // List<int> fileBytes = await File(media.path).readAsBytes();
+        // Stream<List<int>> byteStream = Stream.value(fileBytes);
+        //
+        // final response =
+        // await WebitelPortalSdk.instance.mediaHandler.uploadMedia(
+        //   type: mimeType,
+        //   name: fileName,
+        //   data: byteStream,
+        // );
+
+        String mimeType =
+            lookupMimeType(media.path) ?? 'application/octet-stream';
+        String fileName = media.path.split('/').last;
+
+        final res = await WebitelPortalSdk.instance.mediaHandler.uploadMedia(
+          type: mimeType,
+          name: fileName,
+          data: media.openRead(),
+        );
+      } catch (error) {
+        if (kDebugMode) {
+          print('Error uploading file: $error');
+        }
+      }
     } else {
       if (kDebugMode) {
         print('File was not picked');
@@ -100,3 +132,48 @@ class ChatServiceImpl implements ChatService {
     return messagesStreamController.stream;
   }
 }
+
+// @override
+// Future<void> uploadMedia() async {
+//   File? media = await _filePickerGateway.pickFile();
+//   if (media != null) {
+//     try {
+//       String mimeType =
+//           lookupMimeType(media.path) ?? 'application/octet-stream';
+//       String fileName = media.path.split('/').last;
+//       int totalFileSize = await media.length();
+//       var byteStream = media.openRead();
+//       int bytesUploaded = 0;
+//       int chunkSize = 512 * 1024;
+//
+//       StreamTransformer<List<int>, List<int>> chunkTransformer =
+//       StreamTransformer<List<int>, List<int>>.fromHandlers(
+//         handleData: (List<int> data, EventSink<List<int>> sink) {
+//           sink.add(data);
+//           bytesUploaded += data.length;
+//           double progress = bytesUploaded / totalFileSize * 100;
+//           print('Progress: $progress%');
+//         },
+//         handleDone: (EventSink<List<int>> sink) {
+//           sink.close();
+//         },
+//       );
+//
+//       var chunkedStream = byteStream.transform(chunkTransformer);
+//       await WebitelPortalSdk.instance.mediaHandler.uploadMedia(
+//         type: mimeType,
+//         name: fileName,
+//         data: chunkedStream,
+//       );
+//       print('Progress: 100%');
+//     } catch (error) {
+//       if (kDebugMode) {
+//         print('Error uploading file: $error');
+//       }
+//     }
+//   } else {
+//     if (kDebugMode) {
+//       print('File was not picked');
+//     }
+//   }
+// }

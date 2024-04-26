@@ -20,6 +20,7 @@ dependencies:
   bloc_concurrency: ^0.2.5
   equatable: ^2.0.5
   uuid: ^4.4.0
+  mime: ^1.0.5
   shared_preferences: ^2.2.3
   ua_client_hints: ^1.2.2
   flutter_svg: ^2.0.10+1

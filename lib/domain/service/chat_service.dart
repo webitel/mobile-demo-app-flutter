@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 import 'package:webitel_sdk/domain/entity/response_entity.dart';
 
