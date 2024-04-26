@@ -61,7 +61,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         await emit.onEach(messagesStream, onData: (message) {
           final List<DialogMessageEntity> currentMessages = [
             DialogMessageEntity(
-              messageCategory: MessageCategory.message,
+              messageCategory: message.messageCategory,
               requestId: message.requestId,
               messageType: message.messageType,
               dialogMessageContent: message.dialogMessageContent,

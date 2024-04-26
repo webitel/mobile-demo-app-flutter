@@ -17,11 +17,6 @@ class MediaServiceImpl implements MediaService {
   ConnectionState? connectionState;
   Logger logger = CustomLogger.getLogger();
 
-  final StreamController<UploadMedia> _mediaRequestStream =
-      StreamController<UploadMedia>.broadcast();
-  final StreamController<MediaFileEntity> _mediaFileStream =
-      StreamController<MediaFileEntity>.broadcast();
-
   MediaServiceImpl(
     this._grpcGateway,
     this._imageCompressGateway,

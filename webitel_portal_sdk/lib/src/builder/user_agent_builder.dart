@@ -45,6 +45,6 @@ class UserAgentBuilder {
   }
 
   String build() {
-    return '$_userAgent webitel_portal-sdk/1.0.1';
+    return '$_userAgent webitel_portal_sdk/1.0.1';
   }
 }

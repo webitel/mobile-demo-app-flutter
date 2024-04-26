@@ -19,17 +19,11 @@ class ConnectListenerGateway {
   final GrpcGateway _grpcGateway;
   final DatabaseProvider _databaseProvider;
 
-  final StreamController<portal.Response> _responseStreamController =
-      StreamController<portal.Response>.broadcast();
-  final StreamController<ConnectStreamStatus> _connectController =
-      StreamController<ConnectStreamStatus>.broadcast();
-  final StreamController<UpdateNewMessage> _updateStreamController =
-      StreamController<UpdateNewMessage>.broadcast();
-  final StreamController<portal.Request> _requestStreamController =
-      StreamController<portal.Request>.broadcast();
-  final StreamController<ErrorEntity> _errorStreamController =
-      StreamController<ErrorEntity>.broadcast();
-
+  late final StreamController<portal.Response> _responseStreamController;
+  late final StreamController<ConnectStreamStatus> _connectController;
+  late final StreamController<UpdateNewMessage> _updateStreamController;
+  late final StreamController<portal.Request> _requestStreamController;
+  late final StreamController<ErrorEntity> _errorStreamController;
   bool connectClosed = true;
   final Lock _lock = Lock();
   Logger logger = CustomLogger.getLogger();
@@ -39,6 +33,11 @@ class ConnectListenerGateway {
     this._databaseProvider,
     this._grpcGateway,
   ) {
+    _responseStreamController = StreamController<portal.Response>.broadcast();
+    _connectController = StreamController<ConnectStreamStatus>.broadcast();
+    _updateStreamController = StreamController<UpdateNewMessage>.broadcast();
+    _requestStreamController = StreamController<portal.Request>.broadcast();
+    _errorStreamController = StreamController<ErrorEntity>.broadcast();
     listenToChannelStatus();
   }
 
@@ -51,68 +50,58 @@ class ConnectListenerGateway {
             completer.complete();
             logger.t('Update received');
           }
-          _handleUpdate(update);
+          connectClosed = false;
+          _connectController
+              .add(ConnectStreamStatus(status: ConnectStatus.opened));
+          final canUnpackIntoResponse =
+              update.data.canUnpackInto(portal.Response());
+          final canUnpackIntoUpdateNewMessage =
+              update.data.canUnpackInto(UpdateNewMessage());
+          if (canUnpackIntoResponse == true) {
+            final decodedResponse = update.data.unpackInto(portal.Response());
+            _databaseProvider.deleteRequest(requestId: decodedResponse.id);
+            if (decodedResponse.err.hasMessage()) {
+              _errorStreamController.add(ErrorEntity(
+                  statusCode: decodedResponse.err.code.toString(),
+                  errorMessage: decodedResponse.err.message));
+            }
+            _responseStreamController.add(decodedResponse);
+          } else if (canUnpackIntoUpdateNewMessage == true) {
+            final decodedUpdate = update.data.unpackInto(UpdateNewMessage());
+            _databaseProvider.deleteRequest(requestId: decodedUpdate.id);
+            _updateStreamController.add(decodedUpdate);
+            logger.t(decodedUpdate.message.text);
+          }
         },
-        onError: _handleError,
-        onDone: _handleStreamDone,
+        onError: (error, stackTrace) {
+          logger.e(error: error, stackTrace);
+          if (!completer.isCompleted) {
+            completer.complete();
+          }
+          connectClosed = true;
+          _connectController.add(ConnectStreamStatus(
+            status: ConnectStatus.closed,
+            errorMessage: error.toString(),
+          ));
+        },
+        onDone: () {
+          logger.e('Stream is done');
+          if (!completer.isCompleted) {
+            completer.complete();
+          }
+          connectClosed = true;
+          _connectController.add(ConnectStreamStatus(
+            status: ConnectStatus.closed,
+            errorMessage: 'Stream was closed',
+          ));
+        },
         cancelOnError: true,
       );
-
       await completer.future;
     } catch (error, stackTrace) {
-      _handleError(error, stackTrace);
-    }
-  }
-
-  void _handleUpdate(portal.Update update) {
-    connectClosed = false;
-    _connectController.add(ConnectStreamStatus(status: ConnectStatus.opened));
-
-    if (update.data.canUnpackInto(portal.Response())) {
-      final decodedResponse = update.data.unpackInto(portal.Response());
-      _handleResponse(decodedResponse);
-    } else if (update.data.canUnpackInto(UpdateNewMessage())) {
-      final decodedUpdate = update.data.unpackInto(UpdateNewMessage());
-      _handleNewMessageUpdate(decodedUpdate);
-    }
-  }
-
-  void _handleResponse(portal.Response decodedResponse) {
-    _databaseProvider.deleteRequest(requestId: decodedResponse.id);
-    logger.t('Received response message in stream: ${decodedResponse.id}');
-    if (decodedResponse.err.hasMessage()) {
-      _errorStreamController.add(ErrorEntity(
-          statusCode: decodedResponse.err.code.toString(),
-          errorMessage: decodedResponse.err.message));
-    }
-    _responseStreamController.add(decodedResponse);
-  }
-
-  void _handleNewMessageUpdate(UpdateNewMessage decodedUpdate) {
-    logger.t('Received update message in stream: ${decodedUpdate.message}');
-    _databaseProvider.deleteRequest(requestId: decodedUpdate.id);
-    _updateStreamController.add(decodedUpdate);
-    logger.t(decodedUpdate.message.text);
-  }
-
-  void _handleError(error, StackTrace stackTrace) {
-    logger.e(error, error: error, stackTrace: stackTrace);
-    if (error is! GrpcError) {
       connectClosed = true;
-      _connectController.add(ConnectStreamStatus(
-        status: ConnectStatus.closed,
-        errorMessage: error.toString(),
-      ));
+      logger.e(error: error, stackTrace: stackTrace, error);
     }
-  }
-
-  void _handleStreamDone() {
-    logger.e('Stream is done');
-    connectClosed = true;
-    _connectController.add(ConnectStreamStatus(
-      status: ConnectStatus.closed,
-      errorMessage: 'Stream was closed',
-    ));
   }
 
   Future<void> sendPingMessage() async {
@@ -129,7 +118,6 @@ class ConnectListenerGateway {
   Future<void> sendRequest(portal.Request request) async {
     await reconnect(request);
     _requestStreamController.add(request);
-
     logger.t('Request added: ${request.path}');
   }
 
@@ -141,7 +129,7 @@ class ConnectListenerGateway {
       logger.t('Re-init gRPC Channel');
     }
     await _lock.synchronized(() async {
-      if (connectClosed) {
+      if (connectClosed == true) {
         final timer = Timer.periodic(Duration(seconds: 1), (timer) {
           sendPingMessage();
           logger.t('Ping sent');
@@ -174,6 +162,5 @@ class ConnectListenerGateway {
     _responseStreamController.close();
     _connectController.close();
     _updateStreamController.close();
-    _errorStreamController.close();
   }
 }
