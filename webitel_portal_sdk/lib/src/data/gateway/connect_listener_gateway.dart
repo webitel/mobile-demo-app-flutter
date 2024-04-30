@@ -19,32 +19,33 @@ class ConnectListenerGateway {
   final GrpcGateway _grpcGateway;
   final DatabaseProvider _databaseProvider;
 
-  late final StreamController<portal.Response> _responseStreamController;
-  late final StreamController<ConnectStreamStatus> _connectController;
-  late final StreamController<UpdateNewMessage> _updateStreamController;
-  late final StreamController<portal.Request> _requestStreamController;
-  late final StreamController<ErrorEntity> _errorStreamController;
+  final StreamController<portal.Response> _responseStreamController =
+      StreamController<portal.Response>.broadcast();
+  final StreamController<ConnectStreamStatus> _connectController =
+      StreamController<ConnectStreamStatus>.broadcast();
+  final StreamController<UpdateNewMessage> _updateStreamController =
+      StreamController<UpdateNewMessage>.broadcast();
+  final StreamController<portal.Request> _requestStreamController =
+      StreamController<portal.Request>.broadcast();
+  final StreamController<ErrorEntity> _errorStreamController =
+      StreamController<ErrorEntity>.broadcast();
+  ResponseStream<portal.Update>? _responseStream;
   bool connectClosed = true;
   final Lock _lock = Lock();
   Logger logger = CustomLogger.getLogger();
   ConnectionState? connectionState;
 
-  ConnectListenerGateway(
-    this._databaseProvider,
-    this._grpcGateway,
-  ) {
-    _responseStreamController = StreamController<portal.Response>.broadcast();
-    _connectController = StreamController<ConnectStreamStatus>.broadcast();
-    _updateStreamController = StreamController<UpdateNewMessage>.broadcast();
-    _requestStreamController = StreamController<portal.Request>.broadcast();
-    _errorStreamController = StreamController<ErrorEntity>.broadcast();
+  ConnectListenerGateway(this._databaseProvider, this._grpcGateway) {
     listenToChannelStatus();
   }
 
   Future<void> _connect() async {
     try {
       final completer = Completer<void>();
-      _grpcGateway.customerStub.connect(_requestStreamController.stream).listen(
+      _responseStream =
+          _grpcGateway.customerStub.connect(_requestStreamController.stream);
+
+      _responseStream?.listen(
         (update) async {
           if (!completer.isCompleted) {
             completer.complete();
@@ -74,7 +75,7 @@ class ConnectListenerGateway {
           }
         },
         onError: (error, stackTrace) {
-          logger.e(error: error, stackTrace);
+          logger.e(error, stackTrace: stackTrace);
           if (!completer.isCompleted) {
             completer.complete();
           }
@@ -95,12 +96,13 @@ class ConnectListenerGateway {
             errorMessage: 'Stream was closed',
           ));
         },
-        cancelOnError: true,
+        cancelOnError: false,
       );
+
       await completer.future;
     } catch (error, stackTrace) {
       connectClosed = true;
-      logger.e(error: error, stackTrace: stackTrace, error);
+      logger.e(error, stackTrace: stackTrace);
     }
   }
 
@@ -116,7 +118,15 @@ class ConnectListenerGateway {
   }
 
   Future<void> sendRequest(portal.Request request) async {
-    await reconnect(request);
+    logger.i('Attempting to send request');
+    if (connectionState != ConnectionState.ready || connectClosed == true) {
+      logger.i(
+          'Connection state is not ready or connection is closed. Attempting to reconnect...');
+      await reconnect(request);
+    }
+
+    await waitForReadyState();
+
     _requestStreamController.add(request);
     logger.t('Request added: ${request.path}');
   }
@@ -129,22 +139,46 @@ class ConnectListenerGateway {
       logger.t('Re-init gRPC Channel');
     }
     await _lock.synchronized(() async {
-      if (connectClosed == true) {
-        final timer = Timer.periodic(Duration(seconds: 1), (timer) {
-          sendPingMessage();
-          logger.t('Ping sent');
-        });
-        await _connect();
-        timer.cancel();
-        logger.t('Connected to gRPC Stream');
-      }
+      final timer = Timer.periodic(Duration(seconds: 1), (timer) {
+        sendPingMessage();
+        logger.t('Ping sent');
+      });
+      await _connect();
+      timer.cancel();
+      logger.t('Connected to gRPC Stream');
     });
   }
 
   Future<void> listenToChannelStatus() async {
-    _grpcGateway.stateStream.stream.listen((state) {
+    _grpcGateway.stateStream.stream.listen((state) async {
       connectionState = state;
+      logger.i(state.name);
     });
+  }
+
+  Future<void> waitForReadyState() async {
+    if (connectionState == ConnectionState.ready && !connectClosed) {
+      return; // Already in the desired state
+    }
+
+    final completer = Completer<void>();
+    final subscription = _grpcGateway.stateStream.stream.listen((state) {
+      if (state == ConnectionState.ready && !connectClosed) {
+        if (!completer.isCompleted) {
+          completer.complete();
+        }
+      }
+    }, onError: (error) {
+      if (!completer.isCompleted) {
+        completer.completeError(error);
+      }
+    });
+
+    try {
+      await completer.future;
+    } finally {
+      await subscription.cancel();
+    }
   }
 
   Stream<portal.Response> get responseStream =>

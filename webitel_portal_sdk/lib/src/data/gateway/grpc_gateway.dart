@@ -73,8 +73,9 @@ class GrpcGateway {
       port: 443,
       options: ChannelOptions(
         userAgent: userAgent,
+        idleTimeout: Duration(seconds: 2),
         keepAlive: ClientKeepAliveOptions(
-          pingInterval: Duration(seconds: 10),
+          pingInterval: Duration(seconds: 5),
           timeout: Duration(seconds: 3),
         ),
       ),
@@ -82,6 +83,7 @@ class GrpcGateway {
     channel.onConnectionStateChanged.listen((state) {
       _streamControllerState.add(state);
     });
+
     _customerStub = CustomerClient(
       channel,
       interceptors: [GRPCInterceptor()],
