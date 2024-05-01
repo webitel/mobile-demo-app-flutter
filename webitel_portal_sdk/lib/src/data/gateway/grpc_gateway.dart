@@ -73,7 +73,7 @@ class GrpcGateway {
       port: 443,
       options: ChannelOptions(
         userAgent: userAgent,
-        idleTimeout: Duration(seconds: 2),
+        idleTimeout: Duration(seconds: 5),
         keepAlive: ClientKeepAliveOptions(
           pingInterval: Duration(seconds: 5),
           timeout: Duration(seconds: 3),

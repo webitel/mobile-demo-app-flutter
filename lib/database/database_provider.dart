@@ -24,6 +24,9 @@ class DatabaseProvider {
   Future<void> _createDb(Database db, int version) async {
     await db.execute('''CREATE TABLE $messageTable(
         chatId TEXT,
+        messageCategory TEXT,
+        fileName TEXT,
+        path TEXT,
         messageId TEXT PRIMARY KEY,
         messageType TEXT,
         dialogMessageContent TEXT,
@@ -82,6 +85,9 @@ class DatabaseProvider {
             messageTable,
             {
               'chatId': message.chatId,
+              'path': '',
+              'messageCategory': '',
+              'fileName': message.file?.name,
               'messageId': message.messageId,
               'messageType': message.type!.name,
               'dialogMessageContent': message.dialogMessageContent,
