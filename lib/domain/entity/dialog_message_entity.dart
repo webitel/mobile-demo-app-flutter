@@ -1,27 +1,31 @@
+import 'package:webitel_sdk/domain/entity/media_file.dart';
+
 enum MessageType { error, user, operator }
 
 enum MessageStatus { loading, error, sent }
 
-enum MessageCategory { message, file }
-
 class DialogMessageEntity {
   final String? fileName;
+  final String? fileId;
+  final String? fileType;
   final String? path;
   final String dialogMessageContent;
-  final MessageCategory? messageCategory;
   final Peer peer;
   final MessageType? messageType;
   final MessageStatus? messageStatus;
   final String requestId;
   final String? chatId;
+  final MediaFileEntity? file;
 
   DialogMessageEntity({
+    this.fileId,
+    this.fileType,
+    this.file,
     this.fileName,
     this.path,
     this.chatId,
     this.messageType,
     this.messageStatus,
-    this.messageCategory,
     required this.dialogMessageContent,
     required this.peer,
     required this.requestId,
@@ -30,12 +34,10 @@ class DialogMessageEntity {
   factory DialogMessageEntity.fromMap(Map<String, dynamic> map) {
     return DialogMessageEntity(
       chatId: map['chatId'],
+      fileId: map['fileId'],
       path: map['path'],
       fileName: map['fileName'],
-      messageCategory: map['messageCategory'] != null
-          ? MessageCategory.values
-              .firstWhere((type) => type.toString() == map['messageCategory'])
-          : null,
+      fileType: map['fileType'],
       messageType: map['messageType'] != null
           ? MessageType.values
               .firstWhere((type) => type.toString() == map['messageType'])
@@ -57,11 +59,12 @@ class DialogMessageEntity {
   Map<String, dynamic> toMap() {
     return {
       'chatId': chatId,
+      'fileId': fileId,
       'path': path,
+      'fileType': fileType,
       'fileName': fileName,
       'messageType': messageType?.toString(),
       'messageStatus': messageStatus?.toString(),
-      'messageCategory': messageCategory?.toString(),
       'dialogMessageContent': dialogMessageContent,
       'peerId': peer.id,
       'peerType': peer.type,

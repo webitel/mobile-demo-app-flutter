@@ -41,8 +41,6 @@ class ConnectListenerGateway {
     listenToChannelStatus();
   }
 
-  Stream<portal.Update> transformUpdateStream() async* {}
-
   Future<void> listenToResponses() async {
     try {
       if (_responseStream != null) {
@@ -53,7 +51,6 @@ class ConnectListenerGateway {
 
           if (update.data.canUnpackInto(portal.Response())) {
             final decodedResponse = update.data.unpackInto(portal.Response());
-            _databaseProvider.deleteRequest(requestId: decodedResponse.id);
             if (decodedResponse.err.hasMessage()) {
               _errorStreamController.add(ErrorEntity(
                   statusCode: decodedResponse.err.code.toString(),
@@ -62,7 +59,6 @@ class ConnectListenerGateway {
             _responseStreamController.add(decodedResponse);
           } else if (update.data.canUnpackInto(UpdateNewMessage())) {
             final decodedUpdate = update.data.unpackInto(UpdateNewMessage());
-            _databaseProvider.deleteRequest(requestId: decodedUpdate.id);
             _updateStreamController.add(decodedUpdate);
             _logger.t(decodedUpdate.message.text);
           }
@@ -94,8 +90,8 @@ class ConnectListenerGateway {
       _responseStream = _grpcGateway.customerStub
           .connect(_requestStreamController.stream)
           .asBroadcastStream();
-      await _responseStream?.isEmpty;
 
+      await _responseStream?.isEmpty;
       listenToResponses();
     } catch (err, stackTrace) {
       connectClosed = true;
@@ -130,6 +126,7 @@ class ConnectListenerGateway {
       _logger.t('Current connection state: $_connectionState');
       final user = await _databaseProvider.readUser();
       await _grpcGateway.setAccessToken(user.accessToken);
+
       _logger.t('Re-init gRPC Channel');
     }
     await _lock.synchronized(() async {
@@ -145,18 +142,21 @@ class ConnectListenerGateway {
   Future<void> listenToChannelStatus() async {
     _grpcGateway.stateStream.stream.listen((state) async {
       if (state == ConnectionState.shutdown) {
-        _responseStream = null;
-        connectClosed = true;
+        handleStreamCleanup();
         _logger.i('Response stream canceled due to $state');
       } else if (state == ConnectionState.transientFailure) {
-        _responseStream = null;
-        connectClosed = true;
+        handleStreamCleanup();
         _logger.i('Response stream canceled due to $state');
       } else {
         return;
       }
       _connectionState = state;
     });
+  }
+
+  void handleStreamCleanup() {
+    _responseStream = null;
+    connectClosed = true;
   }
 
   Stream<portal.Response> get responseStream =>

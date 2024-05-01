@@ -1,4 +1,5 @@
 import 'package:webitel_portal_sdk/src/domain/entities/dialog_message.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/media_file.dart';
 import 'package:webitel_portal_sdk/src/generated/portal/messages.pb.dart';
 
 class DialogMessageBuilder {
@@ -8,7 +9,7 @@ class DialogMessageBuilder {
   late String _chatId;
   late String _messageId;
   late UpdateNewMessage _update;
-  File? _file;
+  MediaFileEntity? _file;
 
   DialogMessageBuilder setDialogMessageContent(String dialogMessageContent) {
     _dialogMessageContent = dialogMessageContent;
@@ -40,7 +41,7 @@ class DialogMessageBuilder {
     return this;
   }
 
-  DialogMessageBuilder setFile(File? file) {
+  DialogMessageBuilder setFile(MediaFileEntity? file) {
     _file = file;
     return this;
   }

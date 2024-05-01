@@ -11,7 +11,6 @@ import 'package:webitel_sdk/domain/usecase/chat/fetch_messages_usecase.dart';
 import 'package:webitel_sdk/domain/usecase/chat/listen_to_messages_usecase.dart';
 import 'package:webitel_sdk/domain/usecase/chat/pick_file_usecase.dart';
 import 'package:webitel_sdk/domain/usecase/chat/send_dialog_message_usecase.dart';
-import 'package:webitel_sdk/domain/usecase/chat/upload_media.dart';
 import 'package:webitel_sdk/presentation/bloc/auth/auth_bloc.dart';
 import 'package:webitel_sdk/presentation/bloc/chat/chat_bloc.dart';
 
@@ -34,9 +33,6 @@ Future<void> registerDi() async {
   locator.registerLazySingleton<PickFileUseCase>(
       () => PickFileImplUseCase(locator.get()),
       instanceName: "PickFileUseCase");
-  locator.registerLazySingleton<UploadMediaUseCase>(
-      () => UploadMediaImplUseCase(locator.get()),
-      instanceName: "UploadMediaUseCase");
   locator.registerLazySingleton<SendDialogMessageUseCase>(
       () => SendDialogMessageImplUseCase(locator.get()),
       instanceName: "SendDialogMessageUseCase");
@@ -54,7 +50,6 @@ Future<void> registerDi() async {
   locator.registerLazySingleton<ChatBloc>(
     () => ChatBloc(
       locator<PickFileUseCase>(instanceName: "PickFileUseCase"),
-      locator<UploadMediaUseCase>(instanceName: "UploadMediaUseCase"),
       locator<ListenToMessagesUseCase>(instanceName: "ListenToMessagesUseCase"),
       locator<FetchMessagesUseCase>(instanceName: "FetchMessagesUseCase"),
       locator<SendDialogMessageUseCase>(

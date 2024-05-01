@@ -1,7 +1,6 @@
 import 'package:injectable/injectable.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:webitel_portal_sdk/src/domain/entities/request/request_entity.dart';
 import 'package:webitel_portal_sdk/src/domain/entities/user/user.dart';
 
 @LazySingleton()
@@ -27,14 +26,6 @@ class DatabaseProvider {
   // Method to create the database tables
   Future<void> _createDb(Database db, int version) async {
     await db.transaction((txn) async {
-      // Create the requests queue table
-      await txn.execute('''CREATE TABLE $requestQueueTable(
-        id TEXT PRIMARY KEY,
-        chatId TEXT,
-        path TEXT,
-        text TEXT,
-        timestamp TEXT
-      )''');
       // Create the current user table
       await txn.execute('''CREATE TABLE $userTable(
         id TEXT PRIMARY KEY,
@@ -50,65 +41,6 @@ class DatabaseProvider {
         userAgent TEXT
       )''');
     });
-  }
-
-  // Method to insert a request into the database
-  Future<void> insertRequest({
-    required RequestEntity request,
-  }) async {
-    final db = await database;
-    await db.insert(
-      requestQueueTable,
-      request.toJson(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
-  // Method to delete a request from the database
-  Future<void> deleteRequest({required String requestId}) async {
-    final db = await database;
-    await db.delete(
-      requestQueueTable,
-      where: 'id = ?',
-      whereArgs: [requestId],
-    );
-  }
-
-  // Method to get all requests from the database
-  Future<List<RequestEntity>> getAllRequests({String? chatID}) async {
-    final db = await database;
-
-    String whereClause = '';
-    List<dynamic> whereArgs = [];
-    if (chatID != null) {
-      whereClause = 'WHERE chatId = ?';
-      whereArgs = [chatID];
-    }
-
-    String sqlQuery =
-        'SELECT * FROM $requestQueueTable $whereClause ORDER BY timestamp ASC';
-    final List<Map<String, dynamic>> maps =
-        await db.rawQuery(sqlQuery, whereArgs);
-
-    return List.generate(
-      maps.length,
-      (i) => RequestEntity.fromJson(maps[i]),
-    );
-  }
-
-  // Method to clear all requests from the database
-  Future<void> clearRequests({String? chatID}) async {
-    final db = await database;
-
-    String sqlQuery = 'DELETE FROM $requestQueueTable';
-    List<dynamic> whereArgs = [];
-
-    if (chatID != null) {
-      sqlQuery += ' WHERE chatId = ?';
-      whereArgs = [chatID];
-    }
-
-    await db.rawDelete(sqlQuery, whereArgs);
   }
 
   Future<void> writeUser(UserEntity user) async {

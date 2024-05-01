@@ -6,20 +6,20 @@ import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 class MessageItem extends StatelessWidget {
   final String content;
   final MessageType messageType;
-  final MessageCategory category;
+  final bool isMedia;
   final String? filePath;
 
   const MessageItem({
     required this.messageType,
     required this.content,
-    required this.category,
+    required this.isMedia,
     this.filePath,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
-    if (category == MessageCategory.file && filePath != null) {
+    if (isMedia) {
       final fileType = _getFileType(filePath!);
 
       if (fileType == FileType.image) {

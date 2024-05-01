@@ -1,7 +1,9 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:webitel_portal_sdk/webitel_portal_sdk.dart';
+import 'package:webitel_sdk/domain/entity/cached_file.dart';
 import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
+import 'package:webitel_sdk/domain/entity/media_file.dart';
 
 class DatabaseProvider {
   Database? _database;
@@ -21,10 +23,14 @@ class DatabaseProvider {
 
   static const String messageTable = 'messageTable';
 
+  static const String cachedFiles = 'cachedFiles';
+
   Future<void> _createDb(Database db, int version) async {
     await db.execute('''CREATE TABLE $messageTable(
         chatId TEXT,
+        fileId TEXT,
         messageCategory TEXT,
+        fileType TEXT,
         fileName TEXT,
         path TEXT,
         messageId TEXT PRIMARY KEY,
@@ -37,37 +43,21 @@ class DatabaseProvider {
         messageStatus TEXT,
         timestamp INTEGER
       )''');
+
+    await db.execute('''CREATE TABLE $cachedFiles(
+        path TEXT,
+        name TEXT,
+        type TEXT,
+        requestId TEXT,
+        status TEXT    
+      )''');
   }
 
-  Future<List<DialogMessageEntity>> fetchMessagesByChatId(
-      {required String chatId}) async {
-    final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      messageTable,
-      where: 'chatId = ?',
-      whereArgs: ['AxUSFAMCDxQ'],
-    );
-    final messages = maps
-        .map((message) => DialogMessageEntity(
-              messageStatus: MessageStatus.sent,
-              messageType: message['messageType'] == 'operator'
-                  ? MessageType.operator
-                  : MessageType.user,
-              dialogMessageContent: message['dialogMessageContent'],
-              peer: Peer(id: '', type: '', name: ''),
-              requestId: '',
-            ))
-        .toList();
-
-    return messages;
-  }
-
-  Future<void> writeMessageToDatabase(
-      {required DialogMessageEntity message}) async {
+  Future<void> saveCachedFile(CachedFileEntity file) async {
     final db = await database;
     await db.insert(
-      messageTable,
-      message.toMap(),
+      cachedFiles,
+      file.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
@@ -86,7 +76,8 @@ class DatabaseProvider {
             {
               'chatId': message.chatId,
               'path': '',
-              'messageCategory': '',
+              'fileId': message.file?.id,
+              'fileType': message.file?.type,
               'fileName': message.file?.name,
               'messageId': message.messageId,
               'messageType': message.type!.name,
@@ -105,6 +96,50 @@ class DatabaseProvider {
     } else {
       return;
     }
+  }
+
+  Future<List<DialogMessageEntity>> fetchMessagesByChatId(
+      {required String chatId}) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      messageTable,
+      where: 'chatId = ?',
+      whereArgs: ['AxUSFAMCDxQ'],
+    );
+    final messages = maps
+        .map(
+          (message) => DialogMessageEntity(
+            messageStatus: MessageStatus.sent,
+            messageType: message['messageType'] == 'operator'
+                ? MessageType.operator
+                : MessageType.user,
+            dialogMessageContent: message['dialogMessageContent'],
+            peer: Peer(id: '', type: '', name: ''),
+            requestId: message['requestId'],
+            file: MediaFileEntity(
+              id: message['fileId'],
+              size: 0,
+              bytes: [],
+              data: const Stream<List<int>>.empty(),
+              name: message['fileName'],
+              type: message['fileType'],
+              requestId: message['requestId'],
+            ),
+          ),
+        )
+        .toList();
+
+    return messages;
+  }
+
+  Future<void> writeMessageToDatabase(
+      {required DialogMessageEntity message}) async {
+    final db = await database;
+    await db.insert(
+      messageTable,
+      message.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<void> clear() async {

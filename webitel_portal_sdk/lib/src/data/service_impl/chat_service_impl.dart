@@ -10,30 +10,33 @@ import 'package:webitel_portal_sdk/src/builder/dialog_message_builder.dart';
 import 'package:webitel_portal_sdk/src/builder/error_dialog_message_builder.dart';
 import 'package:webitel_portal_sdk/src/builder/messages_list_message_builder.dart';
 import 'package:webitel_portal_sdk/src/data/gateway/connect_listener_gateway.dart';
+import 'package:webitel_portal_sdk/src/data/gateway/grpc_gateway.dart';
 import 'package:webitel_portal_sdk/src/data/gateway/shared_preferences_gateway.dart';
-import 'package:webitel_portal_sdk/src/database/database.dart';
 import 'package:webitel_portal_sdk/src/domain/entities/dialog_message.dart';
-import 'package:webitel_portal_sdk/src/domain/entities/request/request_entity.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/media_file.dart';
 import 'package:webitel_portal_sdk/src/domain/services/chat_service.dart';
 import 'package:webitel_portal_sdk/src/generated/chat/messages/history.pb.dart';
+import 'package:webitel_portal_sdk/src/generated/chat/messages/message.pb.dart'
+    as file;
 import 'package:webitel_portal_sdk/src/generated/chat/messages/peer.pb.dart';
 import 'package:webitel_portal_sdk/src/generated/google/protobuf/any.pb.dart';
 import 'package:webitel_portal_sdk/src/generated/portal/connect.pb.dart'
     as portal;
+import 'package:webitel_portal_sdk/src/generated/portal/media.pb.dart';
 import 'package:webitel_portal_sdk/src/generated/portal/messages.pb.dart';
 
 @LazySingleton(as: ChatService)
 class ChatServiceImpl implements ChatService {
   final ConnectListenerGateway _connectListenerGateway;
   final SharedPreferencesGateway _sharedPreferencesGateway;
-  final DatabaseProvider _databaseProvider;
+  final GrpcGateway _grpcGateway;
 
   late final StreamController<DialogMessageEntity> _userMessagesController;
   final uuid = Uuid();
   Logger logger = CustomLogger.getLogger();
 
   ChatServiceImpl(
-    this._databaseProvider,
+    this._grpcGateway,
     this._connectListenerGateway,
     this._sharedPreferencesGateway,
   ) {
@@ -54,11 +57,14 @@ class ChatServiceImpl implements ChatService {
           .setChatId(update.message.chat.id) //TODO
           .setUpdate(update)
           .setFile(
-            File(
-              id: update.message.file.id ?? '',
-              size: 0, //TODO
-              type: update.message.file.id ?? '',
-              name: update.message.file.id ?? '',
+            MediaFileEntity(
+              requestId: '',
+              type: update.message.file.type,
+              name: update.message.file.name,
+              bytes: [],
+              data: Stream<List<int>>.empty(),
+              size: update.message.file.size.toInt(),
+              id: update.message.file.id,
             ),
           )
           .build();
@@ -67,11 +73,22 @@ class ChatServiceImpl implements ChatService {
     return _userMessagesController;
   }
 
+  Stream<UploadMedia> stream({
+    required Stream<List<int>> data,
+    required String name,
+    required String type,
+  }) async* {
+    yield UploadMedia(file: InputFile(name: name, type: type));
+
+    await for (var bytes in data) {
+      yield UploadMedia(data: bytes);
+    }
+  }
+
   @override
   Future<DialogMessageEntity> sendMessage(
       {required DialogMessageEntity message}) async {
     final userId = await _sharedPreferencesGateway.getFromDisk('userId');
-    final chatId = await _sharedPreferencesGateway.getFromDisk('chatId');
     final completer = Completer<DialogMessageEntity>();
 
     StreamSubscription? subscription;
@@ -88,6 +105,17 @@ class ChatServiceImpl implements ChatService {
               .setUserId(userId ?? '')
               .setChatId(unpackedMessage.message.chat.id)
               .setUpdate(unpackedMessage)
+              .setFile(
+                MediaFileEntity(
+                  bytes: [],
+                  data: Stream<List<int>>.empty(),
+                  name: unpackedMessage.message.file.name,
+                  type: unpackedMessage.message.file.type,
+                  size: unpackedMessage.message.file.size.toInt(),
+                  id: unpackedMessage.message.file.id,
+                  requestId: message.requestId,
+                ),
+              )
               .build(),
         );
         subscription?.cancel();
@@ -114,28 +142,49 @@ class ChatServiceImpl implements ChatService {
     });
 
     try {
-      final newMessageRequest = SendMessageRequest(
-        text: message.dialogMessageContent,
-        peer: Peer(
-          id: message.peer.id,
-          type: message.peer.type,
-          name: message.peer.name,
-        ),
-      );
-      final request = portal.Request(
-        path: '/webitel.portal.ChatMessages/SendMessage',
-        data: Any.pack(newMessageRequest),
-        id: message.requestId,
-      );
-      final requestDb = RequestEntity(
-        chatId: chatId ?? '',
-        id: message.requestId,
-        text: message.dialogMessageContent,
-        timestamp: DateTime.now(),
-        path: '/webitel.portal.ChatMessages/SendMessage',
-      );
-      await _databaseProvider.insertRequest(request: requestDb);
-      _connectListenerGateway.sendRequest(request);
+      if (message.file!.name.isNotEmpty || message.file!.type.isNotEmpty) {
+        final uploadedFile = await _grpcGateway.mediaStorageStub.uploadFile(
+          stream(
+            data: message.file!.data,
+            name: message.file!.name,
+            type: message.file!.type,
+          ),
+        );
+        final newMessageRequest = SendMessageRequest(
+          text: message.dialogMessageContent,
+          peer: Peer(
+            id: message.peer.id,
+            type: message.peer.type,
+            name: message.peer.name,
+          ),
+          file: file.File(
+            id: uploadedFile.id,
+            name: uploadedFile.name,
+            type: uploadedFile.type,
+          ),
+        );
+        final request = portal.Request(
+          path: '/webitel.portal.ChatMessages/SendMessage',
+          data: Any.pack(newMessageRequest),
+          id: message.requestId,
+        );
+        _connectListenerGateway.sendRequest(request);
+      } else if (message.file!.name.isEmpty || message.file!.type.isEmpty) {
+        final newMessageRequest = SendMessageRequest(
+          text: message.dialogMessageContent,
+          peer: Peer(
+            id: message.peer.id,
+            type: message.peer.type,
+            name: message.peer.name,
+          ),
+        );
+        final request = portal.Request(
+          path: '/webitel.portal.ChatMessages/SendMessage',
+          data: Any.pack(newMessageRequest),
+          id: message.requestId,
+        );
+        _connectListenerGateway.sendRequest(request);
+      }
     } catch (error) {
       if (error is GrpcError) {
         completer.complete(
@@ -173,14 +222,6 @@ class ChatServiceImpl implements ChatService {
       data: Any.pack(fetchMessagesRequest),
       id: id,
     );
-    final requestDb = RequestEntity(
-      chatId: chatId ?? '',
-      id: id,
-      text: '',
-      timestamp: DateTime.now(),
-      path: '/webitel.portal.ChatMessages/ChatHistory',
-    );
-    await _databaseProvider.insertRequest(request: requestDb);
     await _connectListenerGateway.sendRequest(request);
 
     try {
@@ -194,7 +235,7 @@ class ChatServiceImpl implements ChatService {
         final unpackedDialogMessages = response.data.unpackInto(ChatMessages());
         final peers = unpackedDialogMessages.peers;
         final messagesBuilder = MessagesListMessageBuilder()
-            .setRequestId('')
+            .setRequestId(id)
             .setChatId(chatId ?? '')
             .setUserId(userId ?? '')
             .setMessages(unpackedDialogMessages.messages)
@@ -223,14 +264,7 @@ class ChatServiceImpl implements ChatService {
       data: Any.pack(fetchMessageUpdatesRequest),
       id: id,
     );
-    final requestDb = RequestEntity(
-      chatId: chatId ?? '',
-      id: id,
-      text: '',
-      timestamp: DateTime.now(),
-      path: '/webitel.portal.ChatMessages/ChatUpdates',
-    );
-    await _databaseProvider.insertRequest(request: requestDb);
+
     _connectListenerGateway.sendRequest(request);
 
     try {
@@ -244,7 +278,7 @@ class ChatServiceImpl implements ChatService {
         final unpackedDialogMessages = response.data.unpackInto(ChatMessages());
         final peers = unpackedDialogMessages.peers;
         final messagesBuilder = MessagesListMessageBuilder()
-            .setRequestId('')
+            .setRequestId(id)
             .setChatId(chatId ?? '')
             .setUserId(userId ?? '')
             .setMessages(unpackedDialogMessages.messages)

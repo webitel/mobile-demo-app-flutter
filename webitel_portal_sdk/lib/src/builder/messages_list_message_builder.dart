@@ -1,4 +1,5 @@
 import 'package:webitel_portal_sdk/src/domain/entities/dialog_message.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/media_file.dart';
 import 'package:webitel_portal_sdk/src/generated/chat/messages/message.pb.dart';
 import 'package:webitel_portal_sdk/src/generated/chat/messages/peer.pb.dart';
 
@@ -50,6 +51,15 @@ class MessagesListMessageBuilder {
           name: message.from.name,
           type: message.chat.peer.type,
           id: message.chat.peer.id,
+        ),
+        file: MediaFileEntity(
+          id: message.file.id,
+          size: message.file.size.toInt(),
+          bytes: [],
+          data: Stream<List<int>>.empty(),
+          name: message.file.name,
+          type: message.file.type,
+          requestId: _requestId,
         ),
       );
     }).toList();

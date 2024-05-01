@@ -1,12 +1,10 @@
 import 'package:webitel_portal_sdk/src/communication/auth_handler.dart';
 import 'package:webitel_portal_sdk/src/communication/chat_list_handler.dart';
-import 'package:webitel_portal_sdk/src/communication/media_handler.dart';
 import 'package:webitel_portal_sdk/src/communication/message_handler.dart';
 import 'package:webitel_portal_sdk/src/communication/portal_handler.dart';
 import 'package:webitel_portal_sdk/src/injection/injection.dart';
 
 class WebitelPortalSdk {
-  late MediaHandler _mediaHandler;
   late PortalHandler _portalHandler;
   late MessageHandler _messageHandler;
   late AuthHandler _authHandler;
@@ -16,7 +14,6 @@ class WebitelPortalSdk {
 
   WebitelPortalSdk._internal() {
     _initDi();
-    _mediaHandler = MediaHandler();
     _portalHandler = PortalHandler();
     _chatListHandler = ChatListHandler();
     _authHandler = AuthHandler();
@@ -31,8 +28,6 @@ class WebitelPortalSdk {
   Future<void> _initDi() async {
     configureDependencies();
   }
-
-  MediaHandler get mediaHandler => _mediaHandler;
 
   PortalHandler get portalHandler => _portalHandler;
 
