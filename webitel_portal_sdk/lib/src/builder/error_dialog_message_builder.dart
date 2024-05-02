@@ -1,4 +1,5 @@
-import 'package:webitel_portal_sdk/src/domain/entities/dialog_message.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/dialog_message/dialog_message_response.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/peer.dart';
 
 class ErrorDialogMessageBuilder {
   late String _dialogMessageContent;
@@ -15,20 +16,18 @@ class ErrorDialogMessageBuilder {
     return this;
   }
 
-  DialogMessageEntity build() {
-    final messageType = MessageType.operator;
-
+  DialogMessageResponseEntity build() {
     final peerInfo = PeerInfo(
       id: '',
       name: 'ERROR',
       type: 'Unknown',
     );
 
-    return DialogMessageEntity(
+    return DialogMessageResponseEntity(
       id: '',
       chatId: '',
       dialogMessageContent: _dialogMessageContent,
-      type: messageType,
+      type: MessageType.error,
       requestId: _requestId,
       peer: peerInfo,
       messageId: '',

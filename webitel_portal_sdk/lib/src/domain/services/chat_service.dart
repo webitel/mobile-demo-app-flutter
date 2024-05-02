@@ -1,22 +1,23 @@
 import 'dart:async';
 
-import 'package:webitel_portal_sdk/src/domain/entities/dialog_message.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/dialog_message/dialog_message_request.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/dialog_message/dialog_message_response.dart';
 
 abstract interface class ChatService {
-  Future<List<DialogMessageEntity>> fetchMessages({
+  Future<List<DialogMessageResponseEntity>> fetchMessages({
     int? limit,
     String? offset,
   });
 
-  Future<List<DialogMessageEntity>> fetchUpdates({
+  Future<List<DialogMessageResponseEntity>> fetchUpdates({
     int? limit,
     String? offset,
   });
 
-  Future<DialogMessageEntity> sendMessage(
-      {required DialogMessageEntity message});
+  Future<DialogMessageResponseEntity> sendMessage(
+      {required DialogMessageRequestEntity message});
 
-  Future<StreamController<DialogMessageEntity>> listenToMessages();
+  Future<StreamController<DialogMessageResponseEntity>> listenToMessages();
 
   Future<void> enterChat({required String chatId});
 

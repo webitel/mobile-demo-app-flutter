@@ -1,5 +1,6 @@
-import 'package:webitel_portal_sdk/src/domain/entities/dialog_message.dart';
-import 'package:webitel_portal_sdk/src/domain/entities/media_file.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/dialog_message/dialog_message_response.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/media_file/media_file_response.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/peer.dart';
 import 'package:webitel_portal_sdk/src/generated/chat/messages/message.pb.dart';
 import 'package:webitel_portal_sdk/src/generated/chat/messages/peer.pb.dart';
 
@@ -29,14 +30,14 @@ class MessagesListMessageBuilder {
     return this;
   }
 
-  List<DialogMessageEntity> build() {
+  List<DialogMessageResponseEntity> build() {
     return _messages.map((message) {
       final peerIndex = int.parse(message.from.id) - 1;
       final messageType = _peers[peerIndex].id == _userId
           ? MessageType.user
           : MessageType.operator;
 
-      return DialogMessageEntity(
+      return DialogMessageResponseEntity(
         id: message.file.id,
         chatId: _chatId,
         type: messageType,
@@ -46,14 +47,12 @@ class MessagesListMessageBuilder {
           type: message.chat.peer.type,
           id: message.chat.peer.id,
         ),
-        file: MediaFileEntity(
+        file: MediaFileResponseEntity(
           id: message.file.id,
           size: message.file.size.toInt(),
           bytes: [],
-          data: Stream<List<int>>.empty(),
           name: message.file.name,
           type: message.file.type,
-          requestId: '',
         ),
         requestId: '',
       );

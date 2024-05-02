@@ -1,4 +1,5 @@
-import 'package:webitel_portal_sdk/src/domain/entities/dialog_message.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/dialog_message/dialog_message_response.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/peer.dart';
 
 class ErrorMessageBuilder {
   late String _errorMessage;
@@ -8,8 +9,8 @@ class ErrorMessageBuilder {
     return this;
   }
 
-  DialogMessageEntity build() {
-    return DialogMessageEntity(
+  DialogMessageResponseEntity build() {
+    return DialogMessageResponseEntity(
       id: '',
       dialogMessageContent: _errorMessage,
       type: MessageType.error,

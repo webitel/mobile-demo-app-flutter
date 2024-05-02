@@ -6,14 +6,15 @@ import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 import 'package:uuid/uuid.dart';
 import 'package:webitel_portal_sdk/src/backbone/logger.dart';
-import 'package:webitel_portal_sdk/src/builder/dialog_message_builder.dart';
 import 'package:webitel_portal_sdk/src/builder/error_dialog_message_builder.dart';
 import 'package:webitel_portal_sdk/src/builder/messages_list_message_builder.dart';
+import 'package:webitel_portal_sdk/src/builder/response_dialog_message_builder.dart';
 import 'package:webitel_portal_sdk/src/data/gateway/connect_listener_gateway.dart';
 import 'package:webitel_portal_sdk/src/data/gateway/grpc_gateway.dart';
 import 'package:webitel_portal_sdk/src/data/gateway/shared_preferences_gateway.dart';
-import 'package:webitel_portal_sdk/src/domain/entities/dialog_message.dart';
-import 'package:webitel_portal_sdk/src/domain/entities/media_file.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/dialog_message/dialog_message_request.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/dialog_message/dialog_message_response.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/media_file/media_file_response.dart';
 import 'package:webitel_portal_sdk/src/domain/services/chat_service.dart';
 import 'package:webitel_portal_sdk/src/generated/chat/messages/history.pb.dart';
 import 'package:webitel_portal_sdk/src/generated/chat/messages/message.pb.dart'
@@ -31,7 +32,8 @@ class ChatServiceImpl implements ChatService {
   final SharedPreferencesGateway _sharedPreferencesGateway;
   final GrpcGateway _grpcGateway;
 
-  late final StreamController<DialogMessageEntity> _userMessagesController;
+  late final StreamController<DialogMessageResponseEntity>
+      _userMessagesController;
   final uuid = Uuid();
   Logger logger = CustomLogger.getLogger();
 
@@ -40,33 +42,33 @@ class ChatServiceImpl implements ChatService {
     this._connectListenerGateway,
     this._sharedPreferencesGateway,
   ) {
-    _userMessagesController = StreamController<DialogMessageEntity>.broadcast();
+    _userMessagesController =
+        StreamController<DialogMessageResponseEntity>.broadcast();
   }
 
   @override
-  Future<StreamController<DialogMessageEntity>> listenToMessages() async {
+  Future<StreamController<DialogMessageResponseEntity>>
+      listenToMessages() async {
     await _sharedPreferencesGateway.init();
     final userId = await _sharedPreferencesGateway.readUserId();
-
     _connectListenerGateway.updateStream.listen((update) {
-      final dialogMessage = DialogMessageBuilder()
+      final dialogMessage = ResponseDialogMessageBuilder()
           .setDialogMessageContent(update.message.text)
           .setId(update.id)
           .setRequestId(update.id)
           .setMessageId(update.id)
-          .setUserId(userId ?? '')
+          .setUserUd(userId ?? '')
           .setId(update.id)
           .setChatId(update.message.chat.id) //TODO
           .setUpdate(update)
           .setFile(
-            MediaFileEntity(
-              requestId: '',
+            MediaFileResponseEntity(
+              id: update.message.file.id,
               type: update.message.file.type,
               name: update.message.file.name,
               bytes: [],
-              data: Stream<List<int>>.empty(),
+              //TODO WHEN RECEIVING IMAGE - IF FILE IS NOT EMPTY CALL TO getFile from Server
               size: update.message.file.size.toInt(),
-              id: update.message.file.id,
             ),
           )
           .build();
@@ -88,11 +90,10 @@ class ChatServiceImpl implements ChatService {
   }
 
   @override
-  Future<DialogMessageEntity> sendMessage(
-      {required DialogMessageEntity message}) async {
-    final userId = await _sharedPreferencesGateway.getFromDisk('userId');
-    final completer = Completer<DialogMessageEntity>();
-
+  Future<DialogMessageResponseEntity> sendMessage(
+      {required DialogMessageRequestEntity message}) async {
+    final completer = Completer<DialogMessageResponseEntity>();
+    final userId = await _sharedPreferencesGateway.readUserId();
     StreamSubscription? subscription;
     subscription = _connectListenerGateway.responseStream
         .where((response) => response.id == message.requestId)
@@ -100,23 +101,22 @@ class ChatServiceImpl implements ChatService {
       if (response.data.canUnpackInto(UpdateNewMessage())) {
         final unpackedMessage = response.data.unpackInto(UpdateNewMessage());
         completer.complete(
-          DialogMessageBuilder()
+          ResponseDialogMessageBuilder()
               .setDialogMessageContent(unpackedMessage.message.text)
               .setRequestId(unpackedMessage.id)
               .setId(unpackedMessage.id)
+              .setUserUd(userId ?? '')
               .setMessageId(unpackedMessage.id)
-              .setUserId(userId ?? '')
               .setChatId(unpackedMessage.message.chat.id)
               .setUpdate(unpackedMessage)
               .setFile(
-                MediaFileEntity(
-                  bytes: [],
-                  data: Stream<List<int>>.empty(),
+                MediaFileResponseEntity(
                   name: unpackedMessage.message.file.name,
                   type: unpackedMessage.message.file.type,
                   size: unpackedMessage.message.file.size.toInt(),
+                  bytes: [],
+                  // TODO
                   id: unpackedMessage.message.file.id,
-                  requestId: message.requestId,
                 ),
               )
               .build(),
@@ -213,7 +213,7 @@ class ChatServiceImpl implements ChatService {
   }
 
   @override
-  Future<List<DialogMessageEntity>> fetchMessages(
+  Future<List<DialogMessageResponseEntity>> fetchMessages(
       {int? limit, String? offset}) async {
     final chatId = await _sharedPreferencesGateway.getFromDisk('chatId');
     final userId = await _sharedPreferencesGateway.readUserId();
@@ -255,7 +255,7 @@ class ChatServiceImpl implements ChatService {
   }
 
   @override
-  Future<List<DialogMessageEntity>> fetchUpdates(
+  Future<List<DialogMessageResponseEntity>> fetchUpdates(
       {int? limit, String? offset}) async {
     final chatId = await _sharedPreferencesGateway.getFromDisk('chatId');
     final userId = await _sharedPreferencesGateway.readUserId();

@@ -1,10 +1,11 @@
-import 'package:webitel_portal_sdk/src/domain/entities/media_file.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/media_file/media_file_response.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/peer.dart';
 
 enum MessageType { user, operator, error }
 
-class DialogMessageEntity {
+class DialogMessageResponseEntity {
   final String id;
-  final MediaFileEntity? file;
+  final MediaFileResponseEntity? file;
   final String dialogMessageContent;
   final PeerInfo peer;
   final MessageType? type;
@@ -12,7 +13,7 @@ class DialogMessageEntity {
   final String? chatId;
   final String? messageId;
 
-  DialogMessageEntity({
+  DialogMessageResponseEntity({
     required this.id,
     required this.requestId,
     required this.dialogMessageContent,
@@ -21,17 +22,5 @@ class DialogMessageEntity {
     this.file,
     this.chatId,
     this.messageId,
-  });
-}
-
-class PeerInfo {
-  final String id;
-  final String type;
-  final String name;
-
-  PeerInfo({
-    required this.id,
-    required this.type,
-    required this.name,
   });
 }
