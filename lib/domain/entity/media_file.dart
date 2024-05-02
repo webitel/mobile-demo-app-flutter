@@ -6,8 +6,10 @@ class MediaFileEntity {
   final Stream<List<int>> data;
   final int size;
   final String id;
+  final String path;
 
   MediaFileEntity({
+    required this.path,
     required this.id,
     required this.size,
     required this.bytes,

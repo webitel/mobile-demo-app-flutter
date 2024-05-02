@@ -4,7 +4,9 @@ import 'dart:io';
 import 'package:webitel_portal_sdk/webitel_portal_sdk.dart';
 import 'package:webitel_sdk/data/gateway/file_picker_gateway.dart';
 import 'package:webitel_sdk/database/database_provider.dart';
+import 'package:webitel_sdk/domain/entity/cached_file.dart';
 import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
+import 'package:webitel_sdk/domain/entity/media_file.dart';
 import 'package:webitel_sdk/domain/entity/response_entity.dart';
 import 'package:webitel_sdk/domain/service/chat_service.dart';
 
@@ -44,6 +46,15 @@ class ChatServiceImpl implements ChatService {
         mediaName: dialogMessageEntity.file!.name,
         mediaData: dialogMessageEntity.file!.data,
       );
+      _databaseProvider.saveCachedFile(
+        CachedFileEntity(
+          id: message.file!.id,
+          requestId: message.requestId,
+          type: message.file!.type.toString(),
+          path: dialogMessageEntity.file!.path,
+          status: CachedFileStatus.sent,
+        ),
+      );
       return ResponseEntity(
         status: ResponseStatus.success,
         message: message.dialogMessageContent,
@@ -57,6 +68,7 @@ class ChatServiceImpl implements ChatService {
         peerName: dialogMessageEntity.peer.name,
         peerId: dialogMessageEntity.peer.id,
       );
+
       return ResponseEntity(
         status: ResponseStatus.success,
         message: message.dialogMessageContent,
@@ -98,9 +110,22 @@ class ChatServiceImpl implements ChatService {
 
     messagesStream.stream.listen((message) {
       final messageEntity = DialogMessageEntity(
+        file: message.file != null
+            ? MediaFileEntity(
+                path: '',
+                id: '',
+                size: 0,
+                bytes: [],
+                data: const Stream<List<int>>.empty(),
+                name: '',
+                type: '',
+                requestId: '',
+              )
+            : null,
+        id: message.id,
         dialogMessageContent: message.dialogMessageContent,
         peer: Peer(id: '', type: '', name: ''),
-        requestId: message.requestId,
+        requestId: '',
         messageType: message.type!.name == 'user'
             ? MessageType.user
             : MessageType.operator,

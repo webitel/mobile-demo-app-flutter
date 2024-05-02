@@ -1,6 +1,7 @@
+import 'package:grpc/grpc.dart';
 import 'package:injectable/injectable.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:uuid/uuid.dart';
+import 'package:webitel_portal_sdk/src/backbone/constants.dart';
 import 'package:webitel_portal_sdk/src/builder/token_request_builder.dart';
 import 'package:webitel_portal_sdk/src/builder/user_agent_builder.dart';
 import 'package:webitel_portal_sdk/src/data/gateway/grpc_gateway.dart';
@@ -29,70 +30,56 @@ class AuthServiceImpl implements AuthService {
   Future<ResponseEntity> login({
     required String baseUrl,
     required String clientToken,
-    required String appName,
-    required String appVersion,
     required String appToken,
     required String userAgent,
   }) async {
-    final uuid = Uuid();
     await _sharedPreferencesGateway.init();
-    final deviceIdGenerated = uuid.v4();
-    PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    final savedDeviceId = await _sharedPreferencesGateway.readDeviceId();
-    if (savedDeviceId == 'null') {
-      await _sharedPreferencesGateway.saveDeviceId(deviceIdGenerated);
-    }
-    final renewedDeviceId = await _sharedPreferencesGateway.readDeviceId();
+    final deviceId = await getOrGenerateDeviceId();
+    final userAgentString = buildUserAgent(userAgent: userAgent);
+
     await _grpcGateway.init(
       baseUrl: baseUrl,
       clientToken: clientToken,
-      deviceId: renewedDeviceId!,
-      userAgentBuilder: UserAgentBuilder(
-        appName: appName,
-        appVersion: appVersion,
-        packageName: packageInfo.appName,
-        packageVersion: packageInfo.version,
-        userAgent: userAgent,
-      ),
+      deviceId: deviceId,
+      userAgent: userAgentString,
     );
 
     final request = TokenRequestBuilder()
         .setGrantType('identity')
         .setResponseType(['user', 'token', 'chat'])
         .setAppToken(appToken)
-        .setIdentity(Identity(
-          name: 'Volodia Hunkalo',
-          sub: 'Hunkalo acc2',
-          iss: 'https://dev.webitel.com/portal',
-        ))
+        .setIdentity(
+          Identity(
+            name: 'Volodia Hunkalo',
+            sub: 'Hunkalo acc2',
+            iss: Constants.iss,
+          ),
+        )
         .build();
 
     try {
       final response = await _grpcGateway.customerStub.token(request);
       await _sharedPreferencesGateway.saveUserId(response.chat.user.id);
-      if (savedDeviceId != null) {
-        _databaseProvider.writeUser(
-          UserEntity(
-            accessToken: response.accessToken,
-            id: response.chat.user.id,
-            name: response.user.username,
-            baseUrl: baseUrl,
-            clientToken: clientToken,
-            deviceId: renewedDeviceId,
-            appName: appName,
-            appVersion: appVersion,
-            packageName: packageInfo.appName,
-            packageVersion: packageInfo.version,
-            userAgent: userAgent,
-          ),
-        );
-      }
+
+      _databaseProvider.writeUser(
+        UserEntity(
+          accessToken: response.accessToken,
+          id: response.chat.user.id,
+          clientToken: clientToken,
+          deviceId: deviceId,
+        ),
+      );
 
       _grpcGateway.setAccessToken(response.accessToken);
       return ResponseEntity(status: ResponseStatus.success);
-    } catch (error) {
+    } on GrpcError catch (err) {
+      final errorMessage = 'Failed to login: ${err.toString()}';
       return ResponseEntity(
-          status: ResponseStatus.error, message: error.toString());
+          status: ResponseStatus.error, message: errorMessage);
+    } catch (err) {
+      final errorMessage = 'Failed to login: ${err.toString()}';
+      return ResponseEntity(
+          status: ResponseStatus.error, message: errorMessage);
     }
   }
 
@@ -102,9 +89,11 @@ class AuthServiceImpl implements AuthService {
       await _grpcGateway.customerStub
           .registerDevice(RegisterDeviceRequest(push: DevicePush()));
       return ResponseEntity(status: ResponseStatus.success);
-    } catch (error) {
+    } catch (err) {
       return ResponseEntity(
-          status: ResponseStatus.error, message: error.toString());
+        status: ResponseStatus.error,
+        message: 'Failed to register device: ${err.toString()}',
+      );
     }
   }
 
@@ -113,9 +102,30 @@ class AuthServiceImpl implements AuthService {
     try {
       await _grpcGateway.customerStub.logout(LogoutRequest());
       return ResponseEntity(status: ResponseStatus.success);
-    } catch (error) {
+    } catch (err) {
       return ResponseEntity(
-          status: ResponseStatus.error, message: error.toString());
+        status: ResponseStatus.error,
+        message: 'Failed to logout: ${err.toString()}',
+      );
     }
+  }
+
+  Future<String> getOrGenerateDeviceId() async {
+    final String deviceIdGenerated = Uuid().v4();
+    String? savedDeviceId = await _sharedPreferencesGateway.readDeviceId();
+    if (savedDeviceId == null || savedDeviceId == 'null') {
+      await _sharedPreferencesGateway.saveDeviceId(deviceIdGenerated);
+      return deviceIdGenerated;
+    }
+    return savedDeviceId;
+  }
+
+  String buildUserAgent({required String userAgent}) {
+    final userAgentString = UserAgentBuilder(
+      userAgent: userAgent,
+      sdkName: Constants.sdkName,
+      sdkVersion: Constants.sdkVersion,
+    ).build();
+    return userAgentString;
   }
 }

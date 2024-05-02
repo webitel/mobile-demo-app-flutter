@@ -10,6 +10,7 @@ class ErrorMessageBuilder {
 
   DialogMessageEntity build() {
     return DialogMessageEntity(
+      id: '',
       dialogMessageContent: _errorMessage,
       type: MessageType.error,
       requestId: '',

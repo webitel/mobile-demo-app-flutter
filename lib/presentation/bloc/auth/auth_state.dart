@@ -4,12 +4,14 @@ enum AuthStatus { initial, loading, success, error }
 
 class AuthState extends Equatable {
   final AuthStatus authStatus;
+  final Object error;
 
-  const AuthState({required this.authStatus});
+  const AuthState({required this.authStatus, required this.error});
 
   static AuthState initial() {
     return const AuthState(
       authStatus: AuthStatus.initial,
+      error: '',
     );
   }
 
@@ -18,9 +20,11 @@ class AuthState extends Equatable {
 
   AuthState copyWith({
     AuthStatus? authStatus,
+    Object? error,
   }) {
     return AuthState(
       authStatus: authStatus ?? this.authStatus,
+      error: error ?? this.error,
     );
   }
 }

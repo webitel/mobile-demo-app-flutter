@@ -1,42 +1,16 @@
 class UserAgentBuilder {
   late String _userAgent;
-  late String _appName;
-  late String _appVersion;
-  late String _packageName;
-  late String _packageVersion;
+  late String _sdkName;
+  late String _sdkVersion;
 
   UserAgentBuilder({
     required String userAgent,
-    required String appName,
-    required String appVersion,
-    required String packageName,
-    required String packageVersion,
+    required String sdkName,
+    required String sdkVersion,
   }) {
     _userAgent = userAgent;
-    _appName = appName;
-    _appVersion = appVersion;
-    _packageName = packageName;
-    _packageVersion = packageVersion;
-  }
-
-  UserAgentBuilder setAppName(String appName) {
-    _appName = appName;
-    return this;
-  }
-
-  UserAgentBuilder setAppVersion(String appVersion) {
-    _appVersion = appVersion;
-    return this;
-  }
-
-  UserAgentBuilder setPackageName(String packageName) {
-    _packageName = packageName;
-    return this;
-  }
-
-  UserAgentBuilder setPackageVersion(String packageVersion) {
-    _packageVersion = packageVersion;
-    return this;
+    _sdkName = sdkName;
+    _sdkVersion = sdkVersion;
   }
 
   UserAgentBuilder setUserAgent(String userAgent) {
@@ -44,7 +18,17 @@ class UserAgentBuilder {
     return this;
   }
 
+  UserAgentBuilder setSdkName(String sdkName) {
+    _sdkName = sdkName;
+    return this;
+  }
+
+  UserAgentBuilder setSdkVersion(String sdkVersion) {
+    _sdkVersion = sdkVersion;
+    return this;
+  }
+
   String build() {
-    return '$_userAgent webitel_portal_sdk/1.0.1';
+    return '$_userAgent $_sdkName/$_sdkVersion';
   }
 }

@@ -6,8 +6,6 @@ abstract interface class LoginUseCase {
   Future<ResponseEntity> call({
     required String baseUrl,
     required String clientToken,
-    required String appName,
-    required String appVersion,
     required String appToken,
     required String userAgent,
   });
@@ -23,8 +21,6 @@ class LoginImplUseCase implements LoginUseCase {
   Future<ResponseEntity> call({
     required String baseUrl,
     required String clientToken,
-    required String appName,
-    required String appVersion,
     required String appToken,
     required String userAgent,
   }) =>
@@ -33,7 +29,5 @@ class LoginImplUseCase implements LoginUseCase {
         appToken: appToken,
         baseUrl: baseUrl,
         clientToken: clientToken,
-        appName: appName,
-        appVersion: appVersion,
       );
 }

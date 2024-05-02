@@ -22,7 +22,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (res.status == ResponseStatus.success) {
         emit(state.copyWith(authStatus: AuthStatus.success));
       } else {
-        emit(state.copyWith(authStatus: AuthStatus.error));
+        emit(
+          state.copyWith(
+            authStatus: AuthStatus.error,
+            error: res.message,
+          ),
+        );
       }
     });
   }

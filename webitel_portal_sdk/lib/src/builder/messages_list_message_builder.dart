@@ -4,16 +4,10 @@ import 'package:webitel_portal_sdk/src/generated/chat/messages/message.pb.dart';
 import 'package:webitel_portal_sdk/src/generated/chat/messages/peer.pb.dart';
 
 class MessagesListMessageBuilder {
-  late String _requestId;
   late String _chatId;
   late String _userId;
   late List<Message> _messages;
   late List<Peer> _peers;
-
-  MessagesListMessageBuilder setRequestId(String requestId) {
-    _requestId = requestId;
-    return this;
-  }
 
   MessagesListMessageBuilder setChatId(String chatId) {
     _chatId = chatId;
@@ -43,7 +37,7 @@ class MessagesListMessageBuilder {
           : MessageType.operator;
 
       return DialogMessageEntity(
-        requestId: _requestId,
+        id: message.file.id,
         chatId: _chatId,
         type: messageType,
         dialogMessageContent: message.text,
@@ -59,8 +53,9 @@ class MessagesListMessageBuilder {
           data: Stream<List<int>>.empty(),
           name: message.file.name,
           type: message.file.type,
-          requestId: _requestId,
+          requestId: '',
         ),
+        requestId: '',
       );
     }).toList();
   }

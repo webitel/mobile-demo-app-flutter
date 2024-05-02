@@ -26,8 +26,6 @@ class AuthHandler {
   Future<ResponseEntity> login({
     required String baseUrl,
     required String clientToken,
-    required String appName,
-    required String appVersion,
     required String userAgent,
     required String appToken,
   }) async {
@@ -35,8 +33,6 @@ class AuthHandler {
       appToken: appToken,
       baseUrl: baseUrl,
       clientToken: clientToken,
-      appName: appName,
-      appVersion: appVersion,
       userAgent: userAgent,
     );
   }

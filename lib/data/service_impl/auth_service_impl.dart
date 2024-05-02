@@ -28,8 +28,6 @@ class AuthServiceImpl implements AuthService {
         appToken: appToken,
         baseUrl: baseUrl,
         clientToken: clientToken,
-        appName: packageInfo.appName,
-        appVersion: packageInfo.version,
         userAgent: userAgentString,
       );
       return ResponseEntity(
@@ -45,8 +43,6 @@ class AuthServiceImpl implements AuthService {
         appToken: appToken,
         baseUrl: baseUrl,
         clientToken: clientToken,
-        appName: packageInfo.appName,
-        appVersion: packageInfo.version,
         userAgent: userAgentString,
       );
       return ResponseEntity(

@@ -5,6 +5,7 @@ enum MessageType { error, user, operator }
 enum MessageStatus { loading, error, sent }
 
 class DialogMessageEntity {
+  final String id;
   final String? fileName;
   final String? fileId;
   final String? fileType;
@@ -26,6 +27,7 @@ class DialogMessageEntity {
     this.chatId,
     this.messageType,
     this.messageStatus,
+    required this.id,
     required this.dialogMessageContent,
     required this.peer,
     required this.requestId,
@@ -34,6 +36,7 @@ class DialogMessageEntity {
   factory DialogMessageEntity.fromMap(Map<String, dynamic> map) {
     return DialogMessageEntity(
       chatId: map['chatId'],
+      id: map['id'],
       fileId: map['fileId'],
       path: map['path'],
       fileName: map['fileName'],
@@ -59,6 +62,7 @@ class DialogMessageEntity {
   Map<String, dynamic> toMap() {
     return {
       'chatId': chatId,
+      'id': id,
       'fileId': fileId,
       'path': path,
       'fileType': fileType,

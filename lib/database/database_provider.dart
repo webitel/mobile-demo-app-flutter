@@ -40,6 +40,7 @@ class DatabaseProvider {
         peerType TEXT,
         peerName TEXT,
         requestId TEXT,
+        id TEXT,
         messageStatus TEXT,
         timestamp INTEGER
       )''');
@@ -49,6 +50,7 @@ class DatabaseProvider {
         name TEXT,
         type TEXT,
         requestId TEXT,
+        id TEXT,
         status TEXT    
       )''');
   }
@@ -63,39 +65,53 @@ class DatabaseProvider {
   }
 
   Future<void> writeMessages() async {
+    // Fetch messages from the server
     final messagesFromServer =
         await WebitelPortalSdk.instance.messageHandler.fetchMessages(limit: 20);
 
-    if (messagesFromServer.isNotEmpty) {
-      await clear();
-      final db = await database;
-      await db.transaction((txn) async {
-        for (final message in messagesFromServer) {
-          await txn.insert(
-            messageTable,
-            {
-              'chatId': message.chatId,
-              'path': '',
-              'fileId': message.file?.id,
-              'fileType': message.file?.type,
-              'fileName': message.file?.name,
-              'messageId': message.messageId,
-              'messageType': message.type!.name,
-              'dialogMessageContent': message.dialogMessageContent,
-              'peerId': message.peer.id,
-              'peerType': message.peer.type,
-              'peerName': message.peer.name,
-              'requestId': message.requestId,
-              'messageStatus': 'Success',
-              'timestamp': DateTime.now().millisecondsSinceEpoch,
-            },
-            conflictAlgorithm: ConflictAlgorithm.replace,
-          );
+    if (messagesFromServer.isEmpty) return;
+
+    // Clear previous messages
+    await clear();
+
+    // Fetch cached files and map them by requestId
+    final db = await database;
+    final List<Map<String, dynamic>> cachedFilesMaps =
+        await db.query(cachedFiles);
+    final Map<String, String> pathByRequestId = {
+      for (var file in cachedFilesMaps) file['id']: file['path'] as String,
+    };
+
+    await db.transaction((txn) async {
+      for (final message in messagesFromServer) {
+        String path = '';
+        if (message.file?.id != null && message.file!.id.isNotEmpty) {
+          path = pathByRequestId[message.file!.id] ?? '';
         }
-      });
-    } else {
-      return;
-    }
+
+        await txn.insert(
+          messageTable,
+          {
+            'id': message.id,
+            'chatId': message.chatId,
+            'path': path,
+            'fileId': message.file?.id,
+            'fileType': message.file?.type,
+            'fileName': message.file?.name,
+            'messageId': message.messageId,
+            'messageType': message.type!.name,
+            'dialogMessageContent': message.dialogMessageContent,
+            'peerId': message.peer.id,
+            'peerType': message.peer.type,
+            'peerName': message.peer.name,
+            'requestId': message.requestId,
+            'messageStatus': 'Success',
+            'timestamp': DateTime.now().millisecondsSinceEpoch,
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    });
   }
 
   Future<List<DialogMessageEntity>> fetchMessagesByChatId(
@@ -109,6 +125,7 @@ class DatabaseProvider {
     final messages = maps
         .map(
           (message) => DialogMessageEntity(
+            id: message['id'],
             messageStatus: MessageStatus.sent,
             messageType: message['messageType'] == 'operator'
                 ? MessageType.operator
@@ -117,6 +134,7 @@ class DatabaseProvider {
             peer: Peer(id: '', type: '', name: ''),
             requestId: message['requestId'],
             file: MediaFileEntity(
+              path: message['path'],
               id: message['fileId'],
               size: 0,
               bytes: [],

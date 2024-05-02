@@ -51,9 +51,11 @@ class ChatServiceImpl implements ChatService {
     _connectListenerGateway.updateStream.listen((update) {
       final dialogMessage = DialogMessageBuilder()
           .setDialogMessageContent(update.message.text)
+          .setId(update.id)
           .setRequestId(update.id)
           .setMessageId(update.id)
           .setUserId(userId ?? '')
+          .setId(update.id)
           .setChatId(update.message.chat.id) //TODO
           .setUpdate(update)
           .setFile(
@@ -101,6 +103,7 @@ class ChatServiceImpl implements ChatService {
           DialogMessageBuilder()
               .setDialogMessageContent(unpackedMessage.message.text)
               .setRequestId(unpackedMessage.id)
+              .setId(unpackedMessage.id)
               .setMessageId(unpackedMessage.id)
               .setUserId(userId ?? '')
               .setChatId(unpackedMessage.message.chat.id)
@@ -128,11 +131,11 @@ class ChatServiceImpl implements ChatService {
               .build(),
         );
       }
-    }, onError: (Object error) {
-      if (error is GrpcError) {
+    }, onError: (Object err) {
+      if (err is GrpcError) {
         completer.complete(
           ErrorDialogMessageBuilder()
-              .setDialogMessageContent(error.toString())
+              .setDialogMessageContent(err.toString())
               .setRequestId(message.requestId)
               .build(),
         );
@@ -185,11 +188,11 @@ class ChatServiceImpl implements ChatService {
         );
         _connectListenerGateway.sendRequest(request);
       }
-    } catch (error) {
-      if (error is GrpcError) {
+    } catch (err) {
+      if (err is GrpcError) {
         completer.complete(
           ErrorDialogMessageBuilder()
-              .setDialogMessageContent(error.toString())
+              .setDialogMessageContent(err.toString())
               .setRequestId(message.requestId)
               .build(),
         );
@@ -233,9 +236,9 @@ class ChatServiceImpl implements ChatService {
           response.data.canUnpackInto(ChatMessages());
       if (canUnpackIntoDialogMessages == true) {
         final unpackedDialogMessages = response.data.unpackInto(ChatMessages());
+
         final peers = unpackedDialogMessages.peers;
         final messagesBuilder = MessagesListMessageBuilder()
-            .setRequestId(id)
             .setChatId(chatId ?? '')
             .setUserId(userId ?? '')
             .setMessages(unpackedDialogMessages.messages)
@@ -244,8 +247,8 @@ class ChatServiceImpl implements ChatService {
         final messages = messagesBuilder.build();
         return messages;
       }
-    } catch (error, stackTrace) {
-      logger.e(error: error, stackTrace: stackTrace, error);
+    } catch (err, stackTrace) {
+      logger.e(error: err, stackTrace: stackTrace, err);
     }
 
     return [];
@@ -278,7 +281,6 @@ class ChatServiceImpl implements ChatService {
         final unpackedDialogMessages = response.data.unpackInto(ChatMessages());
         final peers = unpackedDialogMessages.peers;
         final messagesBuilder = MessagesListMessageBuilder()
-            .setRequestId(id)
             .setChatId(chatId ?? '')
             .setUserId(userId ?? '')
             .setMessages(unpackedDialogMessages.messages)
@@ -287,7 +289,7 @@ class ChatServiceImpl implements ChatService {
         final messages = messagesBuilder.build();
         return messages;
       }
-    } catch (error) {
+    } catch (err) {
       return [];
     }
 

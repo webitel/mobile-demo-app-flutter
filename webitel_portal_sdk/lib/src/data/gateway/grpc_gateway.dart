@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:grpc/grpc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:webitel_portal_sdk/src/builder/call_options_builder.dart';
-import 'package:webitel_portal_sdk/src/builder/user_agent_builder.dart';
 import 'package:webitel_portal_sdk/src/data/interceptor/interceptor.dart';
 import 'package:webitel_portal_sdk/src/generated/portal/customer.pbgrpc.dart';
 import 'package:webitel_portal_sdk/src/generated/portal/media.pbgrpc.dart';
@@ -24,12 +23,12 @@ class GrpcGateway {
     required String baseUrl,
     required String clientToken,
     required String deviceId,
-    required UserAgentBuilder userAgentBuilder,
+    required String userAgent,
   }) async {
     _baseUrl = baseUrl;
     _deviceId = deviceId;
     _clientToken = clientToken;
-    _userAgent = userAgentBuilder.build();
+    _userAgent = userAgent;
     await _createChannel(
       baseUrl: baseUrl,
       deviceId: deviceId,
@@ -73,7 +72,6 @@ class GrpcGateway {
       port: 443,
       options: ChannelOptions(
         userAgent: userAgent,
-        idleTimeout: Duration(seconds: 5),
         keepAlive: ClientKeepAliveOptions(
           pingInterval: Duration(seconds: 5),
           timeout: Duration(seconds: 3),

@@ -33,6 +33,7 @@ class MessageHandler {
   }) async {
     return await _sendMessageUseCase(
       message: DialogMessageEntity(
+        id: '',
         dialogMessageContent: dialogMessageContent,
         requestId: requestId,
         peer: PeerInfo(

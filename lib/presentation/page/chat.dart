@@ -46,6 +46,13 @@ class _ChatPageState extends State<ChatPage> {
                   chatBloc.add(FetchMessages());
                   chatBloc.add(ListenToMessages());
                 } else if (state.authStatus == AuthStatus.error) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        state.error.toString(),
+                      ),
+                    ),
+                  );
                   chatBloc.add(FetchMessages());
                 }
               },
@@ -106,6 +113,7 @@ class _ChatPageState extends State<ChatPage> {
                                       SendDialogMessageEvent(
                                         dialogMessageEntity:
                                             DialogMessageEntity(
+                                          id: '',
                                           requestId: uuid.v4(),
                                           dialogMessageContent: messageContent,
                                           peer: Peer(

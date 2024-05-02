@@ -45,8 +45,8 @@ class ChatListServiceImpl implements ChatListService {
         _sharedPreferencesGateway.saveToDisk(
             'chatId', unpackedDialogMessages.data.first.id);
       }
-    } catch (error, stackTrace) {
-      logger.e(error: error, stackTrace: stackTrace, error);
+    } catch (err, stackTrace) {
+      logger.e(error: err, stackTrace: stackTrace, err);
     }
   }
 }

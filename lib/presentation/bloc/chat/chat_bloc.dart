@@ -29,7 +29,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   ) : super(ChatState.initial()) {
     on<ClearImageFromStateEvent>(
       (event, emit) async {
-        emit(state.copyWith(selectedFile: File('')));
+        emit(
+          state.copyWith(
+            selectedFile: File(''),
+          ),
+        );
       },
     );
     on<UploadMediaEvent>(
@@ -37,7 +41,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         final file = await _pickFileUseCase();
 
         if (file != null) {
-          emit(state.copyWith(selectedFile: file));
+          emit(
+            state.copyWith(
+              selectedFile: file,
+            ),
+          );
         }
       },
     );
@@ -71,7 +79,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           String mimeType = lookupMimeType(state.selectedFile.path) ??
               'application/octet-stream';
           String fileName = state.selectedFile.path.split('/').last;
-
+          String path = state.selectedFile.path;
           await _sendDialogMessageUseCase(
             dialogMessageEntity: DialogMessageEntity(
               requestId: event.dialogMessageEntity.requestId,
@@ -84,21 +92,30 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
                 bytes: [],
                 data: controller.stream,
                 // Use the controlled stream
+                path: path,
                 name: fileName,
                 type: mimeType,
-                requestId: '',
+                requestId: event.dialogMessageEntity.requestId,
               ),
+              id: '',
             ),
           );
+          add(ClearImageFromStateEvent());
         } else {
           await _sendDialogMessageUseCase(
             dialogMessageEntity: DialogMessageEntity(
               requestId: event.dialogMessageEntity.requestId,
               dialogMessageContent:
                   event.dialogMessageEntity.dialogMessageContent,
-              peer: Peer(id: '', type: 'chat', name: ''),
+              peer: Peer(
+                id: '',
+                type: 'chat',
+                name: '',
+              ),
+              id: '',
             ),
           );
+          add(ClearImageFromStateEvent());
         }
       },
     );
@@ -113,20 +130,29 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       (event, emit) async {
         final messagesStream = await _listenToMessagesUseCase();
         await emit.onEach(messagesStream, onData: (message) {
-          final List<DialogMessageEntity> currentMessages = [
-            DialogMessageEntity(
-              requestId: message.requestId,
-              messageType: message.messageType,
-              dialogMessageContent: message.dialogMessageContent,
-              peer: Peer(
-                id: message.peer.id,
-                type: message.peer.type,
-                name: message.peer.name,
+          if (message.file != null) {
+            add(FetchMessages());
+          } else {
+            final List<DialogMessageEntity> currentMessages = [
+              DialogMessageEntity(
+                requestId: message.requestId,
+                messageType: message.messageType,
+                dialogMessageContent: message.dialogMessageContent,
+                peer: Peer(
+                  id: message.peer.id,
+                  type: message.peer.type,
+                  name: message.peer.name,
+                ),
+                id: message.id,
               ),
-            ),
-            ...state.dialogMessages
-          ];
-          emit(state.copyWith(dialogMessages: currentMessages));
+              ...state.dialogMessages
+            ];
+            emit(
+              state.copyWith(
+                dialogMessages: currentMessages,
+              ),
+            );
+          }
         });
       },
     );

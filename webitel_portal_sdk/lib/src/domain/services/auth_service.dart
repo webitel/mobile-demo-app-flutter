@@ -9,8 +9,6 @@ abstract interface class AuthService {
     required String baseUrl,
     required String userAgent,
     required String clientToken,
-    required String appName,
-    required String appVersion,
     required String appToken,
   });
 }

@@ -35,10 +35,9 @@ class MessagesListView extends StatelessWidget {
                     : 20,
               ),
               child: MessageItem(
-                filePath: '',
-                isMedia: state.dialogMessages[index].file!.name.isNotEmpty
-                    ? true
-                    : false,
+                filePath: state.dialogMessages[index].file != null
+                    ? state.dialogMessages[index].file!.path
+                    : '',
                 messageType: state.dialogMessages[index].messageType!,
                 content: state.dialogMessages[index].dialogMessageContent,
               ),

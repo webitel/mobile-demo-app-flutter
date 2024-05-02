@@ -3,6 +3,7 @@ import 'package:webitel_portal_sdk/src/domain/entities/media_file.dart';
 enum MessageType { user, operator, error }
 
 class DialogMessageEntity {
+  final String id;
   final MediaFileEntity? file;
   final String dialogMessageContent;
   final PeerInfo peer;
@@ -12,6 +13,7 @@ class DialogMessageEntity {
   final String? messageId;
 
   DialogMessageEntity({
+    required this.id,
     required this.requestId,
     required this.dialogMessageContent,
     required this.peer,

@@ -29,16 +29,9 @@ class DatabaseProvider {
       // Create the current user table
       await txn.execute('''CREATE TABLE $userTable(
         id TEXT PRIMARY KEY,
-        name TEXT,  
         accessToken TEXT,
-        baseUrl TEXT,
         clientToken TEXT,
-        deviceId TEXT,
-        appName TEXT,
-        appVersion TEXT,
-        packageName TEXT,
-        packageVersion TEXT,
-        userAgent TEXT
+        deviceId TEXT
       )''');
     });
   }

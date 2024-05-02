@@ -101,8 +101,9 @@ class ConnectListenerGateway {
   }
 
   Future<void> sendPingMessage() async {
-    final echoData = [1, 2, 3];
-    final echo = portal.Echo(data: echoData);
+    final String echoDataString = 'Bind';
+    final List<int> echoDataBytes = echoDataString.codeUnits;
+    final echo = portal.Echo(data: echoDataBytes);
     final request = portal.Request(
       path: '/webitel.portal.Customer/Ping',
       data: Any.pack(echo),
@@ -112,6 +113,7 @@ class ConnectListenerGateway {
   }
 
   Future<void> sendRequest(portal.Request request) async {
+    _logger.i('Staring sending request...');
     if (connectClosed == true && _responseStream == null) {
       _logger.i(
           'Connection state is not ready or connection is closed. Attempting to reconnect...');
@@ -126,7 +128,6 @@ class ConnectListenerGateway {
       _logger.t('Current connection state: $_connectionState');
       final user = await _databaseProvider.readUser();
       await _grpcGateway.setAccessToken(user.accessToken);
-
       _logger.t('Re-init gRPC Channel');
     }
     await _lock.synchronized(() async {
@@ -147,8 +148,6 @@ class ConnectListenerGateway {
       } else if (state == ConnectionState.transientFailure) {
         handleStreamCleanup();
         _logger.i('Response stream canceled due to $state');
-      } else {
-        return;
       }
       _connectionState = state;
     });
