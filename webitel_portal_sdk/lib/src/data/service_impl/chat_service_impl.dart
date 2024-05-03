@@ -49,6 +49,8 @@ class ChatServiceImpl implements ChatService {
     logger.i("Chat service initialized with broadcast stream controller.");
   }
 
+  /// Stream transformer that converts a stream of data chunks into a stream of UploadMedia messages.
+  /// Firstly adding name/type and then bytes
   Stream<UploadMedia> stream({
     required Stream<List<int>> data,
     required String name,
@@ -61,6 +63,8 @@ class ChatServiceImpl implements ChatService {
     }
   }
 
+  /// Listens for all messages from server
+  //TODO FILTER MESSAGES BY ROOMS AND MAKE 2 STREAMS - ROOM MESSAGES + ALL MESSAGES
   @override
   Future<StreamController<DialogMessageResponseEntity>>
       listenToMessages() async {
@@ -187,6 +191,7 @@ class ChatServiceImpl implements ChatService {
     return _userMessagesController;
   }
 
+  /// Sends a message to the chat service and waits for a response.
   @override
   Future<DialogMessageResponseEntity> sendMessage(
       {required DialogMessageRequestEntity message}) async {
@@ -214,6 +219,7 @@ class ChatServiceImpl implements ChatService {
     }
   }
 
+  //LISTEN FOR RESPONSE BY EQUAL REQUEST ID
   Future<DialogMessageResponseEntity> _listenForResponse(
       String requestId, String userId) {
     final completer = Completer<DialogMessageResponseEntity>();
@@ -325,6 +331,7 @@ class ChatServiceImpl implements ChatService {
     );
   }
 
+  //FETCH MESSAGES
   @override
   Future<List<DialogMessageResponseEntity>> fetchMessages(
       {int? limit, String? offset}) async {
@@ -378,6 +385,7 @@ class ChatServiceImpl implements ChatService {
     }
   }
 
+  //FETCH MESSAGES REVERSED FOR PAGINATION
   @override
   Future<List<DialogMessageResponseEntity>> fetchUpdates(
       {int? limit, String? offset}) async {
