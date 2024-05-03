@@ -1,4 +1,5 @@
 import 'package:injectable/injectable.dart';
+import 'package:logger/logger.dart'; // Import the logger package
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:webitel_portal_sdk/src/domain/entities/user/user.dart';
@@ -6,6 +7,7 @@ import 'package:webitel_portal_sdk/src/domain/entities/user/user.dart';
 @LazySingleton()
 class DatabaseProvider {
   Database? _database;
+  final Logger _logger = Logger();
 
   Future<Database> get database async {
     final dbDirectory = await getDatabasesPath();
@@ -23,7 +25,6 @@ class DatabaseProvider {
   static const requestQueueTable = 'requestQueueTable';
   static const userTable = 'userTable';
 
-  // Method to create the database tables
   Future<void> _createDb(Database db, int version) async {
     await db.transaction((txn) async {
       // Create the current user table
@@ -34,6 +35,7 @@ class DatabaseProvider {
         deviceId TEXT
       )''');
     });
+    _logger.i("Database tables created.");
   }
 
   Future<void> writeUser(UserEntity user) async {
@@ -59,6 +61,7 @@ class DatabaseProvider {
           where: 'id = ?',
           whereArgs: [user.id],
         );
+        _logger.i("User updated: ${user.id}");
       }
     } else {
       // User does not exist, insert as new
@@ -67,10 +70,10 @@ class DatabaseProvider {
         user.toJson(),
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
+      _logger.i("New user inserted: ${user.id}");
     }
   }
 
-// Method to read a user from the database
   Future<UserEntity> readUser() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -79,8 +82,10 @@ class DatabaseProvider {
     );
 
     if (maps.isNotEmpty) {
+      _logger.i("User read from database: ${maps[0]['id']}");
       return UserEntity.fromJson(maps[0]);
     } else {
+      _logger.i("No user found in the database.");
       return UserEntity.initial();
     }
   }

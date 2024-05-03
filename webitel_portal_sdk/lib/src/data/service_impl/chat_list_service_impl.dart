@@ -24,29 +24,41 @@ class ChatListServiceImpl implements ChatListService {
 
   @override
   Future<void> fetchDialogs() async {
-    final id = uuid.v4();
+    final requestId = uuid.v4();
+    logger.i('Initiating fetch for chat dialogs with request ID: $requestId');
+
     await _sharedPreferencesGateway.init();
     final chatDialogsRequest = dialog.ChatDialogsRequest();
     final request = portal.Request(
       path: '/webitel.portal.ChatMessages/ChatDialogs',
       data: Any.pack(chatDialogsRequest),
-      id: id,
+      id: requestId,
     );
 
+    logger.i('Sending request to fetch chat dialogs');
     await _connectListenerGateway.sendRequest(request);
 
     try {
       final response = await _connectListenerGateway.responseStream
-          .firstWhere((response) => response.id == id);
+          .firstWhere((response) => response.id == requestId);
 
-      final canUnpackIntoChatList = response.data.canUnpackInto(ChatList());
-      if (canUnpackIntoChatList == true) {
+      logger.i('Received response for chat dialogs request ID: $requestId');
+      if (response.data.canUnpackInto(ChatList())) {
         final unpackedDialogMessages = response.data.unpackInto(ChatList());
-        _sharedPreferencesGateway.saveToDisk(
-            'chatId', unpackedDialogMessages.data.first.id);
+        if (unpackedDialogMessages.data.isNotEmpty) {
+          logger.i(
+              'Successfully unpacked chat dialogs, saving first chat ID to preferences');
+          _sharedPreferencesGateway.saveToDisk(
+              'chatId', unpackedDialogMessages.data.first.id);
+        } else {
+          logger.w('No chat dialogs were returned in the response');
+        }
+      } else {
+        logger.e('Failed to unpack chat list for request ID: $requestId');
       }
     } catch (err, stackTrace) {
-      logger.e(error: err, stackTrace: stackTrace, err);
+      logger.e('Error fetching chat dialogs with request ID: $requestId',
+          error: err, stackTrace: stackTrace);
     }
   }
 }
