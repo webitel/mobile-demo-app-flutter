@@ -33,14 +33,13 @@ class MessagesListMessageBuilder {
   List<DialogMessageResponseEntity> build() {
     return _messages.map((message) {
       final peerIndex = int.parse(message.from.id) - 1;
-      final messageType = _peers[peerIndex].id == _userId
-          ? MessageType.user
-          : MessageType.operator;
+      final messageType =
+          _peers[peerIndex].id == _userId ? Sender.user : Sender.operator;
 
       return DialogMessageResponseEntity(
         id: message.file.id,
         chatId: _chatId,
-        type: messageType,
+        sender: messageType,
         dialogMessageContent: message.text,
         peer: PeerInfo(
           name: message.from.name,

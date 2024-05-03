@@ -1,3 +1,4 @@
+import 'package:webitel_portal_sdk/src/backbone/message_helper.dart';
 import 'package:webitel_portal_sdk/src/domain/entities/dialog_message/dialog_message_response.dart';
 import 'package:webitel_portal_sdk/src/domain/entities/media_file/media_file_response.dart';
 import 'package:webitel_portal_sdk/src/domain/entities/peer.dart';
@@ -11,7 +12,7 @@ class ResponseDialogMessageBuilder {
   late String _id;
   late String _userId;
   late UpdateNewMessage _update;
-  MediaFileResponseEntity? _file;
+  late MediaFileResponseEntity _file;
 
   ResponseDialogMessageBuilder setDialogMessageContent(
       String dialogMessageContent) {
@@ -49,15 +50,17 @@ class ResponseDialogMessageBuilder {
     return this;
   }
 
-  ResponseDialogMessageBuilder setFile(MediaFileResponseEntity? file) {
+  ResponseDialogMessageBuilder setFile(MediaFileResponseEntity file) {
     _file = file;
     return this;
   }
 
   DialogMessageResponseEntity build() {
-    final messageType = _update.message.from.id == _userId
-        ? MessageType.user
-        : MessageType.operator;
+    final sender =
+        _update.message.from.id == _userId ? Sender.user : Sender.operator;
+
+    final messageType = MessageHelper.determineMessageTypeResponse(_update);
+
     final peerInfo = PeerInfo(
       id: _update.message.from.id,
       name: _update.message.from.name,
@@ -65,7 +68,8 @@ class ResponseDialogMessageBuilder {
     );
 
     return DialogMessageResponseEntity(
-      type: messageType,
+      sender: sender,
+      messageType: messageType,
       chatId: _chatId,
       dialogMessageContent: _dialogMessageContent,
       requestId: _requestId,

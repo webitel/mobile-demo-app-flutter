@@ -12,4 +12,11 @@ class MediaFileResponseEntity {
     required this.type,
     required this.id,
   });
+
+  MediaFileResponseEntity.initial()
+      : name = '',
+        type = '',
+        id = '',
+        size = 0,
+        bytes = [];
 }

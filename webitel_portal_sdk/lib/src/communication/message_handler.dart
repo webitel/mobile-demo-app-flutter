@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:webitel_portal_sdk/src/backbone/message_helper.dart';
 import 'package:webitel_portal_sdk/src/domain/entities/dialog_message/dialog_message_request.dart';
 import 'package:webitel_portal_sdk/src/domain/entities/dialog_message/dialog_message_response.dart';
 import 'package:webitel_portal_sdk/src/domain/entities/media_file/media_file_request.dart';
@@ -29,12 +30,14 @@ class MessageHandler {
     required String peerName,
     required String peerId,
     required String requestId,
-    String? mediaType,
-    String? mediaName,
-    Stream<List<int>>? mediaData,
+    required String messageType,
+    required String mediaType,
+    required String mediaName,
+    required Stream<List<int>> mediaData,
   }) async {
     return await _sendMessageUseCase(
       message: DialogMessageRequestEntity(
+        messageType: MessageHelper.fromStringToEnum(messageType),
         dialogMessageContent: dialogMessageContent,
         requestId: requestId,
         peer: PeerInfo(
@@ -43,9 +46,9 @@ class MessageHandler {
           id: peerId,
         ),
         file: MediaFileRequestEntity(
-          data: mediaData ?? Stream<List<int>>.empty(),
-          name: mediaName ?? '',
-          type: mediaType ?? '',
+          data: mediaData,
+          name: mediaName,
+          type: mediaType,
           requestId: requestId,
         ),
       ),

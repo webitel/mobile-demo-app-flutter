@@ -1,5 +1,6 @@
 import 'package:webitel_portal_sdk/src/domain/entities/dialog_message/dialog_message_request.dart';
 import 'package:webitel_portal_sdk/src/domain/entities/media_file/media_file_request.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/message_type.dart';
 import 'package:webitel_portal_sdk/src/domain/entities/peer.dart';
 import 'package:webitel_portal_sdk/src/generated/portal/messages.pb.dart';
 
@@ -8,8 +9,9 @@ class RequestDialogMessageBuilder {
   late String _requestId;
   late String _chatId;
   late String _messageId;
+  late MessageType _messageType;
   late UpdateNewMessage _update;
-  MediaFileRequestEntity? _file;
+  late MediaFileRequestEntity _file;
 
   RequestDialogMessageBuilder setDialogMessageContent(
       String dialogMessageContent) {
@@ -37,8 +39,13 @@ class RequestDialogMessageBuilder {
     return this;
   }
 
-  RequestDialogMessageBuilder setFile(MediaFileRequestEntity? file) {
+  RequestDialogMessageBuilder setFile(MediaFileRequestEntity file) {
     _file = file;
+    return this;
+  }
+
+  RequestDialogMessageBuilder setMessageType(MessageType messageType) {
+    _messageType = messageType;
     return this;
   }
 
@@ -50,6 +57,7 @@ class RequestDialogMessageBuilder {
     );
 
     return DialogMessageRequestEntity(
+      messageType: _messageType,
       chatId: _chatId,
       dialogMessageContent: _dialogMessageContent,
       requestId: _requestId,

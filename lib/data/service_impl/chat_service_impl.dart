@@ -45,12 +45,13 @@ class ChatServiceImpl implements ChatService {
         mediaType: dialogMessageEntity.file!.type,
         mediaName: dialogMessageEntity.file!.name,
         mediaData: dialogMessageEntity.file!.data,
+        messageType: 'media',
       );
       _databaseProvider.saveCachedFile(
         CachedFileEntity(
-          id: message.file!.id,
+          id: message.file.id,
           requestId: message.requestId,
-          type: message.file!.type.toString(),
+          type: message.file.type.toString(),
           path: dialogMessageEntity.file!.path,
           status: CachedFileStatus.sent,
         ),
@@ -67,6 +68,10 @@ class ChatServiceImpl implements ChatService {
         peerType: dialogMessageEntity.peer.type,
         peerName: dialogMessageEntity.peer.name,
         peerId: dialogMessageEntity.peer.id,
+        messageType: 'message',
+        mediaType: '',
+        mediaName: '',
+        mediaData: const Stream<List<int>>.empty(),
       );
 
       return ResponseEntity(
@@ -110,23 +115,21 @@ class ChatServiceImpl implements ChatService {
 
     messagesStream.stream.listen((message) {
       final messageEntity = DialogMessageEntity(
-        file: message.file != null
-            ? MediaFileEntity(
-                path: '',
-                id: '',
-                size: 0,
-                bytes: [],
-                data: const Stream<List<int>>.empty(),
-                name: '',
-                type: '',
-                requestId: '',
-              )
-            : null,
+        file: MediaFileEntity(
+          path: '',
+          id: message.file.id,
+          size: message.file.size,
+          bytes: [],
+          data: const Stream<List<int>>.empty(),
+          name: message.file.name,
+          type: message.file.type,
+          requestId: '',
+        ),
         id: message.id,
         dialogMessageContent: message.dialogMessageContent,
         peer: Peer(id: '', type: '', name: ''),
         requestId: '',
-        messageType: message.type!.name == 'user'
+        messageType: message.sender!.name == 'user'
             ? MessageType.user
             : MessageType.operator,
       );

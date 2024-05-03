@@ -85,8 +85,8 @@ class DatabaseProvider {
     await db.transaction((txn) async {
       for (final message in messagesFromServer) {
         String path = '';
-        if (message.file?.id != null && message.file!.id.isNotEmpty) {
-          path = pathByRequestId[message.file!.id] ?? '';
+        if (message.file.id.isNotEmpty) {
+          path = pathByRequestId[message.file.id] ?? '';
         }
 
         await txn.insert(
@@ -95,11 +95,11 @@ class DatabaseProvider {
             'id': message.id,
             'chatId': message.chatId,
             'path': path,
-            'fileId': message.file?.id,
-            'fileType': message.file?.type,
-            'fileName': message.file?.name,
+            'fileId': message.file.id,
+            'fileType': message.file.type,
+            'fileName': message.file.name,
             'messageId': message.messageId,
-            'messageType': message.type!.name,
+            'messageType': message.sender!.name,
             'dialogMessageContent': message.dialogMessageContent,
             'peerId': message.peer.id,
             'peerType': message.peer.type,

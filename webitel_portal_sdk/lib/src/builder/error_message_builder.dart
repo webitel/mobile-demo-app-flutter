@@ -1,4 +1,5 @@
 import 'package:webitel_portal_sdk/src/domain/entities/dialog_message/dialog_message_response.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/media_file/media_file_response.dart';
 import 'package:webitel_portal_sdk/src/domain/entities/peer.dart';
 
 class ErrorMessageBuilder {
@@ -13,10 +14,10 @@ class ErrorMessageBuilder {
     return DialogMessageResponseEntity(
       id: '',
       dialogMessageContent: _errorMessage,
-      type: MessageType.error,
       requestId: '',
       chatId: '',
       peer: PeerInfo(id: '', name: '', type: ''),
+      file: MediaFileResponseEntity.initial(),
     );
   }
 }
