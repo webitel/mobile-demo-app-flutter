@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:path_provider/path_provider.dart';
 import 'package:webitel_portal_sdk/webitel_portal_sdk.dart';
 import 'package:webitel_sdk/data/gateway/file_picker_gateway.dart';
 import 'package:webitel_sdk/database/database_provider.dart';
@@ -113,35 +115,88 @@ class ChatServiceImpl implements ChatService {
 
     final messagesStreamController = StreamController<DialogMessageEntity>();
 
-    messagesStream.stream.listen((message) {
-      final messageEntity = DialogMessageEntity(
-        file: MediaFileEntity(
-          path: '',
-          id: message.file.id,
-          size: message.file.size,
-          bytes: [],
-          data: const Stream<List<int>>.empty(),
-          name: message.file.name,
-          type: message.file.type,
-          requestId: '',
-        ),
-        id: message.id,
-        dialogMessageContent: message.dialogMessageContent,
-        peer: Peer(id: '', type: '', name: ''),
-        requestId: '',
-        messageType: message.sender!.name == 'user'
-            ? MessageType.user
-            : MessageType.operator,
-      );
+    messagesStream.stream.listen((message) async {
+      if (message.file.bytes.isNotEmpty) {
+        ByteData byteData =
+            ByteData.sublistView(Uint8List.fromList(message.file.bytes));
 
-      _databaseProvider.writeMessageToDatabase(
-        message: messageEntity,
-      );
-      messagesStreamController.add(
-        messageEntity,
-      );
+        final file = await writeToFile(data: byteData, name: message.file.name);
+
+        _databaseProvider.saveCachedFile(
+          CachedFileEntity(
+            id: message.file.id,
+            requestId: message.requestId,
+            type: message.file.type.toString(),
+            path: file.path,
+            status: CachedFileStatus.sent,
+          ),
+        );
+        final messageEntity = DialogMessageEntity(
+          file: MediaFileEntity(
+            path: file.path,
+            id: message.file.id,
+            size: message.file.size,
+            bytes: [],
+            data: const Stream<List<int>>.empty(),
+            name: message.file.name,
+            type: message.file.type,
+            requestId: '',
+          ),
+          id: message.id,
+          dialogMessageContent: message.dialogMessageContent,
+          peer: Peer(id: '', type: '', name: ''),
+          requestId: '',
+          messageType: message.sender!.name == 'user'
+              ? MessageType.user
+              : MessageType.operator,
+        );
+        _databaseProvider.writeMessageToDatabase(
+          message: messageEntity,
+        );
+        messagesStreamController.add(
+          messageEntity,
+        );
+      } else if (message.file.bytes.isEmpty) {
+        final messageEntity = DialogMessageEntity(
+          file: MediaFileEntity(
+            path: '',
+            id: message.file.id,
+            size: message.file.size,
+            bytes: [],
+            data: const Stream<List<int>>.empty(),
+            name: message.file.name,
+            type: message.file.type,
+            requestId: '',
+          ),
+          id: message.id,
+          dialogMessageContent: message.dialogMessageContent,
+          peer: Peer(id: '', type: '', name: ''),
+          requestId: '',
+          messageType: message.sender!.name == 'user'
+              ? MessageType.user
+              : MessageType.operator,
+        );
+        _databaseProvider.writeMessageToDatabase(
+          message: messageEntity,
+        );
+        messagesStreamController.add(
+          messageEntity,
+        );
+      }
     });
 
     return messagesStreamController.stream;
+  }
+
+  Future<File> writeToFile({
+    required ByteData data,
+    required String name,
+  }) async {
+    final buffer = data.buffer;
+    Directory tempDir = await getTemporaryDirectory();
+    String tempPath = tempDir.path;
+    var filePath = '$tempPath/$name';
+    return File(filePath).writeAsBytes(
+        buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
   }
 }

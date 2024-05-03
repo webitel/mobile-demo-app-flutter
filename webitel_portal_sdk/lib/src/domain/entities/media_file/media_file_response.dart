@@ -19,4 +19,20 @@ class MediaFileResponseEntity {
         id = '',
         size = 0,
         bytes = [];
+
+  MediaFileResponseEntity copyWith({
+    String? name,
+    String? type,
+    String? id,
+    int? size,
+    List<int>? bytes,
+  }) {
+    return MediaFileResponseEntity(
+      name: name ?? this.name,
+      type: type ?? this.type,
+      id: id ?? this.id,
+      size: size ?? this.size,
+      bytes: bytes ?? this.bytes,
+    );
+  }
 }

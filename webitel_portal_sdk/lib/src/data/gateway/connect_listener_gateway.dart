@@ -5,10 +5,12 @@ import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:webitel_portal_sdk/src/backbone/logger.dart';
+import 'package:webitel_portal_sdk/src/backbone/response_type_helper.dart';
 import 'package:webitel_portal_sdk/src/data/gateway/grpc_gateway.dart';
 import 'package:webitel_portal_sdk/src/database/database.dart';
 import 'package:webitel_portal_sdk/src/domain/entities/connect_status.dart';
 import 'package:webitel_portal_sdk/src/domain/entities/error.dart';
+import 'package:webitel_portal_sdk/src/domain/entities/response_type.dart';
 import 'package:webitel_portal_sdk/src/generated/google/protobuf/any.pb.dart';
 import 'package:webitel_portal_sdk/src/generated/portal/connect.pb.dart'
     as portal;
@@ -48,19 +50,23 @@ class ConnectListenerGateway {
           connectClosed = false;
           _connectController
               .add(ConnectStreamStatus(status: ConnectStatus.opened));
-
-          if (update.data.canUnpackInto(portal.Response())) {
-            final decodedResponse = update.data.unpackInto(portal.Response());
-            if (decodedResponse.err.hasMessage()) {
+          final responseType = ResponseTypeHelper.determineResponseType(update);
+          _logger.t('Response type: $responseType');
+          switch (responseType) {
+            case ResponseType.response:
+              final decodedResponse = update.data.unpackInto(portal.Response());
+              _responseStreamController.add(decodedResponse);
+            case ResponseType.updateNewMessage:
+              final decodedUpdate = update.data.unpackInto(UpdateNewMessage());
+              _updateStreamController.add(decodedUpdate);
+              _logger.t(
+                decodedUpdate.message.text,
+              );
+            case ResponseType.error:
+              final decodedResponse = update.data.unpackInto(portal.Response());
               _errorStreamController.add(ErrorEntity(
                   statusCode: decodedResponse.err.code.toString(),
                   errorMessage: decodedResponse.err.message));
-            }
-            _responseStreamController.add(decodedResponse);
-          } else if (update.data.canUnpackInto(UpdateNewMessage())) {
-            final decodedUpdate = update.data.unpackInto(UpdateNewMessage());
-            _updateStreamController.add(decodedUpdate);
-            _logger.t(decodedUpdate.message.text);
           }
         }
       } else {

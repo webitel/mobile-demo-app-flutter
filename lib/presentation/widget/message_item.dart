@@ -19,7 +19,7 @@ class MessageItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(filePath.isNotEmpty ? 8 : 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.only(
           topRight: const Radius.circular(20),
@@ -43,7 +43,8 @@ class MessageItem extends StatelessWidget {
                   File(filePath),
                 ),
               ),
-            if (filePath.isNotEmpty) const SizedBox(height: 16),
+            if (filePath.isNotEmpty && content.isNotEmpty)
+              const SizedBox(height: 16),
             Text(
               content,
               style: const TextStyle(

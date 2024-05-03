@@ -98,6 +98,7 @@ class ChatServiceImpl implements ChatService {
               .build();
           print(dialogMessage.file.name);
           _userMessagesController.add(dialogMessage);
+
         case MessageType.outcomingMessage:
           logger.i(
               "Processing ${messageType.toString()} message: ${update.message.text}");
@@ -121,6 +122,7 @@ class ChatServiceImpl implements ChatService {
               )
               .build();
           _userMessagesController.add(dialogMessage);
+
         case MessageType.incomingMedia:
           logger.i(
               "Processing ${messageType.toString()} message: ${update.message.text}");
@@ -130,14 +132,20 @@ class ChatServiceImpl implements ChatService {
           MediaFileResponseEntity? file;
 
           await for (MediaFile mediaFile in media) {
-            file = MediaFileResponseEntity(
-              size: mediaFile.file.size.toInt(),
-              bytes: mediaFile.data,
-              name: mediaFile.file.name,
-              type: mediaFile.file.type,
-              id: mediaFile.file.id,
-            );
+            if (mediaFile.file.name.isNotEmpty) {
+              file = MediaFileResponseEntity(
+                size: mediaFile.file.size.toInt(),
+                name: mediaFile.file.name,
+                type: mediaFile.file.type,
+                id: mediaFile.file.id,
+                bytes: [],
+              );
+            } else if (file != null) {
+              file = file.copyWith(
+                  bytes: List<int>.from(file.bytes)..addAll(mediaFile.data));
+            }
           }
+
           final dialogMessage = ResponseDialogMessageBuilder()
               .setDialogMessageContent(update.message.text)
               .setId(update.id)
@@ -158,6 +166,7 @@ class ChatServiceImpl implements ChatService {
               )
               .build();
           _userMessagesController.add(dialogMessage);
+
         case MessageType.incomingMessage:
           logger.i(
               "Processing ${messageType.toString()} message: ${update.message.text}");
@@ -254,9 +263,9 @@ class ChatServiceImpl implements ChatService {
               .build();
           completer.complete(dialogMessage);
           break;
+
         case MessageType.outcomingMedia:
           logger.i("Handled response for message type $messageType");
-
           final dialogMessage = ResponseDialogMessageBuilder()
               .setDialogMessageContent(unpackedMessage.message.text)
               .setId(unpackedMessage.id)

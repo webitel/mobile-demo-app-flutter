@@ -132,6 +132,28 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         await emit.onEach(messagesStream, onData: (message) {
           if (message.file != null) {
             add(FetchMessages());
+          } else if (message.file != null && message.file!.path.isNotEmpty) {
+            final List<DialogMessageEntity> currentMessages = [
+              DialogMessageEntity(
+                path: message.file!.path,
+                fileId: message.file!.id,
+                requestId: message.requestId,
+                messageType: message.messageType,
+                dialogMessageContent: message.dialogMessageContent,
+                peer: Peer(
+                  id: message.peer.id,
+                  type: message.peer.type,
+                  name: message.peer.name,
+                ),
+                id: message.id,
+              ),
+              ...state.dialogMessages
+            ];
+            emit(
+              state.copyWith(
+                dialogMessages: currentMessages,
+              ),
+            );
           } else {
             final List<DialogMessageEntity> currentMessages = [
               DialogMessageEntity(
