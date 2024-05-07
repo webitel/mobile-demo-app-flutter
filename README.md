@@ -46,10 +46,10 @@ This will run the app on the emulator
 
 add to the pubspec.yaml
 
-`webitel_portal_sdk:
-git:
-url: https://github.com/webitel/mobile-sdk-flutter.git
-ref: v1.0.0`
+`webitel_portal_sdk:`
+`git:`
+`url: https://github.com/webitel/mobile-sdk-flutter.git`
+`ref: v1.0.0`
 
 ## Usage
 
