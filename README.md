@@ -42,43 +42,52 @@ This will update all necessary packages
 
 This will run the app on the emulator
 
+### Add SDK dependency:
+
+add to the pubspec.yaml
+
+`webitel_portal_sdk:
+git:
+url: https://github.com/webitel/mobile-sdk-flutter.git
+ref: v1.0.0`
+
 ## Usage
 
-1. use **_await WebitelPortalSdk.instance.authHandler.login()_** for sign in user in portal
+1. use `await WebitelPortalSdk.instance.authHandler.login()` for sign in user in portal
 
-2. use **_await WebitelPortalSdk.instance.eventHandler.listenToMessages()_** for listening upcoming(user)/incoming(
+2. use `await WebitelPortalSdk.instance.eventHandler.listenToMessages()` for listening upcoming(user)/incoming(
    operator)
    messages
 
    listening to messages is used for listening to messages with media as well if we receive media message we call
-   **await writeToFile** to save file locally and then **_databaseProvider.saveCachedFile** to cache file info in
+   `await writeToFile` to save file locally and then `databaseProvider.saveCachedFile` to cache file info in
    Database
 
-3. **_use await WebitelPortalSdk.instance.messageHandler.sendDialogMessage()_** for sending message
+3. `use await WebitelPortalSdk.instance.messageHandler.sendDialogMessage()` for sending message
 
-4. use **_await WebitelPortalSdk.instance.chatListHandler.fetchDialogs(_**) for fetching dialogs(now we have only 1
+4. use `await WebitelPortalSdk.instance.chatListHandler.fetchDialogs()` for fetching dialogs(now we have only 1
    dialog, but it's important to fetch this one to allow SDK push info to this exact dialog)
 
-5. use **_await WebitelPortalSdk.instance.messageHandler.fetchMessages(limit: 20)_** for fetching messages, and you
+5. use `await WebitelPortalSdk.instance.messageHandler.fetchMessages(limit: 20)` for fetching messages, and you
    could
    set limit and offset for pagination(example of usage offset is still under work)
 
-6. use **_DatabaseProvider.fetchMessagesByChatId_** for fetching cached messages from Database
+6. use `DatabaseProvider.fetchMessagesByChatId` for fetching cached messages from Database
 
-7. use **_DatabaseProvider.writeMessageToDatabase_** for writing one message to Database (for example, when receiving it
+7. use `DatabaseProvider.writeMessageToDatabase` for writing one message to Database (for example, when receiving it
    from
    listenToMessages stream)
 
-8. use **_DatabaseProvider.writeMessages_** for writing latest messages to database (for example, when you fetch last
+8. use `DatabaseProvider.writeMessages` for writing latest messages to database (for example, when you fetch last
    messages
    from server to keep the cached)
 
 9. Sending Files
 
-- Use **pickFile()** from the file_picker Dart package to select a file.
+- Use `pickFile()` from the file_picker Dart package to select a file.
 - Set file name, MIME type, and bytes.
-- Pass mediaType, mediaName, mediaData to **await WebitelPortalSdk.instance.messageHandler.sendMessage()**.
-- mediaData is Stream<List<int>> from **state.selectedFile.openRead()**.
+- Pass mediaType, mediaName, mediaData to `await WebitelPortalSdk.instance.messageHandler.sendMessage()`.
+- mediaData is Stream(List) from `state.selectedFile.openRead()`.
 - MIME type is determined using the **mime** Dart package.
 
 **Chat Description**

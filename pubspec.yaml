@@ -31,7 +31,9 @@ dependencies:
   package_info_plus: ^7.0.0
   file_picker: ^8.0.2
   webitel_portal_sdk:
-    path: webitel_portal_sdk/
+    git:
+      url: https://github.com/webitel/mobile-sdk-flutter.git
+      ref: v1.0.0
 
 dev_dependencies:
   flutter_test:
