@@ -77,7 +77,7 @@ This will run the app on the emulator
 
 - Use **pickFile()** from the file_picker Dart package to select a file.
 - Set file name, MIME type, and bytes.
-- Pass mediaType, mediaName, mediaData to await WebitelPortalSdk.instance.messageHandler.sendMessage().
+- Pass mediaType, mediaName, mediaData to **await WebitelPortalSdk.instance.messageHandler.sendMessage()**.
 - mediaData is Stream<List<int>> from **state.selectedFile.openRead()**.
 - MIME type is determined using the **mime** Dart package.
 
