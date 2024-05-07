@@ -48,23 +48,34 @@ This will run the app on the emulator
    operator)
    messages
 
+   listening to messages is used for listening to messages with media as well if we receive media message we call *
+   *await
+   writeToFile** to save file locally and then **_databaseProvider.saveCachedFile** to cache file info in Database
+
 3. **_use await WebitelPortalSdk.instance.messageHandler.sendDialogMessage()_** for sending message
 
 4. use **_await WebitelPortalSdk.instance.chatListHandler.fetchDialogs(_**) for fetching dialogs(now we have only 1
-   dialog but it's important to fetch this one to allow SDK push info to this exact dialog)
+   dialog, but it's important to fetch this one to allow SDK push info to this exact dialog)
 
-5. use **_await WebitelPortalSdk.instance.messageHandler.fetchMessages(limit: 20)_** for fetching messages and you could
+5. use **_await WebitelPortalSdk.instance.messageHandler.fetchMessages(limit: 20)_** for fetching messages, and you
+   could
    set limit and offset for pagination(example of usage offset is still under work)
 
 6. use **_DatabaseProvider.fetchMessagesByChatId_** for fetching cached messages from Database
 
-7. use **_DatabaseProvider.writeMessageToDatabase_** for writing 1 message to Database(for example when receiving it
+7. use **_DatabaseProvider.writeMessageToDatabase_** for writing one message to Database (for example, when receiving it
    from
    listenToMessages stream)
 
-8. use **_DatabaseProvider.writeMessages_** for writing latest messages to databse(for example when you fetch last
+8. use **_DatabaseProvider.writeMessages_** for writing latest messages to database (for example, when you fetch last
    messages
    from server to keep the cached)
+
+9. Sending file working this way now - use **pickFile()** using file_picker Dart package, receive file info. Set file
+   name, mime type, and bytes. If we send file, we need to pass mediaType, mediaName, mediaData into **await
+   WebitelPortalSdk.instance.messageHandler.sendMessage**. Media data is **Stream<List<int>> mediaData** which we get
+   from **state.selectedFile.openRead()** in ChatBloc. Mime type is extracted using **mime** Dart package
+   using
 
 **Chat Description**
 

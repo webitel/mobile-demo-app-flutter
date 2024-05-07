@@ -136,7 +136,7 @@ class ChatServiceImpl implements ChatService {
             path: file.path,
             id: message.file.id,
             size: message.file.size,
-            bytes: [],
+            bytes: message.file.bytes,
             data: const Stream<List<int>>.empty(),
             name: message.file.name,
             type: message.file.type,
@@ -197,6 +197,10 @@ class ChatServiceImpl implements ChatService {
     String tempPath = tempDir.path;
     var filePath = '$tempPath/$name';
     return File(filePath).writeAsBytes(
-        buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
+      buffer.asUint8List(
+        data.offsetInBytes,
+        data.lengthInBytes,
+      ),
+    );
   }
 }

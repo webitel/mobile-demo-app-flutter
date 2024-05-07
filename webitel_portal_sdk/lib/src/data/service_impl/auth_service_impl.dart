@@ -1,6 +1,5 @@
 import 'package:grpc/grpc.dart';
 import 'package:injectable/injectable.dart';
-import 'package:logger/logger.dart'; // Assuming you are using a logger package
 import 'package:uuid/uuid.dart';
 import 'package:webitel_portal_sdk/src/backbone/constants.dart';
 import 'package:webitel_portal_sdk/src/backbone/logger.dart';
@@ -21,7 +20,7 @@ class AuthServiceImpl implements AuthService {
   final DatabaseProvider _databaseProvider;
   final SharedPreferencesGateway _sharedPreferencesGateway;
   final GrpcGateway _grpcGateway;
-  final Logger logger = CustomLogger.getLogger();
+  final log = CustomLogger.getLogger('AuthServiceImpl');
 
   AuthServiceImpl(
     this._databaseProvider,
@@ -36,12 +35,12 @@ class AuthServiceImpl implements AuthService {
     required String appToken,
     required String userAgent,
   }) async {
-    logger.i('Attempting to log in with base URL: $baseUrl');
+    log.info('Attempting to log in with base URL: $baseUrl');
     await _sharedPreferencesGateway.init();
     final deviceId = await getOrGenerateDeviceId();
     final userAgentString = buildUserAgent(userAgent: userAgent);
 
-    logger.i(
+    log.info(
         'Initializing GRPC connection with device ID: $deviceId and user agent: $userAgentString');
     await _grpcGateway.init(
       baseUrl: baseUrl,
@@ -65,8 +64,8 @@ class AuthServiceImpl implements AuthService {
 
     try {
       final response = await _grpcGateway.customerStub.token(request);
-      logger
-          .i('Logged in successfully, saving user ID and setting access token');
+      log.info(
+          'Logged in successfully, saving user ID and setting access token');
       await _sharedPreferencesGateway.saveUserId(response.chat.user.id);
 
       _databaseProvider.writeUser(
@@ -81,12 +80,12 @@ class AuthServiceImpl implements AuthService {
       _grpcGateway.setAccessToken(response.accessToken);
       return ResponseEntity(status: ResponseStatus.success);
     } on GrpcError catch (err) {
-      logger.e('GRPC Error during login: ${err.toString()}');
+      log.severe('GRPC Error during login: ${err.toString()}');
       return ResponseEntity(
           status: ResponseStatus.error,
           message: 'Failed to login: ${err.toString()}');
     } catch (err) {
-      logger.e('Exception during login: ${err.toString()}');
+      log.severe('Exception during login: ${err.toString()}');
       return ResponseEntity(
           status: ResponseStatus.error,
           message: 'Failed to login: ${err.toString()}');
@@ -95,14 +94,14 @@ class AuthServiceImpl implements AuthService {
 
   @override
   Future<ResponseEntity> registerDevice() async {
-    logger.i('Attempting to register device');
+    log.info('Attempting to register device');
     try {
       await _grpcGateway.customerStub
           .registerDevice(RegisterDeviceRequest(push: DevicePush()));
-      logger.i('Device registered successfully');
+      log.info('Device registered successfully');
       return ResponseEntity(status: ResponseStatus.success);
     } catch (err) {
-      logger.e('Failed to register device: ${err.toString()}');
+      log.severe('Failed to register device: ${err.toString()}');
       return ResponseEntity(
           status: ResponseStatus.error,
           message: 'Failed to register device: ${err.toString()}');
@@ -111,13 +110,13 @@ class AuthServiceImpl implements AuthService {
 
   @override
   Future<ResponseEntity> logout() async {
-    logger.i('Attempting to logout');
+    log.info('Attempting to logout');
     try {
       await _grpcGateway.customerStub.logout(LogoutRequest());
-      logger.i('Logged out successfully');
+      log.info('Logged out successfully');
       return ResponseEntity(status: ResponseStatus.success);
     } catch (err) {
-      logger.e('Failed to logout: ${err.toString()}');
+      log.severe('Failed to logout: ${err.toString()}');
       return ResponseEntity(
           status: ResponseStatus.error,
           message: 'Failed to logout: ${err.toString()}');
@@ -128,11 +127,11 @@ class AuthServiceImpl implements AuthService {
     String? savedDeviceId = await _sharedPreferencesGateway.readDeviceId();
     if (savedDeviceId == null || savedDeviceId == 'null') {
       final String deviceIdGenerated = Uuid().v4();
-      logger.i('Generating new device ID: $deviceIdGenerated');
+      log.info('Generating new device ID: $deviceIdGenerated');
       await _sharedPreferencesGateway.saveDeviceId(deviceIdGenerated);
       return deviceIdGenerated;
     }
-    logger.i('Using existing device ID: $savedDeviceId');
+    log.info('Using existing device ID: $savedDeviceId');
     return savedDeviceId;
   }
 
@@ -142,7 +141,7 @@ class AuthServiceImpl implements AuthService {
       sdkName: Constants.sdkName,
       sdkVersion: Constants.sdkVersion,
     ).build();
-    logger.i('Built user agent: $userAgentString');
+    log.info('Built user agent: $userAgentString');
     return userAgentString;
   }
 }

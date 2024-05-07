@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:grpc/grpc.dart';
 import 'package:injectable/injectable.dart';
-import 'package:logger/logger.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:webitel_portal_sdk/src/backbone/logger.dart';
 import 'package:webitel_portal_sdk/src/backbone/response_type_helper.dart';
@@ -35,7 +34,7 @@ class ConnectListenerGateway {
 
   bool connectClosed = true;
   final Lock _lock = Lock();
-  final Logger _logger = CustomLogger.getLogger();
+  final log = CustomLogger.getLogger('ConnectListenerGateway');
   ConnectionState? _connectionState;
   Timer? _timer;
 
@@ -51,44 +50,45 @@ class ConnectListenerGateway {
           _connectController
               .add(ConnectStreamStatus(status: ConnectStatus.opened));
           final responseType = ResponseTypeHelper.determineResponseType(update);
-          _logger.t('Response type: $responseType');
+          log.info('Response type: $responseType');
+
           switch (responseType) {
             case ResponseType.response:
               final decodedResponse = update.data.unpackInto(portal.Response());
               _responseStreamController.add(decodedResponse);
+              break;
             case ResponseType.updateNewMessage:
               final decodedUpdate = update.data.unpackInto(UpdateNewMessage());
               _updateStreamController.add(decodedUpdate);
-              _logger.t(
-                decodedUpdate.message.text,
-              );
+              log.info(decodedUpdate.message.text);
+              break;
             case ResponseType.error:
               final decodedResponse = update.data.unpackInto(portal.Response());
               _errorStreamController.add(ErrorEntity(
                   statusCode: decodedResponse.err.code.toString(),
                   errorMessage: decodedResponse.err.message));
+              break;
           }
         }
       } else {
-        _logger.e('_response stream is null');
+        log.warning('_response stream is null');
       }
-    } on GrpcError catch (err, stackTrace) {
-      _logger.e(err, stackTrace: stackTrace);
-      connectClosed = true;
-      _responseStream = null;
-      _connectController.add(ConnectStreamStatus(
-        status: ConnectStatus.closed,
-        errorMessage: err.toString(),
-      ));
-    } catch (err, stackTrace) {
-      _logger.e(err, stackTrace: stackTrace);
-      connectClosed = true;
-      _responseStream = null;
-      _connectController.add(ConnectStreamStatus(
-        status: ConnectStatus.closed,
-        errorMessage: err.toString(),
-      ));
+    } on GrpcError catch (err, stack) {
+      log.warning('GRPC Error: $err', err, stack);
+      handleConnectionClosure(err.toString());
+    } catch (err, stack) {
+      log.warning('Unexpected error: $err', err, stack);
+      handleConnectionClosure(err.toString());
     }
+  }
+
+  void handleConnectionClosure(String errorMessage) {
+    connectClosed = true;
+    _responseStream = null;
+    _connectController.add(ConnectStreamStatus(
+      status: ConnectStatus.closed,
+      errorMessage: errorMessage,
+    ));
   }
 
   Future<void> _connect() async {
@@ -99,10 +99,10 @@ class ConnectListenerGateway {
 
       await _responseStream?.isEmpty;
       listenToResponses();
-    } catch (err, stackTrace) {
+    } catch (err) {
       connectClosed = true;
       _responseStream = null;
-      _logger.e(err, stackTrace: stackTrace);
+      log.info(err);
     }
   }
 
@@ -115,26 +115,26 @@ class ConnectListenerGateway {
       data: Any.pack(echo),
     );
     _requestStreamController.add(request);
-    _logger.t('Request added: ${request.path}');
+    log.info('Request added: ${request.path}');
   }
 
   Future<void> sendRequest(portal.Request request) async {
-    _logger.i('Staring sending request...');
+    log.info('Staring sending request...');
     if (connectClosed == true && _responseStream == null) {
-      _logger.i(
+      log.warning(
           'Connection state is not ready or connection is closed. Attempting to reconnect...');
       await reconnect();
     }
     _requestStreamController.add(request);
-    _logger.t('Request added: ${request.path}');
+    log.info('Request added: ${request.path}');
   }
 
   Future<void> reconnect() async {
     if (_connectionState == ConnectionState.shutdown) {
-      _logger.t('Current connection state: $_connectionState');
+      log.info('Current connection state: $_connectionState');
       final user = await _databaseProvider.readUser();
       await _grpcGateway.setAccessToken(user.accessToken);
-      _logger.t('Re-init gRPC Channel');
+      log.info('Re-init gRPC Channel');
     }
     await _lock.synchronized(() async {
       _timer = Timer.periodic(Duration(seconds: 1), (timer) async {
@@ -142,7 +142,7 @@ class ConnectListenerGateway {
       });
       await _connect();
       _timer?.cancel();
-      _logger.t('Connected to gRPC Stream');
+      log.info('Connected to gRPC Stream');
     });
   }
 
@@ -150,10 +150,10 @@ class ConnectListenerGateway {
     _grpcGateway.stateStream.stream.listen((state) async {
       if (state == ConnectionState.shutdown) {
         handleStreamCleanup();
-        _logger.i('Response stream canceled due to $state');
+        log.warning('Response stream canceled due to $state');
       } else if (state == ConnectionState.transientFailure) {
         handleStreamCleanup();
-        _logger.i('Response stream canceled due to $state');
+        log.warning('Response stream canceled due to $state');
       }
       _connectionState = state;
     });

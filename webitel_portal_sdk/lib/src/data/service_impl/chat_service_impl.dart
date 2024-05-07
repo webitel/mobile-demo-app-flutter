@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:grpc/grpc.dart';
 import 'package:grpc/grpc_or_grpcweb.dart';
 import 'package:injectable/injectable.dart';
-import 'package:logger/logger.dart';
 import 'package:uuid/uuid.dart';
 import 'package:webitel_portal_sdk/src/backbone/logger.dart';
 import 'package:webitel_portal_sdk/src/backbone/message_helper.dart';
@@ -37,7 +36,7 @@ class ChatServiceImpl implements ChatService {
   late final StreamController<DialogMessageResponseEntity>
       _userMessagesController;
   final uuid = Uuid();
-  Logger logger = CustomLogger.getLogger();
+  final log = CustomLogger.getLogger('ChatServiceImpl');
 
   ChatServiceImpl(
     this._grpcGateway,
@@ -46,7 +45,7 @@ class ChatServiceImpl implements ChatService {
   ) {
     _userMessagesController =
         StreamController<DialogMessageResponseEntity>.broadcast();
-    logger.i("Chat service initialized with broadcast stream controller.");
+    log.info("Chat service initialized with broadcast stream controller.");
   }
 
   /// Stream transformer that converts a stream of data chunks into a stream of UploadMedia messages.
@@ -72,10 +71,10 @@ class ChatServiceImpl implements ChatService {
     final userId = await _sharedPreferencesGateway.readUserId();
     _connectListenerGateway.updateStream.listen((update) async {
       final messageType = MessageHelper.determineMessageTypeResponse(update);
-      logger.i("Received message update of type: $messageType");
+      log.info("Received message update of type: $messageType");
       switch (messageType) {
         case MessageType.outcomingMedia:
-          logger.i(
+          log.info(
               "Processing ${messageType.toString()} message: ${update.message.text}");
           final dialogMessage = ResponseDialogMessageBuilder()
               .setDialogMessageContent(update.message.text)
@@ -100,7 +99,7 @@ class ChatServiceImpl implements ChatService {
           _userMessagesController.add(dialogMessage);
 
         case MessageType.outcomingMessage:
-          logger.i(
+          log.info(
               "Processing ${messageType.toString()} message: ${update.message.text}");
           final dialogMessage = ResponseDialogMessageBuilder()
               .setDialogMessageContent(update.message.text)
@@ -124,7 +123,7 @@ class ChatServiceImpl implements ChatService {
           _userMessagesController.add(dialogMessage);
 
         case MessageType.incomingMedia:
-          logger.i(
+          log.info(
               "Processing ${messageType.toString()} message: ${update.message.text}");
           final media = _grpcGateway.mediaStorageStub
               .getFile(GetFileRequest(fileId: update.message.file.id));
@@ -168,7 +167,7 @@ class ChatServiceImpl implements ChatService {
           _userMessagesController.add(dialogMessage);
 
         case MessageType.incomingMessage:
-          logger.i(
+          log.info(
               "Processing ${messageType.toString()} message: ${update.message.text}");
 
           final dialogMessage = ResponseDialogMessageBuilder()
@@ -193,9 +192,9 @@ class ChatServiceImpl implements ChatService {
           _userMessagesController.add(dialogMessage);
       }
     }, onError: (error) {
-      logger.e("Error while listening to messages: $error");
+      log.severe("Error while listening to messages: $error");
     }, onDone: () {
-      logger.e("Error while listening to messages: stream is done");
+      log.severe("Error while listening to messages: stream is done");
     });
     return _userMessagesController;
   }
@@ -207,20 +206,20 @@ class ChatServiceImpl implements ChatService {
     try {
       final userId = await _sharedPreferencesGateway.readUserId();
       final messageType = MessageHelper.determineMessageTypeRequest(message);
-      logger.i("Sending message of type $messageType for user $userId");
+      log.info("Sending message of type $messageType for user $userId");
       final request = await _buildRequest(message, userId ?? '', messageType);
 
       _connectListenerGateway.sendRequest(request);
       return await _listenForResponse(message.requestId, userId ?? '')
           .timeout(const Duration(seconds: 5));
     } on GrpcError catch (err) {
-      logger.e("GRPC Error on sendMessage: ${err.toString()}");
+      log.severe("GRPC Error on sendMessage: ${err.toString()}");
       return ErrorDialogMessageBuilder()
           .setDialogMessageContent(err.toString())
           .setRequestId(message.requestId)
           .build();
     } on TimeoutException {
-      logger.e("Timeout exception on sendMessage");
+      log.warning("Timeout exception on sendMessage");
       return ErrorDialogMessageBuilder()
           .setDialogMessageContent('Message was not sent due to timeout')
           .setRequestId(message.requestId)
@@ -251,7 +250,7 @@ class ChatServiceImpl implements ChatService {
 
       switch (messageType) {
         case MessageType.outcomingMessage:
-          logger.i("Handled response for message type $messageType");
+          log.info("Handled response for message type $messageType");
           final dialogMessage = ResponseDialogMessageBuilder()
               .setDialogMessageContent(unpackedMessage.message.text)
               .setRequestId(unpackedMessage.id)
@@ -265,7 +264,7 @@ class ChatServiceImpl implements ChatService {
           break;
 
         case MessageType.outcomingMedia:
-          logger.i("Handled response for message type $messageType");
+          log.info("Handled response for message type $messageType");
           final dialogMessage = ResponseDialogMessageBuilder()
               .setDialogMessageContent(unpackedMessage.message.text)
               .setId(unpackedMessage.id)
@@ -302,7 +301,7 @@ class ChatServiceImpl implements ChatService {
       Completer<DialogMessageResponseEntity> completer, String requestId) {
     final errorMessage =
         error is GrpcError ? error.toString() : 'Unknown error occurred';
-    logger.e("Error on handling message response: $errorMessage");
+    log.severe("Error on handling message response: $errorMessage");
     completer.complete(ErrorDialogMessageBuilder()
         .setDialogMessageContent(errorMessage)
         .setRequestId(requestId)
@@ -311,14 +310,14 @@ class ChatServiceImpl implements ChatService {
 
   Future<portal.Request> _buildRequest(DialogMessageRequestEntity message,
       String userId, MessageType messageType) async {
-    logger.i("Building request for message type $messageType");
+    log.info("Building request for message type $messageType");
     final peer = Peer(
         id: message.peer.id, type: message.peer.type, name: message.peer.name);
     final baseRequest =
         SendMessageRequest(text: message.dialogMessageContent, peer: peer);
 
     if (messageType == MessageType.outcomingMedia) {
-      logger.i("Uploading media for message.");
+      log.info("Uploading media for message.");
       final uploadedFile = await _grpcGateway.mediaStorageStub.uploadFile(
         stream(
           data: message.file.data,
@@ -347,8 +346,8 @@ class ChatServiceImpl implements ChatService {
     final chatId = await _sharedPreferencesGateway.getFromDisk('chatId');
     final userId = await _sharedPreferencesGateway.readUserId();
     final requestId = uuid.v4();
-    logger
-        .i('Fetching messages for chatId: $chatId with limit: ${limit ?? 20}');
+    log.info(
+        'Fetching messages for chatId: $chatId with limit: ${limit ?? 20}');
 
     final fetchMessagesRequest =
         ChatMessagesRequest(chatId: chatId, limit: limit ?? 20);
@@ -373,22 +372,20 @@ class ChatServiceImpl implements ChatService {
             .setPeers(unpackedDialogMessages.peers);
 
         final messages = messagesBuilder.build();
-        logger.i(
+        log.info(
             'Successfully fetched ${messages.length} messages for chatId: $chatId');
         return messages;
       } else {
-        logger.e('Failed to unpack dialog messages for requestId: $requestId');
+        log.severe(
+            'Failed to unpack dialog messages for requestId: $requestId');
         return [];
       }
-    } catch (e, stackTrace) {
+    } catch (e) {
       if (e is TimeoutException) {
-        logger.e('Timeout while fetching messages for chatId: $chatId',
-            error: e, stackTrace: stackTrace);
+        log.severe('Timeout while fetching messages for chatId: $chatId');
       } else {
-        logger.e(
-            'An error occurred while fetching messages for chatId: $chatId',
-            error: e,
-            stackTrace: stackTrace);
+        log.severe(
+            'An error occurred while fetching messages for chatId: $chatId');
       }
       return [];
     }
@@ -401,7 +398,7 @@ class ChatServiceImpl implements ChatService {
     final chatId = await _sharedPreferencesGateway.getFromDisk('chatId');
     final userId = await _sharedPreferencesGateway.readUserId();
     final requestId = uuid.v4();
-    logger.i(
+    log.info(
         'Fetching message updates for chatId: $chatId with limit: ${limit ?? 20}');
 
     final fetchMessageUpdatesRequest =
@@ -427,22 +424,21 @@ class ChatServiceImpl implements ChatService {
             .setPeers(unpackedDialogMessages.peers);
 
         final messages = messagesBuilder.build();
-        logger.i(
+        log.info(
             'Successfully fetched ${messages.length} message updates for chatId: $chatId');
         return messages;
       } else {
-        logger.e('Failed to unpack dialog messages for requestId: $requestId');
+        log.severe(
+            'Failed to unpack dialog messages for requestId: $requestId');
         return [];
       }
-    } catch (e, stackTrace) {
+    } catch (e) {
       if (e is TimeoutException) {
-        logger.e('Timeout while fetching message updates for chatId: $chatId',
-            error: e, stackTrace: stackTrace);
+        log.severe(
+            'Timeout while fetching message updates for chatId: $chatId');
       } else {
-        logger.e(
-            'An error occurred while fetching message updates for chatId: $chatId',
-            error: e,
-            stackTrace: stackTrace);
+        log.severe(
+            'An error occurred while fetching message updates for chatId: $chatId');
       }
       return [];
     }

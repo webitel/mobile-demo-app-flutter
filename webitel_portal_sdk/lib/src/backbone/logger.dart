@@ -1,16 +1,16 @@
-import 'package:logger/logger.dart';
+import 'package:logging/logging.dart';
 
 class CustomLogger {
-  static Logger getLogger() {
-    return Logger(
-      printer: PrettyPrinter(
-        methodCount: 2,
-        errorMethodCount: 8,
-        lineLength: 120,
-        colors: true,
-        printEmojis: true,
-        printTime: true,
-      ),
-    );
+  static void initialize() {
+    Logger.root.level = Level.ALL;
+    Logger.root.onRecord.listen((record) {
+      print(
+        '${record.level.name}: ${record.time}: ${record.loggerName}: ${record.message}: ${record.stackTrace}',
+      );
+    });
+  }
+
+  static Logger getLogger(String className) {
+    return Logger(className);
   }
 }

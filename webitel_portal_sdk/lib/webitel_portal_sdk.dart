@@ -1,3 +1,4 @@
+import 'package:webitel_portal_sdk/src/backbone/logger.dart';
 import 'package:webitel_portal_sdk/src/communication/auth_handler.dart';
 import 'package:webitel_portal_sdk/src/communication/chat_list_handler.dart';
 import 'package:webitel_portal_sdk/src/communication/message_handler.dart';
@@ -27,6 +28,7 @@ class WebitelPortalSdk {
 
   Future<void> _initDi() async {
     configureDependencies();
+    CustomLogger.initialize();
   }
 
   PortalHandler get portalHandler => _portalHandler;
