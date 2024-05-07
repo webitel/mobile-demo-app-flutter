@@ -48,9 +48,9 @@ This will run the app on the emulator
    operator)
    messages
 
-   listening to messages is used for listening to messages with media as well if we receive media message we call *
-   *await
-   writeToFile** to save file locally and then **_databaseProvider.saveCachedFile** to cache file info in Database
+   listening to messages is used for listening to messages with media as well if we receive media message we call
+   **await writeToFile** to save file locally and then **_databaseProvider.saveCachedFile** to cache file info in
+   Database
 
 3. **_use await WebitelPortalSdk.instance.messageHandler.sendDialogMessage()_** for sending message
 
