@@ -18,6 +18,8 @@ List the key features and functionalities of your project:
 
 - Feature 3: [Fetch messages/updates]
 
+- Feature 4: [Send/Receive files]
+
 ### Clone the Repository
 
 1. Open your terminal or command prompt.
@@ -71,11 +73,13 @@ This will run the app on the emulator
    messages
    from server to keep the cached)
 
-9. Sending file working this way now - use **pickFile()** using file_picker Dart package, receive file info. Set file
-   name, mime type, and bytes. If we send file, we need to pass mediaType, mediaName, mediaData into **await
-   WebitelPortalSdk.instance.messageHandler.sendMessage**. Media data is **Stream<List<int>> mediaData** which we get
-   from **state.selectedFile.openRead()** in ChatBloc. Mime type is extracted using **mime** Dart package
-   using
+9. Sending Files
+
+- Use **pickFile()** from the file_picker Dart package to select a file.
+- Set file name, MIME type, and bytes.
+- Pass mediaType, mediaName, mediaData to await WebitelPortalSdk.instance.messageHandler.sendMessage().
+- mediaData is Stream<List<int>> from **state.selectedFile.openRead()**.
+- MIME type is determined using the **mime** Dart package.
 
 **Chat Description**
 
