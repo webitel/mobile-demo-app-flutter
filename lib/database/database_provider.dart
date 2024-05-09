@@ -36,9 +36,6 @@ class DatabaseProvider {
         messageId TEXT PRIMARY KEY,
         messageType TEXT,
         dialogMessageContent TEXT,
-        peerId TEXT,
-        peerType TEXT,
-        peerName TEXT,
         requestId TEXT,
         id TEXT,
         messageStatus TEXT,
@@ -64,10 +61,10 @@ class DatabaseProvider {
     );
   }
 
-  Future<void> writeMessages() async {
+  Future<void> writeMessages(Dialog dialog) async {
     // Fetch messages from the server
-    final messagesFromServer =
-        await WebitelPortalSdk.instance.messageHandler.fetchMessages(limit: 20);
+
+    final messagesFromServer = await dialog.fetchMessages(limit: 20);
 
     if (messagesFromServer.isEmpty) return;
 
@@ -101,9 +98,6 @@ class DatabaseProvider {
             'messageId': message.messageId,
             'messageType': message.sender!.name,
             'dialogMessageContent': message.dialogMessageContent,
-            'peerId': message.peer.id,
-            'peerType': message.peer.type,
-            'peerName': message.peer.name,
             'requestId': message.requestId,
             'messageStatus': 'Success',
             'timestamp': DateTime.now().millisecondsSinceEpoch,
@@ -131,7 +125,6 @@ class DatabaseProvider {
                 ? MessageType.operator
                 : MessageType.user,
             dialogMessageContent: message['dialogMessageContent'],
-            peer: Peer(id: '', type: '', name: ''),
             requestId: message['requestId'],
             file: MediaFileEntity(
               path: message['path'],

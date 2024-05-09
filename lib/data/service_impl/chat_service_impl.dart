@@ -35,15 +35,12 @@ class ChatServiceImpl implements ChatService {
   @override
   Future<ResponseEntity> sendDialogMessage({
     required DialogMessageEntity dialogMessageEntity,
+    required Dialog dialog,
   }) async {
     if (dialogMessageEntity.file != null) {
-      final message =
-          await WebitelPortalSdk.instance.messageHandler.sendMessage(
+      final message = await dialog.sendMessage(
         dialogMessageContent: dialogMessageEntity.dialogMessageContent,
         requestId: dialogMessageEntity.requestId,
-        peerType: dialogMessageEntity.peer.type,
-        peerName: dialogMessageEntity.peer.name,
-        peerId: dialogMessageEntity.peer.id,
         mediaType: dialogMessageEntity.file!.type,
         mediaName: dialogMessageEntity.file!.name,
         mediaData: dialogMessageEntity.file!.data,
@@ -63,13 +60,9 @@ class ChatServiceImpl implements ChatService {
         message: message.dialogMessageContent,
       );
     } else if (dialogMessageEntity.file == null) {
-      final message =
-          await WebitelPortalSdk.instance.messageHandler.sendMessage(
+      final message = await dialog.sendMessage(
         dialogMessageContent: dialogMessageEntity.dialogMessageContent,
         requestId: dialogMessageEntity.requestId,
-        peerType: dialogMessageEntity.peer.type,
-        peerName: dialogMessageEntity.peer.name,
-        peerId: dialogMessageEntity.peer.id,
         messageType: 'message',
         mediaType: '',
         mediaName: '',
@@ -85,17 +78,16 @@ class ChatServiceImpl implements ChatService {
   }
 
   @override
-  Future<List<DialogMessageEntity>> fetchMessages() async {
-    await WebitelPortalSdk.instance.chatListHandler.fetchDialogs();
-    //Checking if messages from server is not empty, if empty - load last cached messages in database
+  Future<List<DialogMessageEntity>> fetchMessages({
+    required Dialog dialog,
+  }) async {
+    final messagesFromServer = await dialog.fetchMessages(limit: 20);
 
-    final messagesFromServer =
-        await WebitelPortalSdk.instance.messageHandler.fetchMessages(limit: 20);
     if (messagesFromServer.isNotEmpty) {
       // if is not empty, clear last cached messages and write new ones
 
       await _databaseProvider.clear();
-      await _databaseProvider.writeMessages();
+      await _databaseProvider.writeMessages(dialog);
       // fetch messages by chatId(for now have only one chat)
 
       final fetchedMessages =
@@ -108,14 +100,13 @@ class ChatServiceImpl implements ChatService {
   }
 
   @override
-  Future<Stream<DialogMessageEntity>> listenToMessages() async {
+  Future<Stream<DialogMessageEntity>> listenToMessages({
+    required Dialog dialog,
+  }) async {
     // this is messages stream for all user/operator messages
-    final messagesStream =
-        await WebitelPortalSdk.instance.messageHandler.listenToMessages();
 
     final messagesStreamController = StreamController<DialogMessageEntity>();
-
-    messagesStream.stream.listen((message) async {
+    dialog.onNewMessage.listen((message) async {
       if (message.file.bytes.isNotEmpty) {
         ByteData byteData =
             ByteData.sublistView(Uint8List.fromList(message.file.bytes));
@@ -144,7 +135,6 @@ class ChatServiceImpl implements ChatService {
           ),
           id: message.id,
           dialogMessageContent: message.dialogMessageContent,
-          peer: Peer(id: '', type: '', name: ''),
           requestId: '',
           messageType: message.sender!.name == 'user'
               ? MessageType.user
@@ -170,7 +160,6 @@ class ChatServiceImpl implements ChatService {
           ),
           id: message.id,
           dialogMessageContent: message.dialogMessageContent,
-          peer: Peer(id: '', type: '', name: ''),
           requestId: '',
           messageType: message.sender!.name == 'user'
               ? MessageType.user

@@ -24,7 +24,7 @@ class AuthServiceImpl implements AuthService {
     if (Platform.isAndroid) {
       final userAgentString =
           '${packageInfo.appName}/${packageInfo.version} (${uaData.platform} ${uaData.platformVersion}; ${uaData.model}; ${uaData.device}; ${uaData.architecture})';
-      final res = await WebitelPortalSdk.instance.authHandler.login(
+      final res = await WebitelPortalSdk.instance.login(
         appToken: appToken,
         baseUrl: baseUrl,
         clientToken: clientToken,
@@ -39,7 +39,7 @@ class AuthServiceImpl implements AuthService {
     } else if (Platform.isIOS) {
       final userAgentString =
           '${packageInfo.appName}/${packageInfo.version} (${uaData.platform} ${uaData.platformVersion}; ${uaData.model}; ${uaData.device}; ${uaData.architecture})';
-      final res = await WebitelPortalSdk.instance.authHandler.login(
+      final res = await WebitelPortalSdk.instance.login(
         appToken: appToken,
         baseUrl: baseUrl,
         clientToken: clientToken,

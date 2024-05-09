@@ -5,28 +5,18 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:mime/mime.dart';
+import 'package:webitel_portal_sdk/webitel_portal_sdk.dart';
 import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 import 'package:webitel_sdk/domain/entity/media_file.dart';
-import 'package:webitel_sdk/domain/usecase/chat/fetch_messages_usecase.dart';
-import 'package:webitel_sdk/domain/usecase/chat/listen_to_messages_usecase.dart';
-import 'package:webitel_sdk/domain/usecase/chat/pick_file_usecase.dart';
-import 'package:webitel_sdk/domain/usecase/chat/send_dialog_message_usecase.dart';
+import 'package:webitel_sdk/domain/service/chat_service.dart';
 
 part 'chat_event.dart';
 part 'chat_state.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
-  final PickFileUseCase _pickFileUseCase;
-  final ListenToMessagesUseCase _listenToMessagesUseCase;
-  final FetchMessagesUseCase _fetchMessagesUseCase;
-  final SendDialogMessageUseCase _sendDialogMessageUseCase;
+  late final ChatService chatService;
 
-  ChatBloc(
-    this._pickFileUseCase,
-    this._listenToMessagesUseCase,
-    this._fetchMessagesUseCase,
-    this._sendDialogMessageUseCase,
-  ) : super(ChatState.initial()) {
+  ChatBloc(this.chatService) : super(ChatState.initial()) {
     on<ClearImageFromStateEvent>(
       (event, emit) async {
         emit(
@@ -36,9 +26,20 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         );
       },
     );
+    on<FetchDialogs>(
+      (event, emit) async {
+        final serviceDialog =
+            await WebitelPortalSdk.instance.chatHandler.fetchServiceDialog();
+        emit(state.copyWith(dialog: serviceDialog));
+        if (serviceDialog.id.isNotEmpty) {
+          add(ListenToMessages());
+          add(FetchMessages());
+        }
+      },
+    );
     on<UploadMediaEvent>(
       (event, emit) async {
-        final file = await _pickFileUseCase();
+        final file = await chatService.pickFile();
 
         if (file != null) {
           emit(
@@ -80,12 +81,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
               'application/octet-stream';
           String fileName = state.selectedFile.path.split('/').last;
           String path = state.selectedFile.path;
-          await _sendDialogMessageUseCase(
+          await chatService.sendDialogMessage(
             dialogMessageEntity: DialogMessageEntity(
               requestId: event.dialogMessageEntity.requestId,
               dialogMessageContent:
                   event.dialogMessageEntity.dialogMessageContent,
-              peer: Peer(id: '', type: 'chat', name: ''),
               file: MediaFileEntity(
                 id: '',
                 size: 0,
@@ -99,21 +99,18 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
               ),
               id: '',
             ),
+            dialog: state.dialog!,
           );
           add(ClearImageFromStateEvent());
         } else {
-          await _sendDialogMessageUseCase(
+          await chatService.sendDialogMessage(
             dialogMessageEntity: DialogMessageEntity(
               requestId: event.dialogMessageEntity.requestId,
               dialogMessageContent:
                   event.dialogMessageEntity.dialogMessageContent,
-              peer: Peer(
-                id: '',
-                type: 'chat',
-                name: '',
-              ),
               id: '',
             ),
+            dialog: state.dialog!,
           );
           add(ClearImageFromStateEvent());
         }
@@ -122,15 +119,19 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     on<FetchMessages>(
       (event, emit) async {
-        final messages = await _fetchMessagesUseCase();
+        final messages = await chatService.fetchMessages(
+          dialog: state.dialog!,
+        );
         emit(state.copyWith(dialogMessages: messages));
       },
     );
     on<ListenToMessages>(
       (event, emit) async {
-        final messagesStream = await _listenToMessagesUseCase();
+        final messagesStream = await chatService.listenToMessages(
+          dialog: state.dialog!,
+        );
         await emit.onEach(messagesStream, onData: (message) {
-          if (message.file != null) {
+          if (message.file!.name.isNotEmpty) {
             add(FetchMessages());
           } else if (message.file != null && message.file!.path.isNotEmpty) {
             final List<DialogMessageEntity> currentMessages = [
@@ -140,11 +141,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
                 requestId: message.requestId,
                 messageType: message.messageType,
                 dialogMessageContent: message.dialogMessageContent,
-                peer: Peer(
-                  id: message.peer.id,
-                  type: message.peer.type,
-                  name: message.peer.name,
-                ),
                 id: message.id,
               ),
               ...state.dialogMessages
@@ -160,11 +156,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
                 requestId: message.requestId,
                 messageType: message.messageType,
                 dialogMessageContent: message.dialogMessageContent,
-                peer: Peer(
-                  id: message.peer.id,
-                  type: message.peer.type,
-                  name: message.peer.name,
-                ),
                 id: message.id,
               ),
               ...state.dialogMessages

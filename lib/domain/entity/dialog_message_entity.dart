@@ -11,7 +11,7 @@ class DialogMessageEntity {
   final String? fileType;
   final String? path;
   final String dialogMessageContent;
-  final Peer peer;
+
   final MessageType? messageType;
   final MessageStatus? messageStatus;
   final String requestId;
@@ -29,7 +29,6 @@ class DialogMessageEntity {
     this.messageStatus,
     required this.id,
     required this.dialogMessageContent,
-    required this.peer,
     required this.requestId,
   });
 
@@ -50,11 +49,6 @@ class DialogMessageEntity {
               .firstWhere((status) => status.toString() == map['messageStatus'])
           : null,
       dialogMessageContent: map['dialogMessageContent'],
-      peer: Peer(
-        id: map['peerId'],
-        type: map['peerType'],
-        name: map['peerName'],
-      ),
       requestId: map['requestId'],
     );
   }
@@ -70,23 +64,8 @@ class DialogMessageEntity {
       'messageType': messageType?.toString(),
       'messageStatus': messageStatus?.toString(),
       'dialogMessageContent': dialogMessageContent,
-      'peerId': peer.id,
-      'peerType': peer.type,
-      'peerName': peer.name,
       'requestId': requestId,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
   }
-}
-
-class Peer {
-  final String id;
-  final String type;
-  final String name;
-
-  Peer({
-    required this.id,
-    required this.type,
-    required this.name,
-  });
 }

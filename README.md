@@ -53,9 +53,11 @@ add to the pubspec.yaml
 
 ## Usage
 
-1. use `await WebitelPortalSdk.instance.authHandler.login()` for sign in user in portal
+1. use `await WebitelPortalSdk.instance.login()` for sign in user in portal
 
-2. use `await WebitelPortalSdk.instance.eventHandler.listenToMessages()` for listening upcoming(user)/incoming(
+2. use `final dialog = await WebitelPortalSdk.instance.fetchServiceDialog()` for fetching service dialog
+
+3. use `await dialog.listenToMessages()` for listening upcoming(user)/incoming(
    operator)
    messages
 
@@ -63,12 +65,9 @@ add to the pubspec.yaml
    `await writeToFile` to save file locally and then `databaseProvider.saveCachedFile` to cache file info in
    Database
 
-3. `use await WebitelPortalSdk.instance.messageHandler.sendDialogMessage()` for sending message
+4. `use await dialog.sendDialogMessage()` for sending message
 
-4. use `await WebitelPortalSdk.instance.chatListHandler.fetchDialogs()` for fetching dialogs(now we have only 1
-   dialog, but it's important to fetch this one to allow SDK push info to this exact dialog)
-
-5. use `await WebitelPortalSdk.instance.messageHandler.fetchMessages(limit: 20)` for fetching messages, and you
+5. use `await dialog.fetchMessages(limit: 20)` for fetching messages, and you
    could
    set limit and offset for pagination(example of usage offset is still under work)
 
@@ -86,7 +85,7 @@ add to the pubspec.yaml
 
 - Use `pickFile()` from the file_picker Dart package to select a file.
 - Set file name, MIME type, and bytes.
-- Pass mediaType, mediaName, mediaData to `await WebitelPortalSdk.instance.messageHandler.sendMessage()`.
+- Pass mediaType, mediaName, mediaData to `await dialog.sendMessage()`.
 - mediaData is Stream(List) from `state.selectedFile.openRead()`.
 - MIME type is determined using the **mime** Dart package.
 
