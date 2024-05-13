@@ -5,13 +5,12 @@ enum MessageType { error, user, operator }
 enum MessageStatus { loading, error, sent }
 
 class DialogMessageEntity {
-  final String id;
+  final int id;
   final String? fileName;
   final String? fileId;
   final String? fileType;
   final String? path;
   final String dialogMessageContent;
-
   final MessageType? messageType;
   final MessageStatus? messageStatus;
   final String requestId;

@@ -12,13 +12,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc(this.authService) : super(AuthState.initial()) {
     on<LoginEvent>((event, emit) async {
       emit(state.copyWith(authStatus: AuthStatus.loading));
-      final res = await authService.login(
-        appToken:
-            '49sFBWUGEtlHz7iTWjIXIgRGnZXQ4dQZOy7fdM8AyffZ3oEQzNC5Noa6Aeem6BAw',
-        clientToken:
-            '49sFBWUGEtlHz7iTWjIXIgRGnZXQ4dQZOy7fdM8AyffZ3oEQzNC5Noa6Aeem6BAw',
-        baseUrl: 'dev.webitel.com',
-      );
+      final res = await authService.login();
       if (res.status == ResponseStatus.success) {
         emit(state.copyWith(authStatus: AuthStatus.success));
       } else {

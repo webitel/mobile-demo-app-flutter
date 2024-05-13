@@ -78,6 +78,39 @@ class ChatServiceImpl implements ChatService {
   }
 
   @override
+  Future<List<DialogMessageEntity>> fetchPaginationMessages(
+      {required Dialog dialog, required int limit, required int offset}) async {
+    List<DialogMessageEntity> paginationMessages = [];
+    final messagesFromServer =
+        await dialog.fetchMessages(limit: limit, offset: offset);
+
+    for (var message in messagesFromServer) {
+      paginationMessages.add(
+        DialogMessageEntity(
+          id: message.id,
+          messageStatus: MessageStatus.sent,
+          messageType: message.sender!.name == 'operator'
+              ? MessageType.operator
+              : MessageType.user,
+          dialogMessageContent: message.dialogMessageContent,
+          requestId: message.requestId,
+          file: MediaFileEntity(
+            path: '',
+            id: message.file.id,
+            size: 0,
+            bytes: [],
+            data: const Stream<List<int>>.empty(),
+            name: message.file.name,
+            type: message.file.type,
+            requestId: message.requestId,
+          ),
+        ),
+      );
+    }
+    return paginationMessages;
+  }
+
+  @override
   Future<List<DialogMessageEntity>> fetchMessages({
     required Dialog dialog,
   }) async {

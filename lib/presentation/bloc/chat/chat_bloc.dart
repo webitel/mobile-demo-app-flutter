@@ -26,6 +26,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         );
       },
     );
+
     on<FetchDialogs>(
       (event, emit) async {
         final serviceDialog =
@@ -97,7 +98,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
                 type: mimeType,
                 requestId: event.dialogMessageEntity.requestId,
               ),
-              id: '',
+              id: 0,
             ),
             dialog: state.dialog!,
           );
@@ -108,7 +109,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
               requestId: event.dialogMessageEntity.requestId,
               dialogMessageContent:
                   event.dialogMessageEntity.dialogMessageContent,
-              id: '',
+              id: 0,
             ),
             dialog: state.dialog!,
           );
@@ -122,7 +123,29 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         final messages = await chatService.fetchMessages(
           dialog: state.dialog!,
         );
-        emit(state.copyWith(dialogMessages: messages));
+        emit(
+          state.copyWith(
+            dialogMessages: messages,
+          ),
+        );
+      },
+    );
+    on<FetchPaginationMessages>(
+      (event, emit) async {
+        final paginationMessages = await chatService.fetchPaginationMessages(
+          dialog: state.dialog!,
+          limit: 20,
+          offset: state.dialogMessages.last.id,
+        );
+        final updatedMessages = [
+          ...state.dialogMessages,
+          ...paginationMessages,
+        ];
+        emit(
+          state.copyWith(
+            dialogMessages: updatedMessages,
+          ),
+        );
       },
     );
     on<ListenToMessages>(

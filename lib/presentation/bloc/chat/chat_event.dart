@@ -14,6 +14,8 @@ class ListenToMessages extends ChatEvent {}
 
 class FetchMessages extends ChatEvent {}
 
+class FetchPaginationMessages extends ChatEvent {}
+
 class UploadMediaEvent extends ChatEvent {}
 
 class ClearImageFromStateEvent extends ChatEvent {}

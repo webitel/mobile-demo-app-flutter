@@ -37,7 +37,7 @@ class DatabaseProvider {
         messageType TEXT,
         dialogMessageContent TEXT,
         requestId TEXT,
-        id TEXT,
+        id INTEGER,
         messageStatus TEXT,
         timestamp INTEGER
       )''');

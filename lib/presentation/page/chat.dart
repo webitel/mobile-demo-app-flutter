@@ -112,7 +112,7 @@ class _ChatPageState extends State<ChatPage> {
                                       SendDialogMessageEvent(
                                         dialogMessageEntity:
                                             DialogMessageEntity(
-                                          id: '',
+                                          id: 0,
                                           requestId: uuid.v4(),
                                           dialogMessageContent: messageContent,
                                         ),

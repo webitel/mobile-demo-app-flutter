@@ -19,5 +19,11 @@ abstract interface class ChatService {
     required Dialog dialog,
   });
 
+  Future<List<DialogMessageEntity>> fetchPaginationMessages({
+    required Dialog dialog,
+    required int limit,
+    required int offset,
+  });
+
   Future<File?> pickFile();
 }

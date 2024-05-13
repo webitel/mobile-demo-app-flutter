@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:ua_client_hints/ua_client_hints.dart';
 import 'package:webitel_portal_sdk/webitel_portal_sdk.dart';
@@ -13,45 +11,31 @@ class AuthServiceImpl implements AuthService {
   AuthServiceImpl(this._sharedPreferencesGateway);
 
   @override
-  Future<ResponseEntity> login({
-    required String appToken,
-    required String baseUrl,
-    required String clientToken,
-  }) async {
+  Future<ResponseEntity> login() async {
     await _sharedPreferencesGateway.init();
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     final uaData = await userAgentData();
-    if (Platform.isAndroid) {
-      final userAgentString =
-          '${packageInfo.appName}/${packageInfo.version} (${uaData.platform} ${uaData.platformVersion}; ${uaData.model}; ${uaData.device}; ${uaData.architecture})';
-      final res = await WebitelPortalSdk.instance.login(
-        appToken: appToken,
-        baseUrl: baseUrl,
-        clientToken: clientToken,
-        userAgent: userAgentString,
-      );
-      return ResponseEntity(
-        status: res.status.name == 'success'
-            ? ResponseStatus.success
-            : ResponseStatus.error,
-        message: res.message,
-      );
-    } else if (Platform.isIOS) {
-      final userAgentString =
-          '${packageInfo.appName}/${packageInfo.version} (${uaData.platform} ${uaData.platformVersion}; ${uaData.model}; ${uaData.device}; ${uaData.architecture})';
-      final res = await WebitelPortalSdk.instance.login(
-        appToken: appToken,
-        baseUrl: baseUrl,
-        clientToken: clientToken,
-        userAgent: userAgentString,
-      );
-      return ResponseEntity(
-        status: res.status.name == 'success'
-            ? ResponseStatus.success
-            : ResponseStatus.error,
-        message: res.message,
-      );
-    }
+    final res = await WebitelPortalSdk.instance.login(
+      appToken:
+          'CLboLLKNTa5EP53ySLL0D_eDufMb1LW_LnfhoPb1HAe8xlvgqQW5xpftqfWUmLQt',
+      url: 'grpcs://test.webitel.me:443',
+      appName: packageInfo.appName,
+      appVersion: packageInfo.version,
+      platform: uaData.platform,
+      platformVersion: uaData.platformVersion,
+      model: uaData.model,
+      device: uaData.device,
+      architecture: uaData.architecture,
+      name: 'Test name',
+      sub: 'Sub 1',
+      issuer: 'https://paynet.uz/portal',
+    );
+    return ResponseEntity(
+      status: res.status.name == 'success'
+          ? ResponseStatus.success
+          : ResponseStatus.error,
+      message: res.message,
+    );
     return ResponseEntity(
       status: ResponseStatus.error,
       message: 'Unknown error',
