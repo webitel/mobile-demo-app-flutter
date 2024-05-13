@@ -43,7 +43,7 @@ class _ChatPageState extends State<ChatPage> {
               bloc: authBloc,
               listener: (context, state) {
                 if (state.authStatus == AuthStatus.success) {
-                  chatBloc.add(FetchDialogs());
+                  chatBloc.add(FetchDialogs(client: state.client!));
                 } else if (state.authStatus == AuthStatus.error) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(

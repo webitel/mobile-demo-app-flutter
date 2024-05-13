@@ -53,11 +53,12 @@ add to the pubspec.yaml
 
 ## Usage
 
-1. use `await WebitelPortalSdk.instance.login()` for sign in user in portal
+1. use `final client = await WebitelPortalSdk.instance.initClient()` for client configuration
+2. use `final client = await client.login()` for logging in user
 
-2. use `final dialog = await WebitelPortalSdk.instance.fetchServiceDialog()` for fetching service dialog
+3. use `final dialog = await client.fetchServiceDialog()` for fetching service dialog
 
-3. use `await dialog.listenToMessages()` for listening upcoming(user)/incoming(
+4. use `await dialog.listenToMessages()` for listening upcoming(user)/incoming(
    operator)
    messages
 
@@ -65,23 +66,23 @@ add to the pubspec.yaml
    `await writeToFile` to save file locally and then `databaseProvider.saveCachedFile` to cache file info in
    Database
 
-4. `use await dialog.sendDialogMessage()` for sending message
+5. `use await dialog.sendDialogMessage()` for sending message
 
-5. use `await dialog.fetchMessages(limit: 20)` for fetching messages, and you
+6. use `await dialog.fetchMessages(limit: 20)` for fetching messages, and you
    could
    set limit and offset for pagination(example of usage offset is still under work)
 
-6. use `DatabaseProvider.fetchMessagesByChatId` for fetching cached messages from Database
+7. use `DatabaseProvider.fetchMessagesByChatId` for fetching cached messages from Database
 
-7. use `DatabaseProvider.writeMessageToDatabase` for writing one message to Database (for example, when receiving it
+8. use `DatabaseProvider.writeMessageToDatabase` for writing one message to Database (for example, when receiving it
    from
    listenToMessages stream)
 
-8. use `DatabaseProvider.writeMessages` for writing latest messages to database (for example, when you fetch last
+9. use `DatabaseProvider.writeMessages` for writing latest messages to database (for example, when you fetch last
    messages
    from server to keep the cached)
 
-9. Sending Files
+10. Sending Files
 
 - Use `pickFile()` from the file_picker Dart package to select a file.
 - Set file name, MIME type, and bytes.

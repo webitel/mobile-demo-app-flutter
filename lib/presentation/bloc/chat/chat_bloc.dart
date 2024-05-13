@@ -30,7 +30,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<FetchDialogs>(
       (event, emit) async {
         final serviceDialog =
-            await WebitelPortalSdk.instance.chatHandler.fetchServiceDialog();
+            await event.client.chatHandler.fetchServiceDialog();
         emit(state.copyWith(dialog: serviceDialog));
         if (serviceDialog.id.isNotEmpty) {
           add(ListenToMessages());

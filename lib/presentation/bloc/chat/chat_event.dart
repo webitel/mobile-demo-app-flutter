@@ -8,7 +8,11 @@ class SendDialogMessageEvent extends ChatEvent {
   SendDialogMessageEvent({required this.dialogMessageEntity});
 }
 
-class FetchDialogs extends ChatEvent {}
+class FetchDialogs extends ChatEvent {
+  final Client client;
+
+  FetchDialogs({required this.client});
+}
 
 class ListenToMessages extends ChatEvent {}
 
