@@ -29,8 +29,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     on<FetchDialogs>(
       (event, emit) async {
-        final serviceDialog =
-            await event.client.chatHandler.fetchServiceDialog();
+        final serviceDialog = await event.client.chat.fetchServiceDialog();
         emit(state.copyWith(dialog: serviceDialog));
         if (serviceDialog.id.isNotEmpty) {
           add(ListenToMessages());
