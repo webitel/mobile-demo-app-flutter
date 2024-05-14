@@ -37,7 +37,7 @@ class DatabaseProvider {
         messageType TEXT,
         dialogMessageContent TEXT,
         requestId TEXT,
-        id INTEGER,
+        id TEXT,
         messageStatus TEXT,
         timestamp INTEGER
       )''');
@@ -89,7 +89,7 @@ class DatabaseProvider {
         await txn.insert(
           messageTable,
           {
-            'id': message.id,
+            'id': message.id.toString(),
             'chatId': message.chatId,
             'path': path,
             'fileId': message.file.id,
@@ -119,7 +119,7 @@ class DatabaseProvider {
     final messages = maps
         .map(
           (message) => DialogMessageEntity(
-            id: message['id'],
+            id: int.parse(message['id']),
             messageStatus: MessageStatus.sent,
             messageType: message['messageType'] == 'operator'
                 ? MessageType.operator

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:webitel_portal_sdk/webitel_portal_sdk.dart';
 import 'package:webitel_sdk/data/gateway/file_picker_gateway.dart';
@@ -15,7 +15,6 @@ import 'package:webitel_sdk/domain/service/chat_service.dart';
 class ChatServiceImpl implements ChatService {
   final DatabaseProvider _databaseProvider;
   final FilePickerGateway _filePickerGateway;
-  late final StreamController<DialogMessageEntity> messagesStreamController;
 
   ChatServiceImpl(
     this._databaseProvider,
@@ -24,10 +23,10 @@ class ChatServiceImpl implements ChatService {
 
   @override
   Future<File?> pickFile() async {
-    File? media = await _filePickerGateway.pickFile();
-    if (media != null) {
-      return media;
-    } else {
+    try {
+      return await _filePickerGateway.pickFile();
+    } catch (e) {
+      debugPrint('Error picking file: $e');
       return null;
     }
   }
@@ -37,77 +36,100 @@ class ChatServiceImpl implements ChatService {
     required DialogMessageEntity dialogMessageEntity,
     required Dialog dialog,
   }) async {
-    if (dialogMessageEntity.file != null) {
-      final message = await dialog.sendMessage(
-        dialogMessageContent: dialogMessageEntity.dialogMessageContent,
-        requestId: dialogMessageEntity.requestId,
-        mediaType: dialogMessageEntity.file!.type,
-        mediaName: dialogMessageEntity.file!.name,
-        mediaData: dialogMessageEntity.file!.data,
-        messageType: 'media',
-      );
-      _databaseProvider.saveCachedFile(
-        CachedFileEntity(
-          id: message.file.id,
-          requestId: message.requestId,
-          type: message.file.type.toString(),
-          path: dialogMessageEntity.file!.path,
-          status: CachedFileStatus.sent,
-        ),
-      );
+    try {
+      if (dialogMessageEntity.file != null) {
+        return await _sendMessageWithFile(dialogMessageEntity, dialog);
+      } else {
+        return await _sendMessageWithoutFile(dialogMessageEntity, dialog);
+      }
+    } catch (e) {
+      debugPrint('Error sending message: $e');
       return ResponseEntity(
-        status: ResponseStatus.success,
-        message: message.dialogMessageContent,
-      );
-    } else if (dialogMessageEntity.file == null) {
-      final message = await dialog.sendMessage(
-        dialogMessageContent: dialogMessageEntity.dialogMessageContent,
-        requestId: dialogMessageEntity.requestId,
-        messageType: 'message',
-        mediaType: '',
-        mediaName: '',
-        mediaData: const Stream<List<int>>.empty(),
-      );
-
-      return ResponseEntity(
-        status: ResponseStatus.success,
-        message: message.dialogMessageContent,
-      );
+          status: ResponseStatus.error, message: e.toString());
     }
-    return ResponseEntity(status: ResponseStatus.error, message: '');
+  }
+
+  Future<ResponseEntity> _sendMessageWithFile(
+    DialogMessageEntity dialogMessageEntity,
+    Dialog dialog,
+  ) async {
+    final message = await dialog.sendMessage(
+      dialogMessageContent: dialogMessageEntity.dialogMessageContent,
+      requestId: dialogMessageEntity.requestId,
+      mediaType: dialogMessageEntity.file!.type,
+      mediaName: dialogMessageEntity.file!.name,
+      mediaData: dialogMessageEntity.file!.data,
+      messageType: 'media',
+    );
+
+    _databaseProvider.saveCachedFile(
+      CachedFileEntity(
+        id: message.file.id,
+        requestId: message.requestId,
+        type: message.file.type.toString(),
+        path: dialogMessageEntity.file!.path,
+        status: CachedFileStatus.sent,
+      ),
+    );
+
+    return ResponseEntity(
+      status: ResponseStatus.success,
+      message: message.dialogMessageContent,
+    );
+  }
+
+  Future<ResponseEntity> _sendMessageWithoutFile(
+    DialogMessageEntity dialogMessageEntity,
+    Dialog dialog,
+  ) async {
+    final message = await dialog.sendMessage(
+      dialogMessageContent: dialogMessageEntity.dialogMessageContent,
+      requestId: dialogMessageEntity.requestId,
+      messageType: 'message',
+      mediaType: '',
+      mediaName: '',
+      mediaData: const Stream<List<int>>.empty(),
+    );
+
+    return ResponseEntity(
+      status: ResponseStatus.success,
+      message: message.dialogMessageContent,
+    );
   }
 
   @override
-  Future<List<DialogMessageEntity>> fetchPaginationMessages(
-      {required Dialog dialog, required int limit, required int offset}) async {
-    List<DialogMessageEntity> paginationMessages = [];
+  Future<List<DialogMessageEntity>> fetchPaginationMessages({
+    required Dialog dialog,
+    required int limit,
+    required int offset,
+  }) async {
     final messagesFromServer =
         await dialog.fetchMessages(limit: limit, offset: offset);
-
-    for (var message in messagesFromServer) {
-      paginationMessages.add(
-        DialogMessageEntity(
-          id: message.id,
-          messageStatus: MessageStatus.sent,
-          messageType: message.sender!.name == 'operator'
-              ? MessageType.operator
-              : MessageType.user,
-          dialogMessageContent: message.dialogMessageContent,
-          requestId: message.requestId,
-          file: MediaFileEntity(
-            path: '',
-            id: message.file.id,
-            size: 0,
-            bytes: [],
-            data: const Stream<List<int>>.empty(),
-            name: message.file.name,
-            type: message.file.type,
-            requestId: message.requestId,
+    return messagesFromServer
+        .map(
+          (message) => DialogMessageEntity(
+            file: MediaFileEntity(
+              path: '',
+              id: message.file.id,
+              size: message.file.size,
+              bytes: [],
+              data: const Stream.empty(),
+              name: message.file.name,
+              type: message.file.type,
+              requestId: '',
+            ),
+            fileName: message.file.name,
+            fileId: message.file.id,
+            fileType: message.file.type,
+            id: message.id,
+            dialogMessageContent: message.dialogMessageContent,
+            requestId: '',
+            messageType: message.sender!.name == 'user'
+                ? MessageType.user
+                : MessageType.operator,
           ),
-        ),
-      );
-    }
-    return paginationMessages;
+        )
+        .toList();
   }
 
   @override
@@ -117,100 +139,133 @@ class ChatServiceImpl implements ChatService {
     final messagesFromServer = await dialog.fetchMessages(limit: 20);
 
     if (messagesFromServer.isNotEmpty) {
-      // if is not empty, clear last cached messages and write new ones
-
       await _databaseProvider.clear();
       await _databaseProvider.writeMessages(dialog);
-      // fetch messages by chatId(for now have only one chat)
 
-      final fetchedMessages =
-          await _databaseProvider.fetchMessagesByChatId(chatId: '');
-      return fetchedMessages;
-    } else if (messagesFromServer.isEmpty) {
+      return await _databaseProvider.fetchMessagesByChatId(chatId: '');
+    } else {
       return await _databaseProvider.fetchMessagesByChatId(chatId: '');
     }
-    return [];
   }
 
   @override
   Future<Stream<DialogMessageEntity>> listenToMessages({
     required Dialog dialog,
   }) async {
-    // this is messages stream for all user/operator messages
-
     final messagesStreamController = StreamController<DialogMessageEntity>();
+
     dialog.onNewMessage.listen((message) async {
-      if (message.file.bytes.isNotEmpty) {
-        ByteData byteData =
-            ByteData.sublistView(Uint8List.fromList(message.file.bytes));
-
-        final file = await writeToFile(data: byteData, name: message.file.name);
-
-        _databaseProvider.saveCachedFile(
-          CachedFileEntity(
-            id: message.file.id,
-            requestId: message.requestId,
-            type: message.file.type.toString(),
-            path: file.path,
-            status: CachedFileStatus.sent,
-          ),
-        );
-        final messageEntity = DialogMessageEntity(
-          file: MediaFileEntity(
-            path: file.path,
-            id: message.file.id,
-            size: message.file.size,
-            bytes: message.file.bytes,
-            data: const Stream<List<int>>.empty(),
-            name: message.file.name,
-            type: message.file.type,
+      final messageType = message.sender!.name == 'user'
+          ? MessageType.user
+          : MessageType.operator;
+      try {
+        final messageEntity = await _processNewMessage(
+          dialog,
+          DialogMessageEntity(
+            file: MediaFileEntity(
+              path: '',
+              id: message.file.id,
+              size: message.file.size,
+              bytes: [],
+              data: const Stream.empty(),
+              name: message.file.name,
+              type: message.file.type,
+              requestId: '',
+            ),
+            fileName: message.file.name,
+            fileId: message.file.id,
+            fileType: message.file.type,
+            id: message.id,
+            dialogMessageContent: message.dialogMessageContent,
             requestId: '',
+            messageType: messageType,
           ),
-          id: message.id,
-          dialogMessageContent: message.dialogMessageContent,
-          requestId: '',
-          messageType: message.sender!.name == 'user'
-              ? MessageType.user
-              : MessageType.operator,
         );
-        _databaseProvider.writeMessageToDatabase(
-          message: messageEntity,
-        );
-        messagesStreamController.add(
-          messageEntity,
-        );
-      } else if (message.file.bytes.isEmpty) {
-        final messageEntity = DialogMessageEntity(
-          file: MediaFileEntity(
-            path: '',
-            id: message.file.id,
-            size: message.file.size,
-            bytes: [],
-            data: const Stream<List<int>>.empty(),
-            name: message.file.name,
-            type: message.file.type,
-            requestId: '',
-          ),
-          id: message.id,
-          dialogMessageContent: message.dialogMessageContent,
-          requestId: '',
-          messageType: message.sender!.name == 'user'
-              ? MessageType.user
-              : MessageType.operator,
-        );
-        _databaseProvider.writeMessageToDatabase(
-          message: messageEntity,
-        );
-        messagesStreamController.add(
-          messageEntity,
-        );
+        messagesStreamController.add(messageEntity);
+      } catch (e) {
+        debugPrint('Error processing new message: $e');
       }
     });
 
     return messagesStreamController.stream;
   }
 
-  Future<File> writeToFile({
+  Future<DialogMessageEntity> _processNewMessage(
+      Dialog dialog, DialogMessageEntity message) async {
+    if (message.file!.id.isNotEmpty &&
+        message.messageType == MessageType.operator) {
+      final file = await _downloadFile(dialog, message);
+      _databaseProvider.saveCachedFile(
+        CachedFileEntity(
+          id: message.file!.id,
+          requestId: message.requestId,
+          type: message.file!.type.toString(),
+          path: file.path,
+          status: CachedFileStatus.sent,
+        ),
+      );
+
+      return DialogMessageEntity(
+        file: MediaFileEntity(
+          path: file.path,
+          id: message.file!.id,
+          size: message.file!.size,
+          bytes: [],
+          data: const Stream.empty(),
+          name: message.file!.name,
+          type: message.file!.type,
+          requestId: '',
+        ),
+        id: message.id,
+        dialogMessageContent: message.dialogMessageContent,
+        requestId: '',
+        messageType: MessageType.operator,
+      );
+    } else {
+      final messageEntity = DialogMessageEntity(
+        file: MediaFileEntity(
+          path: '',
+          id: message.file!.id,
+          size: message.file!.size,
+          bytes: [],
+          data: const Stream.empty(),
+          name: message.file!.name,
+          type: message.file!.type,
+          requestId: '',
+        ),
+        id: message.id,
+        dialogMessageContent: message.dialogMessageContent,
+        requestId: '',
+        messageType: message.messageType,
+      );
+      _databaseProvider.writeMessageToDatabase(message: messageEntity);
+      return messageEntity;
+    }
+  }
+
+  Future<File> _downloadFile(Dialog dialog, dynamic message) async {
+    final fileStream = dialog.downloadFile(fileId: message.file.id);
+    List<int> bytesList = [];
+
+    await for (var bytes in fileStream.stream) {
+      int chunkSize = bytes.bytes.length;
+      if (chunkSize > 0) {
+        if (kDebugMode) {
+          print('Received chunk of $chunkSize bytes');
+        }
+        bytesList.addAll(bytes.bytes);
+      } else {
+        if (kDebugMode) {
+          print('Received chunk of 0 bytes, skipping');
+        }
+      }
+    }
+
+    ByteData byteData = ByteData.sublistView(Uint8List.fromList(bytesList));
+    return await _writeToFile(data: byteData, name: message.file.name);
+  }
+
+  Future<File> _writeToFile({
     required ByteData data,
     required String name,
   }) async {
@@ -219,10 +274,7 @@ class ChatServiceImpl implements ChatService {
     String tempPath = tempDir.path;
     var filePath = '$tempPath/$name';
     return File(filePath).writeAsBytes(
-      buffer.asUint8List(
-        data.offsetInBytes,
-        data.lengthInBytes,
-      ),
+      buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
     );
   }
 }

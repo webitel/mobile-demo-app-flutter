@@ -10,21 +10,40 @@ class AuthServiceImpl implements AuthService {
 
   @override
   Future<ResponseEntity> login({required Client client}) async {
+    await _sharedPreferencesGateway.init();
+
     final res = await client.login(
-      name: 'Test name',
-      sub: 'Sub 1',
-      issuer: 'https://paynet.uz/portal',
+      name: 'Volodia Hunkalo',
+      sub: 'Account 2',
+      issuer: 'https://dev.webitel.com/portal',
+      // 'https://paynet.uz/portal',
     );
-    return ResponseEntity(status: ResponseStatus.success);
+    return ResponseEntity(
+      status: res.status.name == 'success'
+          ? ResponseStatus.success
+          : ResponseStatus.error,
+    );
   }
 
   @override
   Future<Client> initClient() async {
     final client = await WebitelPortalSdk.instance.initClient(
-      url: 'grpcs://test.webitel.me:443',
+      url: 'grpcs://dev.webitel.com:443',
+      // 'grpcs://test.webitel.me:443',
       appToken:
-          'CLboLLKNTa5EP53ySLL0D_eDufMb1LW_LnfhoPb1HAe8xlvgqQW5xpftqfWUmLQt',
+          '49sFBWUGEtlHz7iTWjIXIgRGnZXQ4dQZOy7fdM8AyffZ3oEQzNC5Noa6Aeem6BAw',
+      // 'CLboLLKNTa5EP53ySLL0D_eDufMb1LW_LnfhoPb1HAe8xlvgqQW5xpftqfWUmLQt',
     );
     return client;
+  }
+
+  @override
+  Future<void> logout({required Client client}) async {
+    await client.logout();
+  }
+
+  @override
+  Future<void> registerDevice({required Client client}) async {
+    await client.registerDevice();
   }
 }

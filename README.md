@@ -54,17 +54,17 @@ add to the pubspec.yaml
 ## Usage
 
 1. use `final client = await WebitelPortalSdk.instance.initClient()` for client configuration
+
 2. use `final client = await client.login()` for logging in user
 
 3. use `final dialog = await client.fetchServiceDialog()` for fetching service dialog
 
 4. use `await dialog.listenToMessages()` for listening upcoming(user)/incoming(
-   operator)
-   messages
+   operator) messages
 
    listening to messages is used for listening to messages with media as well if we receive media message we call
-   `await writeToFile` to save file locally and then `databaseProvider.saveCachedFile` to cache file info in
-   Database
+   `await client.getFile(fileId:fileId)` to get file from server and then `await writeToFile` to save file locally and
+   then `databaseProvider.saveCachedFile` to cache file info in Database
 
 5. `use await dialog.sendDialogMessage()` for sending message
 

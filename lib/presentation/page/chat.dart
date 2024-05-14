@@ -67,7 +67,10 @@ class _ChatPageState extends State<ChatPage> {
                       trackVisibility: true,
                       thickness: 2,
                       thumbVisibility: true,
-                      child: MessagesListView(chatBloc: chatBloc),
+                      child: MessagesListView(
+                        chatBloc: chatBloc,
+                        authBloc: authBloc,
+                      ),
                     ),
                   ),
                   Column(

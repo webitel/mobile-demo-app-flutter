@@ -5,4 +5,8 @@ abstract interface class AuthService {
   Future<ResponseEntity> login({required Client client});
 
   Future<Client> initClient();
+
+  Future<void> logout({required Client client});
+
+  Future<void> registerDevice({required Client client});
 }
