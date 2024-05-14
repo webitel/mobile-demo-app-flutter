@@ -28,7 +28,7 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     chatBloc = di.locator.get<ChatBloc>();
     authBloc = di.locator.get<AuthBloc>();
-    authBloc.add(LoginEvent());
+    authBloc.add(InitClientEvent());
     super.initState();
   }
 

@@ -10,10 +10,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   late final AuthService authService;
 
   AuthBloc(this.authService) : super(AuthState.initial()) {
-    on<LoginEvent>((event, emit) async {
-      emit(state.copyWith(authStatus: AuthStatus.loading));
-      final client = await authService.login();
-      emit(state.copyWith(client: client, authStatus: AuthStatus.success));
-    });
+    on<InitClientEvent>(
+      (event, emit) async {
+        final client = await authService.initClient();
+        emit(
+          state.copyWith(client: client),
+        );
+        add(LoginEvent());
+      },
+    );
+    on<LoginEvent>(
+      (event, emit) async {
+        emit(state.copyWith(authStatus: AuthStatus.loading));
+        final client = await authService.login(client: state.client!);
+        emit(
+          state.copyWith(
+            authStatus: AuthStatus.success,
+          ),
+        );
+      },
+    );
   }
 }
