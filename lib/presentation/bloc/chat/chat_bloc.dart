@@ -75,7 +75,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             file: MediaFileEntity(
               id: '',
               size: 0,
-              bytes: [],
               data: controller.stream,
               path: path,
               name: fileName,

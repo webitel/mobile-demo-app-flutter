@@ -9,7 +9,7 @@ class SendDialogMessageEvent extends ChatEvent {
 }
 
 class FetchDialogs extends ChatEvent {
-  final Client client;
+  final PortalClient client;
 
   FetchDialogs({required this.client});
 }

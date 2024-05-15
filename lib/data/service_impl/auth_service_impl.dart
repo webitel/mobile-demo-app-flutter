@@ -9,7 +9,7 @@ class AuthServiceImpl implements AuthService {
   AuthServiceImpl(this._sharedPreferencesGateway);
 
   @override
-  Future<ResponseEntity> login({required Client client}) async {
+  Future<ResponseEntity> login({required PortalClient client}) async {
     await _sharedPreferencesGateway.init();
 
     final res = await client.login(
@@ -26,7 +26,7 @@ class AuthServiceImpl implements AuthService {
   }
 
   @override
-  Future<Client> initClient() async {
+  Future<PortalClient> initClient() async {
     final client = await WebitelPortalSdk.instance.initClient(
       url: 'grpcs://dev.webitel.com:443',
       // 'grpcs://test.webitel.me:443',
@@ -38,13 +38,13 @@ class AuthServiceImpl implements AuthService {
   }
 
   @override
-  Future<void> logout({required Client client}) async {
+  Future<void> logout({required PortalClient client}) async {
     await client.logout();
   }
 
   @override
   Future<void> registerDevice({
-    required Client client,
+    required PortalClient client,
     required String pushToken,
   }) async {
     await client.registerDevice(pushToken: pushToken);

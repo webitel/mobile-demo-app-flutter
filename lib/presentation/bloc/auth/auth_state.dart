@@ -5,7 +5,7 @@ enum AuthStatus { initial, loading, success, error }
 class AuthState extends Equatable {
   final AuthStatus authStatus;
   final Object error;
-  final Client? client;
+  final PortalClient? client;
 
   const AuthState({
     required this.authStatus,
@@ -31,7 +31,7 @@ class AuthState extends Equatable {
   AuthState copyWith({
     AuthStatus? authStatus,
     Object? error,
-    Client? client,
+    PortalClient? client,
   }) {
     return AuthState(
       authStatus: authStatus ?? this.authStatus,

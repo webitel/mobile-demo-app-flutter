@@ -31,7 +31,7 @@ dependencies:
   webitel_portal_sdk:
     git:
       url: https://github.com/webitel/mobile-sdk-flutter.git
-      ref: v1.1.4
+      ref: v1.1.5
 
 dev_dependencies:
   flutter_test:
