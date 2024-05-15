@@ -36,8 +36,7 @@ class DatabaseProvider {
         messageId TEXT PRIMARY KEY,
         messageType TEXT,
         dialogMessageContent TEXT,
-        requestId TEXT,
-        id TEXT,
+        id INTEGER,
         messageStatus TEXT,
         timestamp INTEGER
       )''');
@@ -46,7 +45,6 @@ class DatabaseProvider {
         path TEXT,
         name TEXT,
         type TEXT,
-        requestId TEXT,
         id TEXT,
         status TEXT    
       )''');
@@ -89,7 +87,7 @@ class DatabaseProvider {
         await txn.insert(
           messageTable,
           {
-            'id': message.id.toString(),
+            'id': message.messageId,
             'chatId': message.chatId,
             'path': path,
             'fileId': message.file.id,
@@ -98,7 +96,6 @@ class DatabaseProvider {
             'messageId': message.messageId,
             'messageType': message.sender!.name,
             'dialogMessageContent': message.dialogMessageContent,
-            'requestId': message.requestId,
             'messageStatus': 'Success',
             'timestamp': DateTime.now().millisecondsSinceEpoch,
           },
@@ -119,13 +116,12 @@ class DatabaseProvider {
     final messages = maps
         .map(
           (message) => DialogMessageEntity(
-            id: int.parse(message['id']),
+            id: message['id'],
             messageStatus: MessageStatus.sent,
             messageType: message['messageType'] == 'operator'
                 ? MessageType.operator
                 : MessageType.user,
             dialogMessageContent: message['dialogMessageContent'],
-            requestId: message['requestId'],
             file: MediaFileEntity(
               path: message['path'],
               id: message['fileId'],
@@ -134,7 +130,6 @@ class DatabaseProvider {
               data: const Stream<List<int>>.empty(),
               name: message['fileName'],
               type: message['fileType'],
-              requestId: message['requestId'],
             ),
           ),
         )

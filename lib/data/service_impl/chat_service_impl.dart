@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:uuid/uuid.dart';
 import 'package:webitel_portal_sdk/webitel_portal_sdk.dart';
 import 'package:webitel_sdk/data/gateway/file_picker_gateway.dart';
 import 'package:webitel_sdk/database/database_provider.dart';
@@ -20,6 +21,8 @@ class ChatServiceImpl implements ChatService {
     this._databaseProvider,
     this._filePickerGateway,
   );
+
+  final uuid = const Uuid();
 
   @override
   Future<File?> pickFile() async {
@@ -55,19 +58,19 @@ class ChatServiceImpl implements ChatService {
   ) async {
     final message = await dialog.sendMessage(
       dialogMessageContent: dialogMessageEntity.dialogMessageContent,
-      requestId: dialogMessageEntity.requestId,
+      requestId: uuid.v4(),
       mediaType: dialogMessageEntity.file!.type,
       mediaName: dialogMessageEntity.file!.name,
-      mediaData: dialogMessageEntity.file!.data,
+      mediaData:
+          dialogMessageEntity.file!.data ?? const Stream<List<int>>.empty(),
       messageType: 'media',
     );
 
     _databaseProvider.saveCachedFile(
       CachedFileEntity(
         id: message.file.id,
-        requestId: message.requestId,
         type: message.file.type.toString(),
-        path: dialogMessageEntity.file!.path,
+        path: dialogMessageEntity.file!.path ?? '',
         status: CachedFileStatus.sent,
       ),
     );
@@ -84,10 +87,8 @@ class ChatServiceImpl implements ChatService {
   ) async {
     final message = await dialog.sendMessage(
       dialogMessageContent: dialogMessageEntity.dialogMessageContent,
-      requestId: dialogMessageEntity.requestId,
+      requestId: uuid.v4(),
       messageType: 'message',
-      mediaType: '',
-      mediaName: '',
       mediaData: const Stream<List<int>>.empty(),
     );
 
@@ -109,21 +110,17 @@ class ChatServiceImpl implements ChatService {
         .map(
           (message) => DialogMessageEntity(
             file: MediaFileEntity(
-              path: '',
               id: message.file.id,
               size: message.file.size,
-              bytes: [],
               data: const Stream.empty(),
               name: message.file.name,
               type: message.file.type,
-              requestId: '',
             ),
             fileName: message.file.name,
             fileId: message.file.id,
             fileType: message.file.type,
-            id: message.id,
+            id: message.messageId ?? 0,
             dialogMessageContent: message.dialogMessageContent,
-            requestId: '',
             messageType: message.sender!.name == 'user'
                 ? MessageType.user
                 : MessageType.operator,
@@ -163,21 +160,17 @@ class ChatServiceImpl implements ChatService {
           dialog,
           DialogMessageEntity(
             file: MediaFileEntity(
-              path: '',
               id: message.file.id,
               size: message.file.size,
-              bytes: [],
               data: const Stream.empty(),
               name: message.file.name,
               type: message.file.type,
-              requestId: '',
             ),
             fileName: message.file.name,
             fileId: message.file.id,
             fileType: message.file.type,
-            id: message.id,
+            id: message.messageId ?? 0,
             dialogMessageContent: message.dialogMessageContent,
-            requestId: '',
             messageType: messageType,
           ),
         );
@@ -198,7 +191,6 @@ class ChatServiceImpl implements ChatService {
       _databaseProvider.saveCachedFile(
         CachedFileEntity(
           id: message.file!.id,
-          requestId: message.requestId,
           type: message.file!.type.toString(),
           path: file.path,
           status: CachedFileStatus.sent,
@@ -210,32 +202,25 @@ class ChatServiceImpl implements ChatService {
           path: file.path,
           id: message.file!.id,
           size: message.file!.size,
-          bytes: [],
           data: const Stream.empty(),
           name: message.file!.name,
           type: message.file!.type,
-          requestId: '',
         ),
         id: message.id,
         dialogMessageContent: message.dialogMessageContent,
-        requestId: '',
         messageType: MessageType.operator,
       );
     } else {
       final messageEntity = DialogMessageEntity(
         file: MediaFileEntity(
-          path: '',
           id: message.file!.id,
           size: message.file!.size,
-          bytes: [],
           data: const Stream.empty(),
           name: message.file!.name,
           type: message.file!.type,
-          requestId: '',
         ),
         id: message.id,
         dialogMessageContent: message.dialogMessageContent,
-        requestId: '',
         messageType: message.messageType,
       );
       _databaseProvider.writeMessageToDatabase(message: messageEntity);
@@ -247,7 +232,7 @@ class ChatServiceImpl implements ChatService {
     final fileStream = dialog.downloadFile(fileId: message.file.id);
     List<int> bytesList = [];
 
-    await for (var bytes in fileStream.stream) {
+    await for (var bytes in fileStream) {
       int chunkSize = bytes.bytes.length;
       if (chunkSize > 0) {
         if (kDebugMode) {

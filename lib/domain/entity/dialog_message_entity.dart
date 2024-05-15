@@ -13,7 +13,6 @@ class DialogMessageEntity {
   final String dialogMessageContent;
   final MessageType? messageType;
   final MessageStatus? messageStatus;
-  final String requestId;
   final String? chatId;
   final MediaFileEntity? file;
 
@@ -28,7 +27,6 @@ class DialogMessageEntity {
     this.messageStatus,
     required this.id,
     required this.dialogMessageContent,
-    required this.requestId,
   });
 
   factory DialogMessageEntity.fromMap(Map<String, dynamic> map) {
@@ -48,7 +46,6 @@ class DialogMessageEntity {
               .firstWhere((status) => status.toString() == map['messageStatus'])
           : null,
       dialogMessageContent: map['dialogMessageContent'],
-      requestId: map['requestId'],
     );
   }
 
@@ -63,7 +60,6 @@ class DialogMessageEntity {
       'messageType': messageType?.toString(),
       'messageStatus': messageStatus?.toString(),
       'dialogMessageContent': dialogMessageContent,
-      'requestId': requestId,
       'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
   }

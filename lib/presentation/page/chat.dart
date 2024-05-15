@@ -116,7 +116,6 @@ class _ChatPageState extends State<ChatPage> {
                                         dialogMessageEntity:
                                             DialogMessageEntity(
                                           id: 0,
-                                          requestId: uuid.v4(),
                                           dialogMessageContent: messageContent,
                                         ),
                                       ),

@@ -8,5 +8,8 @@ abstract interface class AuthService {
 
   Future<void> logout({required Client client});
 
-  Future<void> registerDevice({required Client client});
+  Future<void> registerDevice({
+    required Client client,
+    required String pushToken,
+  });
 }

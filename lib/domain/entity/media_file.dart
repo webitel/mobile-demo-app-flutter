@@ -1,21 +1,19 @@
 class MediaFileEntity {
   final String name;
   final String type;
-  final String requestId;
-  final List<int> bytes;
-  final Stream<List<int>> data;
+  final List<int>? bytes;
+  final Stream<List<int>>? data;
   final int size;
   final String id;
-  final String path;
+  final String? path;
 
   MediaFileEntity({
-    required this.path,
+    this.bytes,
+    this.data,
+    this.path,
     required this.id,
     required this.size,
-    required this.bytes,
-    required this.data,
     required this.name,
     required this.type,
-    required this.requestId,
   });
 }

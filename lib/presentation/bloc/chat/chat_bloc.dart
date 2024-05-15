@@ -70,7 +70,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         String path = state.selectedFile.path;
         await chatService.sendDialogMessage(
           dialogMessageEntity: DialogMessageEntity(
-            requestId: event.dialogMessageEntity.requestId,
             dialogMessageContent:
                 event.dialogMessageEntity.dialogMessageContent,
             file: MediaFileEntity(
@@ -81,7 +80,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
               path: path,
               name: fileName,
               type: mimeType,
-              requestId: event.dialogMessageEntity.requestId,
             ),
             id: 0,
           ),
@@ -91,7 +89,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       } else {
         await chatService.sendDialogMessage(
           dialogMessageEntity: DialogMessageEntity(
-            requestId: event.dialogMessageEntity.requestId,
             dialogMessageContent:
                 event.dialogMessageEntity.dialogMessageContent,
             id: 0,
@@ -126,12 +123,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       await emit.onEach<DialogMessageEntity>(messagesStream, onData: (message) {
         if (message.file?.name.isNotEmpty ?? false) {
           add(FetchMessages());
-        } else if (message.file != null && message.file!.path.isNotEmpty) {
+        } else if (message.file != null &&
+            message.file!.path != null &&
+            message.file!.path!.isNotEmpty) {
           final currentMessages = [
             DialogMessageEntity(
               path: message.file!.path,
               fileId: message.file!.id,
-              requestId: message.requestId,
               messageType: message.messageType,
               dialogMessageContent: message.dialogMessageContent,
               id: message.id,
@@ -142,7 +140,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         } else {
           final currentMessages = [
             DialogMessageEntity(
-              requestId: message.requestId,
               messageType: message.messageType,
               dialogMessageContent: message.dialogMessageContent,
               id: message.id,

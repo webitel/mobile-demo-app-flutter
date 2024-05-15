@@ -14,7 +14,7 @@ class AuthServiceImpl implements AuthService {
 
     final res = await client.login(
       name: 'Volodia Hunkalo',
-      sub: 'Account 2',
+      sub: 'Account 3',
       issuer: 'https://dev.webitel.com/portal',
       // 'https://paynet.uz/portal',
     );
@@ -43,7 +43,10 @@ class AuthServiceImpl implements AuthService {
   }
 
   @override
-  Future<void> registerDevice({required Client client}) async {
-    await client.registerDevice();
+  Future<void> registerDevice({
+    required Client client,
+    required String pushToken,
+  }) async {
+    await client.registerDevice(pushToken: pushToken);
   }
 }

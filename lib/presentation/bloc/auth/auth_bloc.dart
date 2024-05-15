@@ -14,7 +14,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<RegisterDevice>(
       (event, emit) async {
         if (state.client != null) {
-          await authService.registerDevice(client: state.client!);
+          await authService.registerDevice(
+            client: state.client!,
+            pushToken: '', //TODO ADD PUSH TOKEN
+          );
         }
       },
     );
