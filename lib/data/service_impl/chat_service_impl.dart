@@ -10,7 +10,6 @@ import 'package:webitel_sdk/database/database_provider.dart';
 import 'package:webitel_sdk/domain/entity/cached_file.dart';
 import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 import 'package:webitel_sdk/domain/entity/media_file.dart';
-import 'package:webitel_sdk/domain/entity/response_entity.dart';
 import 'package:webitel_sdk/domain/service/chat_service.dart';
 
 class ChatServiceImpl implements ChatService {
@@ -35,7 +34,7 @@ class ChatServiceImpl implements ChatService {
   }
 
   @override
-  Future<ResponseEntity> sendDialogMessage({
+  Future<PortalResponse> sendDialogMessage({
     required DialogMessageEntity dialogMessageEntity,
     required Dialog dialog,
   }) async {
@@ -47,12 +46,14 @@ class ChatServiceImpl implements ChatService {
       }
     } catch (e) {
       debugPrint('Error sending message: $e');
-      return ResponseEntity(
-          status: ResponseStatus.error, message: e.toString());
+      return PortalResponse(
+        status: PortalResponseStatus.error,
+        message: e.toString(),
+      );
     }
   }
 
-  Future<ResponseEntity> _sendMessageWithFile(
+  Future<PortalResponse> _sendMessageWithFile(
     DialogMessageEntity dialogMessageEntity,
     Dialog dialog,
   ) async {
@@ -75,13 +76,14 @@ class ChatServiceImpl implements ChatService {
       ),
     );
 
-    return ResponseEntity(
-      status: ResponseStatus.success,
+    return PortalResponse(
+      status: PortalResponseStatus.success,
       message: message.dialogMessageContent,
+      statusCode: message.statusCode,
     );
   }
 
-  Future<ResponseEntity> _sendMessageWithoutFile(
+  Future<PortalResponse> _sendMessageWithoutFile(
     DialogMessageEntity dialogMessageEntity,
     Dialog dialog,
   ) async {
@@ -92,9 +94,10 @@ class ChatServiceImpl implements ChatService {
       mediaData: const Stream<List<int>>.empty(),
     );
 
-    return ResponseEntity(
-      status: ResponseStatus.success,
+    return PortalResponse(
+      status: PortalResponseStatus.success,
       message: message.dialogMessageContent,
+      statusCode: message.statusCode,
     );
   }
 
@@ -224,6 +227,7 @@ class ChatServiceImpl implements ChatService {
         messageType: message.messageType,
       );
       _databaseProvider.writeMessageToDatabase(message: messageEntity);
+
       return messageEntity;
     }
   }
@@ -247,6 +251,7 @@ class ChatServiceImpl implements ChatService {
     }
 
     ByteData byteData = ByteData.sublistView(Uint8List.fromList(bytesList));
+
     return await _writeToFile(data: byteData, name: message.file.name);
   }
 
@@ -258,8 +263,12 @@ class ChatServiceImpl implements ChatService {
     Directory tempDir = await getTemporaryDirectory();
     String tempPath = tempDir.path;
     var filePath = '$tempPath/$name';
+
     return File(filePath).writeAsBytes(
-      buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+      buffer.asUint8List(
+        data.offsetInBytes,
+        data.lengthInBytes,
+      ),
     );
   }
 }

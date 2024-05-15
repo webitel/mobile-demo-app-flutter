@@ -1,8 +1,7 @@
 import 'package:webitel_portal_sdk/webitel_portal_sdk.dart';
-import 'package:webitel_sdk/domain/entity/response_entity.dart';
 
 abstract interface class AuthService {
-  Future<ResponseEntity> login({required PortalClient client});
+  Future<PortalResponse> login({required PortalClient client});
 
   Future<PortalClient> initClient();
 
@@ -12,4 +11,6 @@ abstract interface class AuthService {
     required PortalClient client,
     required String pushToken,
   });
+
+  Future<Stream<Error>> listenToError({required PortalClient client});
 }

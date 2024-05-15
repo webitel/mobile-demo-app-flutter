@@ -9,3 +9,9 @@ class InitClientEvent extends AuthEvent {}
 class LogoutEvent extends AuthEvent {}
 
 class RegisterDevice extends AuthEvent {}
+
+class ListenToErrorEvent extends AuthEvent {
+  final PortalClient client;
+
+  ListenToErrorEvent({required this.client});
+}

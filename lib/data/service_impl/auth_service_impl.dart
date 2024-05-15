@@ -1,6 +1,7 @@
+import 'dart:async';
+
 import 'package:webitel_portal_sdk/webitel_portal_sdk.dart';
 import 'package:webitel_sdk/data/gateway/shared_preferences_gateway.dart';
-import 'package:webitel_sdk/domain/entity/response_entity.dart';
 import 'package:webitel_sdk/domain/service/auth_service.dart';
 
 class AuthServiceImpl implements AuthService {
@@ -8,20 +9,23 @@ class AuthServiceImpl implements AuthService {
 
   AuthServiceImpl(this._sharedPreferencesGateway);
 
+  final errorController = StreamController<Error>.broadcast();
+
   @override
-  Future<ResponseEntity> login({required PortalClient client}) async {
+  Future<PortalResponse> login({required PortalClient client}) async {
     await _sharedPreferencesGateway.init();
 
     final res = await client.login(
       name: 'Volodia Hunkalo',
-      sub: 'Account 3',
+      sub: 'Account 7',
       issuer: 'https://dev.webitel.com/portal',
       // 'https://paynet.uz/portal',
     );
-    return ResponseEntity(
+
+    return PortalResponse(
       status: res.status.name == 'success'
-          ? ResponseStatus.success
-          : ResponseStatus.error,
+          ? PortalResponseStatus.success
+          : PortalResponseStatus.error,
     );
   }
 
@@ -48,5 +52,19 @@ class AuthServiceImpl implements AuthService {
     required String pushToken,
   }) async {
     await client.registerDevice(pushToken: pushToken);
+  }
+
+  @override
+  Future<Stream<Error>> listenToError({required PortalClient client}) async {
+    final channel = await client.getChannel();
+    channel.onError.listen((error) {
+      errorController.add(
+        Error(
+          statusCode: error.statusCode,
+          errorMessage: error.errorMessage,
+        ),
+      );
+    });
+    return errorController.stream;
   }
 }

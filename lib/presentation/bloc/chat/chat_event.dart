@@ -23,3 +23,9 @@ class FetchPaginationMessages extends ChatEvent {}
 class UploadMediaEvent extends ChatEvent {}
 
 class ClearImageFromStateEvent extends ChatEvent {}
+
+class ListenToErrorEvent extends ChatEvent {
+  final PortalClient client;
+
+  ListenToErrorEvent({required this.client});
+}

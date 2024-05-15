@@ -68,13 +68,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             'application/octet-stream';
         String fileName = state.selectedFile.path.split('/').last;
         String path = state.selectedFile.path;
-        await chatService.sendDialogMessage(
+        final message = await chatService.sendDialogMessage(
           dialogMessageEntity: DialogMessageEntity(
             dialogMessageContent:
                 event.dialogMessageEntity.dialogMessageContent,
             file: MediaFileEntity(
               id: '',
               size: 0,
+              bytes: [],
               data: controller.stream,
               path: path,
               name: fileName,
@@ -84,9 +85,14 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           ),
           dialog: state.dialog!,
         );
+        if (message.statusCode == '401') {
+          if (kDebugMode) {
+            print(message.statusCode); //TODO
+          }
+        }
         add(ClearImageFromStateEvent());
       } else {
-        await chatService.sendDialogMessage(
+        final message = await chatService.sendDialogMessage(
           dialogMessageEntity: DialogMessageEntity(
             dialogMessageContent:
                 event.dialogMessageEntity.dialogMessageContent,
@@ -94,6 +100,11 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           ),
           dialog: state.dialog!,
         );
+        if (message.statusCode == '401') {
+          if (kDebugMode) {
+            print(message.statusCode); //TODO
+          }
+        }
         add(ClearImageFromStateEvent());
       }
     });

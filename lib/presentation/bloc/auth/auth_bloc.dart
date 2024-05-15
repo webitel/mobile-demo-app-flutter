@@ -1,7 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:webitel_portal_sdk/webitel_portal_sdk.dart';
-import 'package:webitel_sdk/domain/entity/response_entity.dart';
 import 'package:webitel_sdk/domain/service/auth_service.dart';
 
 part 'auth_event.dart';
@@ -11,6 +11,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   late final AuthService authService;
 
   AuthBloc(this.authService) : super(AuthState.initial()) {
+    on<ListenToErrorEvent>((event, emit) async {
+      final errorStream = await authService.listenToError(client: event.client);
+      emit.onEach(errorStream, onData: (error) {
+        if (kDebugMode) {
+          print(error.errorMessage);
+        }
+        if (kDebugMode) {
+          print(error.statusCode);
+        }
+      });
+    });
     on<RegisterDevice>(
       (event, emit) async {
         if (state.client != null) {
@@ -46,7 +57,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         );
         if (state.client != null) {
           final res = await authService.login(client: state.client!);
-          if (res.status == ResponseStatus.success) {
+          add(ListenToErrorEvent(client: state.client!));
+          if (res.status == PortalResponseStatus.success) {
             emit(
               state.copyWith(
                 authStatus: AuthStatus.success,
