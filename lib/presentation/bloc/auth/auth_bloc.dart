@@ -13,7 +13,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc(this.authService) : super(AuthState.initial()) {
     on<ListenToErrorEvent>((event, emit) async {
       final errorStream = await authService.listenToError(client: event.client);
-      emit.onEach(errorStream, onData: (error) {
+      await emit.onEach(errorStream, onData: (error) {
         if (kDebugMode) {
           print(error.errorMessage);
         }
@@ -42,10 +42,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<InitClientEvent>(
       (event, emit) async {
         final client = await authService.initClient();
-        add(LoginEvent());
-        emit(
-          state.copyWith(client: client),
-        );
+        if (client.error == null) {
+          add(LoginEvent());
+          emit(
+            state.copyWith(client: client),
+          );
+        }
       },
     );
     on<LoginEvent>(

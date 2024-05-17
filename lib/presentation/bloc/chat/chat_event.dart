@@ -20,7 +20,9 @@ class FetchMessages extends ChatEvent {}
 
 class FetchPaginationMessages extends ChatEvent {}
 
-class UploadMediaEvent extends ChatEvent {}
+class UploadFileEvent extends ChatEvent {}
+
+class UploadImageEvent extends ChatEvent {}
 
 class ClearImageFromStateEvent extends ChatEvent {}
 

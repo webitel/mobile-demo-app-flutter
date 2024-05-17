@@ -9,15 +9,15 @@ class AuthServiceImpl implements AuthService {
 
   AuthServiceImpl(this._sharedPreferencesGateway);
 
-  final errorController = StreamController<Error>.broadcast();
+  final errorController = StreamController<CallError>.broadcast();
 
   @override
   Future<PortalResponse> login({required PortalClient client}) async {
     await _sharedPreferencesGateway.init();
 
     final res = await client.login(
-      name: 'Volodia Hunkalo',
-      sub: 'Account 7',
+      name: 'Volodia H',
+      sub: 'Acc1',
       issuer: 'https://dev.webitel.com/portal',
       // 'https://paynet.uz/portal',
     );
@@ -55,11 +55,12 @@ class AuthServiceImpl implements AuthService {
   }
 
   @override
-  Future<Stream<Error>> listenToError({required PortalClient client}) async {
+  Future<Stream<CallError>> listenToError(
+      {required PortalClient client}) async {
     final channel = await client.getChannel();
     channel.onError.listen((error) {
       errorController.add(
-        Error(
+        CallError(
           statusCode: error.statusCode,
           errorMessage: error.errorMessage,
         ),

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:webitel_portal_sdk/webitel_portal_sdk.dart';
@@ -29,6 +30,23 @@ class ChatServiceImpl implements ChatService {
       return await _filePickerGateway.pickFile();
     } catch (e) {
       debugPrint('Error picking file: $e');
+      return null;
+    }
+  }
+
+  @override
+  Future<File?> pickImage() async {
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+      if (pickedFile != null) {
+        return File(pickedFile.path);
+      } else {
+        return null;
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
       return null;
     }
   }
@@ -79,7 +97,6 @@ class ChatServiceImpl implements ChatService {
     return PortalResponse(
       status: PortalResponseStatus.success,
       message: message.dialogMessageContent,
-      statusCode: message.statusCode,
     );
   }
 
@@ -97,7 +114,7 @@ class ChatServiceImpl implements ChatService {
     return PortalResponse(
       status: PortalResponseStatus.success,
       message: message.dialogMessageContent,
-      statusCode: message.statusCode,
+      //TODO RETURN STATUS CODE
     );
   }
 

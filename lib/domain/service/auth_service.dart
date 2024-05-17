@@ -12,5 +12,5 @@ abstract interface class AuthService {
     required String pushToken,
   });
 
-  Future<Stream<Error>> listenToError({required PortalClient client});
+  Future<Stream<CallError>> listenToError({required PortalClient client});
 }

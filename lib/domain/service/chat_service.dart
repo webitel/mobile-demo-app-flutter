@@ -25,4 +25,6 @@ abstract interface class ChatService {
   });
 
   Future<File?> pickFile();
+
+  Future<File?> pickImage();
 }

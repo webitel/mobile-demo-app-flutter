@@ -24,14 +24,23 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<FetchDialogs>((event, emit) async {
       final serviceDialog = await event.client.chat.fetchServiceDialog();
       emit(state.copyWith(dialog: serviceDialog));
+
       if (serviceDialog.id.isNotEmpty) {
         add(ListenToMessages());
         add(FetchMessages());
       }
     });
 
-    on<UploadMediaEvent>((event, emit) async {
+    on<UploadFileEvent>((event, emit) async {
       final file = await chatService.pickFile();
+
+      if (file != null) {
+        emit(state.copyWith(selectedFile: file));
+      }
+    });
+
+    on<UploadImageEvent>((event, emit) async {
+      final file = await chatService.pickImage();
 
       if (file != null) {
         emit(state.copyWith(selectedFile: file));
