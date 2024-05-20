@@ -1,9 +1,9 @@
 import 'package:webitel_portal_sdk/webitel_portal_sdk.dart';
 
 abstract interface class AuthService {
-  Future<PortalResponse> login({required PortalClient client});
-
   Future<PortalClient> initClient();
+
+  Future<PortalResponse> login({required PortalClient client});
 
   Future<void> logout({required PortalClient client});
 

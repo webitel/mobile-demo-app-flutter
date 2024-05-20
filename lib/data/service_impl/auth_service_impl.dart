@@ -32,6 +32,7 @@ class AuthServiceImpl implements AuthService {
   @override
   Future<PortalClient> initClient() async {
     final client = await WebitelPortalSdk.instance.initClient(
+      loggerLevel: LoggerLevel.debug,
       url: 'grpcs://dev.webitel.com:443',
       // 'grpcs://test.webitel.me:443',
       appToken:
@@ -55,8 +56,9 @@ class AuthServiceImpl implements AuthService {
   }
 
   @override
-  Future<Stream<CallError>> listenToError(
-      {required PortalClient client}) async {
+  Future<Stream<CallError>> listenToError({
+    required PortalClient client,
+  }) async {
     final channel = await client.getChannel();
     channel.onError.listen((error) {
       errorController.add(

@@ -76,13 +76,12 @@ class ChatServiceImpl implements ChatService {
     Dialog dialog,
   ) async {
     final message = await dialog.sendMessage(
-      dialogMessageContent: dialogMessageEntity.dialogMessageContent,
+      content: dialogMessageEntity.dialogMessageContent,
       requestId: uuid.v4(),
       mediaType: dialogMessageEntity.file!.type,
       mediaName: dialogMessageEntity.file!.name,
       mediaData:
           dialogMessageEntity.file!.data ?? const Stream<List<int>>.empty(),
-      messageType: 'media',
     );
 
     _databaseProvider.saveCachedFile(
@@ -105,9 +104,8 @@ class ChatServiceImpl implements ChatService {
     Dialog dialog,
   ) async {
     final message = await dialog.sendMessage(
-      dialogMessageContent: dialogMessageEntity.dialogMessageContent,
+      content: dialogMessageEntity.dialogMessageContent,
       requestId: uuid.v4(),
-      messageType: 'message',
       mediaData: const Stream<List<int>>.empty(),
     );
 
