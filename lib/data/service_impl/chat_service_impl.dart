@@ -173,10 +173,27 @@ class ChatServiceImpl implements ChatService {
       final messageType = message.sender!.name == 'user'
           ? MessageType.user
           : MessageType.operator;
+
       try {
+        Keyboard? keyboard;
+        if (message.keyboard!.buttons.isNotEmpty) {
+          keyboard = Keyboard(
+            buttons: message.keyboard!.buttons.map((buttonRow) {
+              return buttonRow.map((button) {
+                return Button(
+                  text: button.text,
+                  code: button.code,
+                  url: button.url,
+                );
+              }).toList();
+            }).toList(),
+          );
+        }
+
         final messageEntity = await _processNewMessage(
           dialog,
           DialogMessageEntity(
+            keyboard: keyboard,
             file: MediaFileEntity(
               id: message.file.id,
               size: message.file.size,
@@ -202,7 +219,9 @@ class ChatServiceImpl implements ChatService {
   }
 
   Future<DialogMessageEntity> _processNewMessage(
-      Dialog dialog, DialogMessageEntity message) async {
+    Dialog dialog,
+    DialogMessageEntity message,
+  ) async {
     if (message.file!.id.isNotEmpty &&
         message.messageType == MessageType.operator) {
       final file = await _downloadFile(dialog, message);
@@ -216,6 +235,7 @@ class ChatServiceImpl implements ChatService {
       );
 
       return DialogMessageEntity(
+        keyboard: message.keyboard,
         file: MediaFileEntity(
           path: file.path,
           id: message.file!.id,
@@ -230,6 +250,7 @@ class ChatServiceImpl implements ChatService {
       );
     } else {
       final messageEntity = DialogMessageEntity(
+        keyboard: message.keyboard,
         file: MediaFileEntity(
           id: message.file!.id,
           size: message.file!.size,
@@ -246,6 +267,78 @@ class ChatServiceImpl implements ChatService {
       return messageEntity;
     }
   }
+
+  // Future<File> _downloadFile(Dialog dialog, dynamic message) async {
+  //   final fileStream = dialog.downloadFile(fileId: message.file.id);
+  //   List<int> bytesList = [];
+  //   bool isPaused = false;
+  //
+  //   await for (var bytes in fileStream) {
+  //     int chunkSize = bytes.bytes.length;
+  //     if (chunkSize > 0) {
+  //       if (kDebugMode) {
+  //         print('Received chunk of $chunkSize bytes');
+  //       }
+  //       bytesList.addAll(bytes.bytes);
+  //
+  //       // Imitate pausing the download after the first chunk
+  //       if (!isPaused) {
+  //         isPaused = true;
+  //         await dialog.pauseDownload(fileId: message.file.id);
+  //
+  //         if (kDebugMode) {
+  //           print('Download paused');
+  //         }
+  //
+  //         // Wait for a short delay before resuming the download
+  //         await Future.delayed(const Duration(seconds: 5));
+  //
+  //         // Resume the download
+  //         final resumeStream = dialog.resumeDownload(fileId: message.file.id);
+  //         await for (var resumedBytes in resumeStream) {
+  //           int resumedChunkSize = resumedBytes.bytes.length;
+  //           if (resumedChunkSize > 0) {
+  //             if (kDebugMode) {
+  //               print('Received resumed chunk of $resumedChunkSize bytes');
+  //             }
+  //             bytesList.addAll(resumedBytes.bytes);
+  //           } else {
+  //             if (kDebugMode) {
+  //               print('Received chunk of 0 bytes, skipping');
+  //             }
+  //           }
+  //         }
+  //
+  //         break; // Exit the loop after resuming to avoid double processing
+  //       }
+  //     } else {
+  //       if (kDebugMode) {
+  //         print('Received chunk of 0 bytes, skipping');
+  //       }
+  //     }
+  //   }
+  //
+  //   ByteData byteData = ByteData.sublistView(Uint8List.fromList(bytesList));
+  //
+  //   return await _writeToFile(data: byteData, name: message.file.name);
+  // }
+  //
+  // Future<File> _writeToFile({
+  //   required ByteData data,
+  //   required String name,
+  // }) async {
+  //   final buffer = data.buffer;
+  //   Directory tempDir = await getTemporaryDirectory();
+  //   String tempPath = tempDir.path;
+  //   var filePath = '$tempPath/$name';
+  //
+  //   return File(filePath).writeAsBytes(
+  //     buffer.asUint8List(
+  //       data.offsetInBytes,
+  //       data.lengthInBytes,
+  //     ),
+  //   );
+  // }
 
   Future<File> _downloadFile(Dialog dialog, dynamic message) async {
     final fileStream = dialog.downloadFile(fileId: message.file.id);
@@ -285,5 +378,19 @@ class ChatServiceImpl implements ChatService {
         data.lengthInBytes,
       ),
     );
+  }
+
+  @override
+  Future<PortalResponse> sendPostback({
+    required Postback postback,
+    required Dialog dialog,
+  }) async {
+    final requestId = uuid.v4();
+    final res = await dialog.sendPostback(
+      postback: postback,
+      requestId: requestId,
+    );
+
+    return PortalResponse(status: PortalResponseStatus.success);
   }
 }

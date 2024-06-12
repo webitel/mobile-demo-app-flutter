@@ -15,8 +15,10 @@ class DialogMessageEntity {
   final MessageStatus? messageStatus;
   final String? chatId;
   final MediaFileEntity? file;
+  final Keyboard? keyboard;
 
   DialogMessageEntity({
+    this.keyboard,
     this.fileId,
     this.fileType,
     this.file,
@@ -63,4 +65,24 @@ class DialogMessageEntity {
       'timestamp': DateTime.now().millisecondsSinceEpoch,
     };
   }
+}
+
+class Keyboard {
+  final List<List<Button>> buttons;
+
+  Keyboard({
+    required this.buttons,
+  });
+}
+
+class Button {
+  final String text;
+  final String? code;
+  final String? url;
+
+  Button({
+    required this.text,
+    this.code,
+    this.url,
+  });
 }

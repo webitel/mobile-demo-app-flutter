@@ -39,6 +39,16 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       }
     });
 
+    on<SendPostbackEvent>((event, emit) async {
+      final res = await chatService.sendPostback(
+        postback: event.postback,
+        dialog: state.dialog!,
+      );
+      if (kDebugMode) {
+        print(res);
+      }
+    });
+
     on<UploadImageEvent>((event, emit) async {
       final file = await chatService.pickImage();
 
@@ -147,6 +157,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             message.file!.path!.isNotEmpty) {
           final currentMessages = [
             DialogMessageEntity(
+              keyboard: message.keyboard!.buttons.isNotEmpty
+                  ? message.keyboard
+                  : null,
               path: message.file!.path,
               fileId: message.file!.id,
               messageType: message.messageType,
@@ -159,6 +172,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         } else {
           final currentMessages = [
             DialogMessageEntity(
+              keyboard: message.keyboard,
               messageType: message.messageType,
               dialogMessageContent: message.dialogMessageContent,
               id: message.id,

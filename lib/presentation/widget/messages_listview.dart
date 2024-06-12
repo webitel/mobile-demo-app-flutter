@@ -46,6 +46,9 @@ class MessagesListView extends StatelessWidget {
                     : 20,
               ),
               child: MessageItem(
+                mid: state.dialogMessages[index].id,
+                chatBloc: chatBloc,
+                keyboard: state.dialogMessages[index].keyboard,
                 filePath: state.dialogMessages[index].file != null
                     ? state.dialogMessages[index].file!.path ?? ''
                     : '',

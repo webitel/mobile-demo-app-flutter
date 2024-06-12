@@ -10,6 +10,11 @@ abstract interface class ChatService {
     required Dialog dialog,
   });
 
+  Future<PortalResponse> sendPostback({
+    required Postback postback,
+    required Dialog dialog,
+  });
+
   Future<Stream<DialogMessageEntity>> listenToMessages({
     required Dialog dialog,
   });

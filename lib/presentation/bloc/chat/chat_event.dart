@@ -8,6 +8,12 @@ class SendDialogMessageEvent extends ChatEvent {
   SendDialogMessageEvent({required this.dialogMessageEntity});
 }
 
+class SendPostbackEvent extends ChatEvent {
+  final Postback postback;
+
+  SendPostbackEvent({required this.postback});
+}
+
 class FetchDialogs extends ChatEvent {
   final PortalClient client;
 

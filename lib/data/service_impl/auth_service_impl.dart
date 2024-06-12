@@ -16,8 +16,8 @@ class AuthServiceImpl implements AuthService {
     await _sharedPreferencesGateway.init();
 
     final res = await client.login(
-      name: 'Volodia H',
-      sub: 'Acc1',
+      name: 'HunkaloV',
+      sub: 'Account 22',
       issuer: 'https://dev.webitel.com/portal',
       // 'https://paynet.uz/portal',
     );
@@ -39,6 +39,7 @@ class AuthServiceImpl implements AuthService {
           '49sFBWUGEtlHz7iTWjIXIgRGnZXQ4dQZOy7fdM8AyffZ3oEQzNC5Noa6Aeem6BAw',
       // 'CLboLLKNTa5EP53ySLL0D_eDufMb1LW_LnfhoPb1HAe8xlvgqQW5xpftqfWUmLQt',
     );
+
     return client;
   }
 

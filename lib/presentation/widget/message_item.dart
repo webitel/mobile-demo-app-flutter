@@ -1,18 +1,25 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:webitel_portal_sdk/webitel_portal_sdk.dart';
 import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
+import 'package:webitel_sdk/presentation/bloc/chat/chat_bloc.dart';
 
 class MessageItem extends StatelessWidget {
   final String content;
   final MessageType messageType;
-
   final String filePath;
+  final Keyboard? keyboard;
+  final int mid;
+  final ChatBloc chatBloc;
 
   const MessageItem({
+    required this.mid,
+    required this.chatBloc,
     required this.messageType,
     required this.content,
     required this.filePath,
+    this.keyboard,
     super.key,
   });
 
@@ -54,6 +61,33 @@ class MessageItem extends StatelessWidget {
                 fontFamily: 'Bebas',
               ),
             ),
+            if (keyboard != null)
+              Wrap(
+                spacing: 8.0,
+                runSpacing: 8.0,
+                alignment: WrapAlignment.start,
+                children: keyboard!.buttons.expand((buttonList) {
+                  return buttonList.map((button) {
+                    return SizedBox(
+                      width: MediaQuery.of(context).size.width / 2 - 24,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          chatBloc.add(
+                            SendPostbackEvent(
+                              postback: Postback(
+                                code: button.code ?? '',
+                                text: button.text,
+                                mid: mid,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Text(button.text),
+                      ),
+                    );
+                  }).toList();
+                }).toList(),
+              ),
           ],
         ),
       ),
