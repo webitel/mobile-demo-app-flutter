@@ -5,6 +5,8 @@ import 'package:webitel_sdk/domain/entity/cached_file.dart';
 import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 import 'package:webitel_sdk/domain/entity/media_file.dart';
 
+import '../domain/entity/msg_type.dart';
+
 class DatabaseProvider {
   Database? _database;
 
@@ -80,7 +82,7 @@ class DatabaseProvider {
     await db.transaction((txn) async {
       for (final message in messagesFromServer) {
         String path = '';
-        if (message.file.id.isNotEmpty) {
+        if (message.file.id!.isNotEmpty) {
           path = pathByRequestId[message.file.id] ?? '';
         }
 
@@ -119,15 +121,14 @@ class DatabaseProvider {
             id: message['id'],
             messageStatus: MessageStatus.sent,
             messageType: message['messageType'] == 'operator'
-                ? MessageType.operator
-                : MessageType.user,
+                ? MsgType.operator
+                : MsgType.user,
             dialogMessageContent: message['dialogMessageContent'],
             file: MediaFileEntity(
               path: message['path'],
               id: message['fileId'],
               size: 0,
               bytes: [],
-              data: const Stream<List<int>>.empty(),
               name: message['fileName'],
               type: message['fileType'],
             ),

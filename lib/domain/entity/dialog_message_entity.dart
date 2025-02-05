@@ -1,6 +1,6 @@
 import 'package:webitel_sdk/domain/entity/media_file.dart';
 
-enum MessageType { error, user, operator }
+import 'msg_type.dart';
 
 enum MessageStatus { loading, error, sent }
 
@@ -11,7 +11,7 @@ class DialogMessageEntity {
   final String? fileType;
   final String? path;
   final String dialogMessageContent;
-  final MessageType? messageType;
+  final MsgType? messageType;
   final MessageStatus? messageStatus;
   final String? chatId;
   final MediaFileEntity? file;
@@ -40,7 +40,7 @@ class DialogMessageEntity {
       fileName: map['fileName'],
       fileType: map['fileType'],
       messageType: map['messageType'] != null
-          ? MessageType.values
+          ? MsgType.values
               .firstWhere((type) => type.toString() == map['messageType'])
           : null,
       messageStatus: map['messageStatus'] != null

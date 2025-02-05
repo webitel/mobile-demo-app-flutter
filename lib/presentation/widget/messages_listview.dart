@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:very_good_infinite_list/very_good_infinite_list.dart';
-import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 import 'package:webitel_sdk/presentation/bloc/auth/auth_bloc.dart';
 import 'package:webitel_sdk/presentation/bloc/chat/chat_bloc.dart';
 import 'package:webitel_sdk/presentation/widget/message_item.dart';
+
+import '../../domain/entity/msg_type.dart';
 
 class MessagesListView extends StatelessWidget {
   const MessagesListView({
@@ -36,14 +37,13 @@ class MessagesListView extends StatelessWidget {
               padding: EdgeInsets.only(
                 top: 8,
                 bottom: 8,
-                left:
-                    state.dialogMessages[index].messageType == MessageType.user
-                        ? 200
-                        : 20,
-                right: state.dialogMessages[index].messageType ==
-                        MessageType.operator
+                left: state.dialogMessages[index].messageType == MsgType.user
                     ? 200
                     : 20,
+                right:
+                    state.dialogMessages[index].messageType == MsgType.operator
+                        ? 200
+                        : 20,
               ),
               child: MessageItem(
                 mid: state.dialogMessages[index].id,

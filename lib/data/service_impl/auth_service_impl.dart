@@ -16,9 +16,11 @@ class AuthServiceImpl implements AuthService {
     await _sharedPreferencesGateway.init();
 
     final res = await client.login(
-      name: 'HunkaloV',
-      sub: 'Account 22',
-      issuer: 'https://dev.webitel.com/portal',
+      name: 'webitel-test',
+      sub: 'webitel-test',
+      issuer:
+      // 'https://dev.webitel.com/portal'
+      'https://solva.kz/portal',
       // 'https://paynet.uz/portal',
     );
 
@@ -33,11 +35,17 @@ class AuthServiceImpl implements AuthService {
   Future<PortalClient> initClient() async {
     final client = await WebitelPortalSdk.instance.initClient(
       loggerLevel: LoggerLevel.debug,
-      url: 'grpcs://dev.webitel.com:443',
-      // 'grpcs://test.webitel.me:443',
+      url:
+      // 'grpcs://dev.webitel.com',
+      'grpcs://chatbot-webitel.moneyman.kz:443',
+      // 'grpcs://chat.paynet.uz:443',
+      // 'grpcs://webitel.moneyman.kz:443',
       appToken:
-          '49sFBWUGEtlHz7iTWjIXIgRGnZXQ4dQZOy7fdM8AyffZ3oEQzNC5Noa6Aeem6BAw',
-      // 'CLboLLKNTa5EP53ySLL0D_eDufMb1LW_LnfhoPb1HAe8xlvgqQW5xpftqfWUmLQt',
+      'zb-zZ33EOZP9wvCkz1_MbUfp1aBGrPKI2uM2JPLO09lH-lUANgSVoXEL_c6bU_lw',
+      // 'lcDHQRNK7paCbgYe2CP9W0pC1Q_YqEuL_wW-9Uc7ngIY3KPxZLCOIbthloF9SdbH'
+
+      // '49sFBWUGEtlHz7iTWjIXIgRGnZXQ4dQZOy7fdM8AyffZ3oEQzNC5Noa6Aeem6BAw'
+      // 'CLboLLKNTa5EP53ySLL0D_eDufMb1LW_LnfhoPb1HAe8xlvgqQW5xpftqfWUmLQt'
     );
 
     return client;

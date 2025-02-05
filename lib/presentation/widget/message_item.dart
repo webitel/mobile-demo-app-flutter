@@ -5,9 +5,11 @@ import 'package:webitel_portal_sdk/webitel_portal_sdk.dart';
 import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 import 'package:webitel_sdk/presentation/bloc/chat/chat_bloc.dart';
 
+import '../../domain/entity/msg_type.dart';
+
 class MessageItem extends StatelessWidget {
   final String content;
-  final MessageType messageType;
+  final MsgType messageType;
   final String filePath;
   final Keyboard? keyboard;
   final int mid;
@@ -30,12 +32,12 @@ class MessageItem extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.only(
           topRight: const Radius.circular(20),
-          topLeft: Radius.circular(messageType == MessageType.user ? 20 : 0),
+          topLeft: Radius.circular(messageType == MsgType.user ? 20 : 0),
           bottomLeft: const Radius.circular(20),
           bottomRight:
-              Radius.circular(messageType == MessageType.operator ? 20 : 0),
+              Radius.circular(messageType == MsgType.operator ? 20 : 0),
         ),
-        color: messageType == MessageType.user
+        color: messageType == MsgType.user
             ? Colors.yellow.withOpacity(0.2)
             : Colors.blue.withOpacity(0.2),
       ),

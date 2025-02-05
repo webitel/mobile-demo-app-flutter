@@ -1,13 +1,13 @@
-import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
+import '../domain/entity/msg_type.dart';
 
-MessageType categorizeMessageType(String messageType) {
+MsgType categorizeMessageType(String messageType) {
   if (messageType == 'user') {
-    return MessageType.user;
+    return MsgType.user;
   } else if (messageType == 'operator') {
-    return MessageType.operator;
+    return MsgType.operator;
   } else if (messageType == 'error') {
-    return MessageType.error;
+    return MsgType.error;
   } else {
-    return MessageType.error;
+    return MsgType.error;
   }
 }

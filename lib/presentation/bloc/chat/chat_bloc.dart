@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:bloc/bloc.dart';
@@ -59,29 +58,29 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     on<SendDialogMessageEvent>((event, emit) async {
       if (state.selectedFile.path.isNotEmpty) {
-        var byteStream = state.selectedFile.openRead();
-        int totalFileSize = await state.selectedFile.length();
-        int bytesUploaded = 0;
+        // var byteStream = state.selectedFile.openRead();
+        // int totalFileSize = await state.selectedFile.length();
+        // int bytesUploaded = 0;
 
-        var controller = StreamController<List<int>>();
-
-        byteStream.listen(
-          (data) {
-            controller.add(data);
-            bytesUploaded += data.length;
-            double progress = bytesUploaded / totalFileSize * 100;
-            if (kDebugMode) {
-              print('Progress: $progress%');
-            }
-          },
-          onDone: () {
-            controller.close();
-          },
-          onError: (error) {
-            controller.addError(error);
-            controller.close();
-          },
-        );
+        // var controller = StreamController<List<int>>();
+        //
+        // byteStream.listen(
+        //   (data) {
+        //     controller.add(data);
+        //     bytesUploaded += data.length;
+        //     double progress = bytesUploaded / totalFileSize * 100;
+        //     if (kDebugMode) {
+        //       print('Progress: $progress%');
+        //     }
+        //   },
+        //   onDone: () {
+        //     controller.close();
+        //   },
+        //   onError: (error) {
+        //     controller.addError(error);
+        //     controller.close();
+        //   },
+        // );
 
         String mimeType = lookupMimeType(state.selectedFile.path) ??
             'application/octet-stream';
@@ -95,7 +94,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
               id: '',
               size: 0,
               bytes: [],
-              data: controller.stream,
+              file: state.selectedFile,
               path: path,
               name: fileName,
               type: mimeType,

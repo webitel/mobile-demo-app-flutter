@@ -13,6 +13,8 @@ import 'package:webitel_sdk/domain/entity/dialog_message_entity.dart';
 import 'package:webitel_sdk/domain/entity/media_file.dart';
 import 'package:webitel_sdk/domain/service/chat_service.dart';
 
+import '../../domain/entity/msg_type.dart';
+
 class ChatServiceImpl implements ChatService {
   final DatabaseProvider _databaseProvider;
   final FilePickerGateway _filePickerGateway;
@@ -75,18 +77,58 @@ class ChatServiceImpl implements ChatService {
     DialogMessageEntity dialogMessageEntity,
     Dialog dialog,
   ) async {
+    // Step 1: Upload the file
+    final upload = dialog.uploadFile(
+      mediaType: dialogMessageEntity.file!.type,
+      mediaName: dialogMessageEntity.file!.name,
+      file: dialogMessageEntity.file!.file!,
+    );
+
+    // Step 2: Wait for the upload to complete and get file metadata
+    UploadResponse? fileResponse;
+
+    try {
+      await for (final progress in upload.onProgress.stream) {
+        if (kDebugMode) {
+          print('Progress: ${progress.progress?.progressSize} bytes uploaded');
+        }
+        if (progress.id != null && progress.id!.isNotEmpty) {
+          fileResponse = progress;
+          break; // File upload completed
+        }
+      }
+    } catch (e) {
+      debugPrint('Error during file upload: $e');
+    }
+
+    // Check if the file upload completed successfully
+    if (fileResponse == null) {
+      return PortalResponse(
+        status: PortalResponseStatus.error,
+        message: 'File upload failed.',
+      );
+    }
+
+    if (kDebugMode) {
+      print(
+          'File uploaded: ${fileResponse.name}, id: ${fileResponse.id}, type: ${fileResponse.type}');
+    }
+
+    // Step 3: Send the message with the uploaded file's metadata
     final message = await dialog.sendMessage(
       content: dialogMessageEntity.dialogMessageContent,
       requestId: uuid.v4(),
-      mediaType: dialogMessageEntity.file!.type,
-      mediaName: dialogMessageEntity.file!.name,
-      mediaData:
-          dialogMessageEntity.file!.data ?? const Stream<List<int>>.empty(),
+      uploadFile: UploadFile(
+        id: fileResponse.id ?? '',
+        name: fileResponse.name ?? '',
+        type: fileResponse.type ?? '',
+      ),
     );
 
+    // Step 4: Save the file metadata to cache
     _databaseProvider.saveCachedFile(
       CachedFileEntity(
-        id: message.file.id,
+        id: message.file.id ?? '',
         type: message.file.type.toString(),
         path: dialogMessageEntity.file!.path ?? '',
         status: CachedFileStatus.sent,
@@ -106,13 +148,12 @@ class ChatServiceImpl implements ChatService {
     final message = await dialog.sendMessage(
       content: dialogMessageEntity.dialogMessageContent,
       requestId: uuid.v4(),
-      mediaData: const Stream<List<int>>.empty(),
     );
 
     return PortalResponse(
       status: PortalResponseStatus.success,
       message: message.dialogMessageContent,
-      //TODO RETURN STATUS CODE
+      // TODO: RETURN STATUS CODE IF NEEDED
     );
   }
 
@@ -128,11 +169,10 @@ class ChatServiceImpl implements ChatService {
         .map(
           (message) => DialogMessageEntity(
             file: MediaFileEntity(
-              id: message.file.id,
-              size: message.file.size,
-              data: const Stream.empty(),
-              name: message.file.name,
-              type: message.file.type,
+              id: message.file.id ?? '',
+              size: message.file.size ?? 0,
+              name: message.file.name ?? '',
+              type: message.file.type ?? '',
             ),
             fileName: message.file.name,
             fileId: message.file.id,
@@ -140,8 +180,8 @@ class ChatServiceImpl implements ChatService {
             id: message.messageId ?? 0,
             dialogMessageContent: message.dialogMessageContent,
             messageType: message.sender!.name == 'user'
-                ? MessageType.user
-                : MessageType.operator,
+                ? MsgType.user
+                : MsgType.operator,
           ),
         )
         .toList();
@@ -170,9 +210,8 @@ class ChatServiceImpl implements ChatService {
     final messagesStreamController = StreamController<DialogMessageEntity>();
 
     dialog.onNewMessage.listen((message) async {
-      final messageType = message.sender!.name == 'user'
-          ? MessageType.user
-          : MessageType.operator;
+      final messageType =
+          message.sender!.name == 'user' ? MsgType.user : MsgType.operator;
 
       try {
         Keyboard? keyboard;
@@ -195,11 +234,10 @@ class ChatServiceImpl implements ChatService {
           DialogMessageEntity(
             keyboard: keyboard,
             file: MediaFileEntity(
-              id: message.file.id,
-              size: message.file.size,
-              data: const Stream.empty(),
-              name: message.file.name,
-              type: message.file.type,
+              id: message.file.id ?? '',
+              size: message.file.size ?? 0,
+              name: message.file.name ?? '',
+              type: message.file.type ?? '',
             ),
             fileName: message.file.name,
             fileId: message.file.id,
@@ -223,7 +261,7 @@ class ChatServiceImpl implements ChatService {
     DialogMessageEntity message,
   ) async {
     if (message.file!.id.isNotEmpty &&
-        message.messageType == MessageType.operator) {
+        message.messageType == MsgType.operator) {
       final file = await _downloadFile(dialog, message);
       _databaseProvider.saveCachedFile(
         CachedFileEntity(
@@ -240,13 +278,12 @@ class ChatServiceImpl implements ChatService {
           path: file.path,
           id: message.file!.id,
           size: message.file!.size,
-          data: const Stream.empty(),
           name: message.file!.name,
           type: message.file!.type,
         ),
         id: message.id,
         dialogMessageContent: message.dialogMessageContent,
-        messageType: MessageType.operator,
+        messageType: MsgType.operator,
       );
     } else {
       final messageEntity = DialogMessageEntity(
@@ -254,7 +291,6 @@ class ChatServiceImpl implements ChatService {
         file: MediaFileEntity(
           id: message.file!.id,
           size: message.file!.size,
-          data: const Stream.empty(),
           name: message.file!.name,
           type: message.file!.type,
         ),
@@ -268,89 +304,35 @@ class ChatServiceImpl implements ChatService {
     }
   }
 
-  // Future<File> _downloadFile(Dialog dialog, dynamic message) async {
-  //   final fileStream = dialog.downloadFile(fileId: message.file.id);
-  //   List<int> bytesList = [];
-  //   bool isPaused = false;
-  //
-  //   await for (var bytes in fileStream) {
-  //     int chunkSize = bytes.bytes.length;
-  //     if (chunkSize > 0) {
-  //       if (kDebugMode) {
-  //         print('Received chunk of $chunkSize bytes');
-  //       }
-  //       bytesList.addAll(bytes.bytes);
-  //
-  //       // Imitate pausing the download after the first chunk
-  //       if (!isPaused) {
-  //         isPaused = true;
-  //         await dialog.pauseDownload(fileId: message.file.id);
-  //
-  //         if (kDebugMode) {
-  //           print('Download paused');
-  //         }
-  //
-  //         // Wait for a short delay before resuming the download
-  //         await Future.delayed(const Duration(seconds: 5));
-  //
-  //         // Resume the download
-  //         final resumeStream = dialog.resumeDownload(fileId: message.file.id);
-  //         await for (var resumedBytes in resumeStream) {
-  //           int resumedChunkSize = resumedBytes.bytes.length;
-  //           if (resumedChunkSize > 0) {
-  //             if (kDebugMode) {
-  //               print('Received resumed chunk of $resumedChunkSize bytes');
-  //             }
-  //             bytesList.addAll(resumedBytes.bytes);
-  //           } else {
-  //             if (kDebugMode) {
-  //               print('Received chunk of 0 bytes, skipping');
-  //             }
-  //           }
-  //         }
-  //
-  //         break; // Exit the loop after resuming to avoid double processing
-  //       }
-  //     } else {
-  //       if (kDebugMode) {
-  //         print('Received chunk of 0 bytes, skipping');
-  //       }
-  //     }
-  //   }
-  //
-  //   ByteData byteData = ByteData.sublistView(Uint8List.fromList(bytesList));
-  //
-  //   return await _writeToFile(data: byteData, name: message.file.name);
-  // }
-  //
-  // Future<File> _writeToFile({
-  //   required ByteData data,
-  //   required String name,
-  // }) async {
-  //   final buffer = data.buffer;
-  //   Directory tempDir = await getTemporaryDirectory();
-  //   String tempPath = tempDir.path;
-  //   var filePath = '$tempPath/$name';
-  //
-  //   return File(filePath).writeAsBytes(
-  //     buffer.asUint8List(
-  //       data.offsetInBytes,
-  //       data.lengthInBytes,
-  //     ),
-  //   );
-  // }
-
   Future<File> _downloadFile(Dialog dialog, dynamic message) async {
-    final fileStream = dialog.downloadFile(fileId: message.file.id);
-    List<int> bytesList = [];
+    final download = dialog.downloadFile(fileId: message.file.id);
 
-    await for (var bytes in fileStream) {
-      int chunkSize = bytes.bytes.length;
+    List<int> bytesList = [];
+    bool isPaused = false;
+
+    await for (var bytes in download.onData.stream) {
+      int chunkSize = bytes.bytes?.length ?? 0;
       if (chunkSize > 0) {
         if (kDebugMode) {
           print('Received chunk of $chunkSize bytes');
         }
-        bytesList.addAll(bytes.bytes);
+        bytesList.addAll(bytes.bytes ?? []);
+
+        // Imitate pausing the download after the first chunk
+        if (!isPaused) {
+          isPaused = true;
+          await download.pause();
+
+          if (kDebugMode) {
+            print('Download paused');
+          }
+
+          // Wait for a short delay before resuming the download
+          await Future.delayed(const Duration(seconds: 5));
+
+          // Resume the download
+          await download.resume();
+        }
       } else {
         if (kDebugMode) {
           print('Received chunk of 0 bytes, skipping');
@@ -379,6 +361,46 @@ class ChatServiceImpl implements ChatService {
       ),
     );
   }
+
+  // Future<File> _downloadFile(Dialog dialog, dynamic message) async {
+  //   final fileStream = dialog.downloadFile(fileId: message.file.id);
+  //   List<int> bytesList = [];
+  //
+  //   await for (var bytes in fileStream.onData) {
+  //     int chunkSize = bytes.bytes.length;
+  //     if (chunkSize > 0) {
+  //       if (kDebugMode) {
+  //         print('Received chunk of $chunkSize bytes');
+  //       }
+  //       bytesList.addAll(bytes.bytes);
+  //     } else {
+  //       if (kDebugMode) {
+  //         print('Received chunk of 0 bytes, skipping');
+  //       }
+  //     }
+  //   }
+  //
+  //   ByteData byteData = ByteData.sublistView(Uint8List.fromList(bytesList));
+  //
+  //   return await _writeToFile(data: byteData, name: message.file.name);
+  // }
+  //
+  // Future<File> _writeToFile({
+  //   required ByteData data,
+  //   required String name,
+  // }) async {
+  //   final buffer = data.buffer;
+  //   Directory tempDir = await getTemporaryDirectory();
+  //   String tempPath = tempDir.path;
+  //   var filePath = '$tempPath/$name';
+  //
+  //   return File(filePath).writeAsBytes(
+  //     buffer.asUint8List(
+  //       data.offsetInBytes,
+  //       data.lengthInBytes,
+  //     ),
+  //   );
+  // }
 
   @override
   Future<PortalResponse> sendPostback({
